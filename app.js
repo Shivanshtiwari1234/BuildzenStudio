@@ -1,215 +1,267 @@
 import {
-    editors,
     initializeEditors,
-    getProjectCode,
-    setProjectCode
+    addEditor,
+    removeEditor,
+    switchEditor,
+    getEditorContent
 } from "./editor.js";
 
 
-/* =========================
-   STARTER PROJECT
-   ========================= */
-
-const starterProject = {
-
-    html: `<div class="card">
-    <h1>Hello, Buildzen!</h1>
-    <p>This page is built with separate HTML, CSS and JavaScript files.</p>
-    <button id="helloBtn">
-        Click me
-    </button>
-</div>`,
-
-    css: `body {
-    margin: 0;
-    min-height: 100vh;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #111827;
-    color: #f9fafb;
-
-    font-family: Arial, sans-serif;
-}
-
-.card {
-    width: min(420px, 90vw);
-
-    padding: 32px;
-
-    border-radius: 16px;
-
-    background: #1f2937;
-
-    text-align: center;
-
-    box-shadow:
-        0 20px 50px rgba(0, 0, 0, 0.35);
-}
-
-h1 {
-    margin-top: 0;
-}
-
-p {
-    color: #9ca3af;
-    line-height: 1.6;
-}
-
-button {
-    padding: 10px 18px;
-
-    border: 0;
-    border-radius: 8px;
-
-    background: #4f7cff;
-    color: white;
-
-    font-size: 14px;
-
-    cursor: pointer;
-}
-
-button:hover {
-    background: #416be0;
-}`,
-
-    js: `console.log("Buildzen preview loaded.");
-
-const button = document.querySelector("#helloBtn");
-
-button.addEventListener("click", () => {
-    console.log("Button clicked!");
-    alert("Hello from Buildzen!");
-});`
-
-};
-
-
-/* =========================
-   DOM REFERENCES
-   ========================= */
-
 const preview =
-    document.querySelector("#preview");
+    document.getElementById("preview");
 
-const statusElement =
-    document.querySelector("#status");
+const status =
+    document.getElementById("status");
+
+const previewStatus =
+    document.getElementById("previewStatus");
 
 const resetBtn =
-    document.querySelector("#resetBtn");
+    document.getElementById("resetBtn");
 
 const refreshBtn =
-    document.querySelector("#refreshBtn");
+    document.getElementById("refreshBtn");
+
+const newFileBtn =
+    document.getElementById("newFileBtn");
+
+const renameFileBtn =
+    document.getElementById("renameFileBtn");
+
+const deleteFileBtn =
+    document.getElementById("deleteFileBtn");
+
+const fileTree =
+    document.getElementById("fileTree");
 
 const consoleOutput =
-    document.querySelector("#consoleOutput");
+    document.getElementById("consoleOutput");
 
 const consoleCount =
-    document.querySelector("#consoleCount");
+    document.getElementById("consoleCount");
 
 const clearConsoleBtn =
-    document.querySelector("#clearConsoleBtn");
+    document.getElementById("clearConsoleBtn");
 
-const consoleFilters =
-    document.querySelectorAll(
-        ".console-filter"
-    );
-
-
-/* =========================
-   STATE
-   ========================= */
 
 const STORAGE_KEY =
     "buildzen-project";
 
-let consoleMessages = [];
 
-let consoleFilter = "all";
+const REQUIRED_FILES = [
+    "index.html",
+    "style.css",
+    "script.js"
+];
 
 
-/* =========================
-   PROJECT STORAGE
-   ========================= */
+const starterFiles = [
+    {
+        id: "index.html",
+        name: "index.html",
+        content:
+            `<main class="hero">
+    <h1>Hello, Buildzen!</h1>
+    <p>Start building your website.</p>
+    <button onclick="sayHello()">Click me</button>
+</main>`
+    },
+
+    {
+        id: "style.css",
+        name: "style.css",
+        content:
+            `.hero {
+    font-family: system-ui, sans-serif;
+    text-align: center;
+    padding: 80px 20px;
+}
+
+button {
+    padding: 10px 18px;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+}`
+    },
+
+    {
+        id: "script.js",
+        name: "script.js",
+        content:
+            `function sayHello() {
+    console.log("Hello from Buildzen!");
+}`
+    }
+];
+
+
+let project = {
+    files: [],
+    activeFile: "index.html"
+};
+
+
+/*
+ * editor.js uses this to get information
+ * about the current project files.
+ */
+window.buildzenFiles = project.files;
+
+
+/* =========================================================
+   Project persistence
+   ========================================================= */
+
+function createId() {
+    return crypto.randomUUID();
+}
+
 
 function loadProject() {
 
+    const saved =
+        localStorage.getItem(STORAGE_KEY);
+
+
+    if (!saved) {
+
+        project = {
+            files: starterFiles.map(file => ({
+                ...file
+            })),
+            activeFile: "index.html"
+        };
+
+        return;
+    }
+
+
     try {
 
-        const saved =
-            localStorage.getItem(
-                STORAGE_KEY
-            );
-
-        if (!saved) {
-            return starterProject;
-        }
-
-
-        const project =
+        const parsed =
             JSON.parse(saved);
 
 
-        return {
+        /*
+         * Current Buildzen project format.
+         */
+        if (
+            parsed &&
+            Array.isArray(parsed.files)
+        ) {
 
-            html:
-                typeof project.html === "string"
-                    ? project.html
-                    : starterProject.html,
+            project = parsed;
 
-            css:
-                typeof project.css === "string"
-                    ? project.css
-                    : starterProject.css,
+            /*
+             * Protect against a malformed/
+             * missing activeFile.
+             */
+            if (
+                !project.activeFile ||
+                !project.files.some(
+                    file =>
+                        file.id === project.activeFile
+                )
+            ) {
 
-            js:
-                typeof project.js === "string"
-                    ? project.js
-                    : starterProject.js
+                project.activeFile =
+                    project.files[0]?.id || null;
 
-        };
+            }
 
-    } catch {
+            return;
+        }
 
-        return starterProject;
+
+        /*
+         * Migrate the old Buildzen format:
+         *
+         * {
+         *     html: "...",
+         *     css: "...",
+         *     js: "..."
+         * }
+         */
+        if (parsed) {
+
+            project = {
+
+                files: [
+
+                    {
+                        id: "index.html",
+                        name: "index.html",
+                        content: parsed.html || ""
+                    },
+
+                    {
+                        id: "style.css",
+                        name: "style.css",
+                        content: parsed.css || ""
+                    },
+
+                    {
+                        id: "script.js",
+                        name: "script.js",
+                        content: parsed.js || ""
+                    }
+
+                ],
+
+                activeFile: "index.html"
+
+            };
+
+            saveProject();
+
+            return;
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Could not load saved project:",
+            error
+        );
 
     }
 
+
+    project = {
+        files: starterFiles.map(file => ({
+            ...file
+        })),
+        activeFile: "index.html"
+    };
 }
 
 
 function saveProject() {
-
-    const project =
-        getProjectCode();
-
 
     localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify(project)
     );
 
+}
 
-    setStatus("Saved");
 
+function syncGlobalFiles() {
 
-    setTimeout(() => {
-        setStatus("Live");
-    }, 900);
+    window.buildzenFiles =
+        project.files;
 
 }
 
 
-/* =========================
-   STATUS
-   ========================= */
+/* =========================================================
+   Status
+   ========================================================= */
 
 function setStatus(text) {
 
-    statusElement.innerHTML = `
+    status.innerHTML = `
         <span class="status-dot"></span>
         ${text}
     `;
@@ -217,63 +269,688 @@ function setStatus(text) {
 }
 
 
-/* =========================
-   CONSOLE
-   ========================= */
+/* =========================================================
+   File helpers
+   ========================================================= */
 
-function formatConsoleValue(value) {
+function getActiveFile() {
 
-    if (value === null) {
-        return "null";
+    return project.files.find(
+        file =>
+            file.id === project.activeFile
+    );
+
+}
+
+
+function getFileIcon(filename) {
+
+    const extension =
+        filename
+            .split(".")
+            .pop()
+            .toLowerCase();
+
+
+    if (extension === "html") {
+
+        return {
+            text: "<>",
+            className: "html-icon"
+        };
+
     }
 
-    if (value === undefined) {
-        return "undefined";
+
+    if (extension === "css") {
+
+        return {
+            text: "#",
+            className: "css-icon"
+        };
+
     }
 
-    if (typeof value === "string") {
-        return value;
-    }
 
     if (
-        typeof value === "number" ||
-        typeof value === "boolean" ||
-        typeof value === "bigint"
+        extension === "js" ||
+        extension === "mjs"
     ) {
-        return String(value);
+
+        return {
+            text: "JS",
+            className: "js-icon"
+        };
+
     }
 
 
-    try {
+    return {
+        text: "•",
+        className: "file-icon-default"
+    };
 
-        return JSON.stringify(
-            value,
-            null,
-            2
+}
+
+
+function escapeHtml(text) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        text;
+
+    return div.innerHTML;
+
+}
+
+
+function renderFileTree() {
+
+    fileTree.innerHTML = "";
+
+
+    for (const file of project.files) {
+
+        const button =
+            document.createElement("button");
+
+        button.className =
+            "file-item";
+
+
+        if (
+            file.id === project.activeFile
+        ) {
+
+            button.classList.add("active");
+
+        }
+
+
+        const icon =
+            getFileIcon(file.name);
+
+
+        button.innerHTML = `
+
+            <span class="file-icon ${icon.className}">
+                ${icon.text}
+            </span>
+
+            <span class="file-name">
+                ${escapeHtml(file.name)}
+            </span>
+
+        `;
+
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                openFile(file.id);
+
+            }
         );
 
-    } catch {
 
-        return String(value);
+        fileTree.appendChild(button);
 
     }
 
 }
 
 
-function addConsoleMessage(
-    type,
-    message
+function openFile(fileId) {
+
+    const file =
+        project.files.find(
+            item =>
+                item.id === fileId
+        );
+
+
+    if (!file) {
+        return;
+    }
+
+
+    project.activeFile =
+        fileId;
+
+
+    syncGlobalFiles();
+
+    renderFileTree();
+
+    switchEditor(
+        file.id,
+        file
+    );
+
+    saveProject();
+
+}
+
+
+/* =========================================================
+   File validation
+   ========================================================= */
+
+function isValidFilename(name) {
+
+    if (!name) {
+        return false;
+    }
+
+
+    if (
+        name.includes("/") ||
+        name.includes("\\")
+    ) {
+
+        return false;
+
+    }
+
+
+    return /^[^<>:"|?*]+$/.test(name);
+
+}
+
+
+function fileExists(
+    name,
+    exceptId = null
 ) {
 
-    consoleMessages.push({
+    return project.files.some(
+        file =>
+            file.id !== exceptId &&
+            file.name.toLowerCase() ===
+            name.toLowerCase()
+    );
 
+}
+
+
+/* =========================================================
+   New file
+   ========================================================= */
+
+function getDefaultContent(filename) {
+
+    const extension =
+        filename
+            .split(".")
+            .pop()
+            .toLowerCase();
+
+
+    if (extension === "html") {
+
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New Page</title>
+</head>
+<body>
+
+</body>
+</html>`;
+
+    }
+
+
+    if (extension === "css") {
+
+        return `/* ${filename} */`;
+
+    }
+
+
+    if (
+        extension === "js" ||
+        extension === "mjs"
+    ) {
+
+        return `// ${filename}`;
+
+    }
+
+
+    return "";
+
+}
+
+
+function createFile() {
+
+    const name =
+        prompt(
+            "Enter the new file name:",
+            "new-file.js"
+        );
+
+
+    if (name === null) {
+        return;
+    }
+
+
+    const filename =
+        name.trim();
+
+
+    if (!isValidFilename(filename)) {
+
+        alert("Invalid file name.");
+
+        return;
+
+    }
+
+
+    if (fileExists(filename)) {
+
+        alert(
+            "A file with that name already exists."
+        );
+
+        return;
+
+    }
+
+
+    const file = {
+
+        id: createId(),
+
+        name: filename,
+
+        content:
+            getDefaultContent(filename)
+
+    };
+
+
+    project.files.push(file);
+
+    project.activeFile =
+        file.id;
+
+
+    syncGlobalFiles();
+
+    addEditor(file);
+
+    renderFileTree();
+
+    switchEditor(
+        file.id,
+        file
+    );
+
+    saveProject();
+
+    setStatus("Saved");
+
+    updatePreview();
+
+}
+
+
+/* =========================================================
+   Rename
+   ========================================================= */
+
+function renameFile() {
+
+    const file =
+        getActiveFile();
+
+
+    if (!file) {
+        return;
+    }
+
+
+    const name =
+        prompt(
+            "Rename file:",
+            file.name
+        );
+
+
+    if (name === null) {
+        return;
+    }
+
+
+    const filename =
+        name.trim();
+
+
+    if (!isValidFilename(filename)) {
+
+        alert("Invalid file name.");
+
+        return;
+
+    }
+
+
+    if (
+        fileExists(
+            filename,
+            file.id
+        )
+    ) {
+
+        alert(
+            "A file with that name already exists."
+        );
+
+        return;
+
+    }
+
+
+    file.name =
+        filename;
+
+
+    syncGlobalFiles();
+
+    renderFileTree();
+
+    switchEditor(
+        file.id,
+        file
+    );
+
+    saveProject();
+
+    setStatus("Saved");
+
+    updatePreview();
+
+}
+
+
+/* =========================================================
+   Delete
+   ========================================================= */
+
+function deleteFile() {
+
+    const file =
+        getActiveFile();
+
+
+    if (!file) {
+        return;
+    }
+
+
+    if (
+        REQUIRED_FILES.includes(
+            file.name
+        )
+    ) {
+
+        alert(
+            `${file.name} is a required Buildzen file and cannot be deleted.`
+        );
+
+        return;
+
+    }
+
+
+    const confirmed =
+        confirm(
+            `Delete "${file.name}"?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    const index =
+        project.files.findIndex(
+            item =>
+                item.id === file.id
+        );
+
+
+    if (index === -1) {
+        return;
+    }
+
+
+    removeEditor(file.id);
+
+    project.files.splice(
+        index,
+        1
+    );
+
+
+    /*
+     * Select a sensible neighboring file.
+     */
+    const nextFile =
+        project.files[
+        Math.min(
+            index,
+            project.files.length - 1
+        )
+        ];
+
+
+    project.activeFile =
+        nextFile?.id ||
+        project.files[0]?.id ||
+        null;
+
+
+    syncGlobalFiles();
+
+    renderFileTree();
+
+
+    if (project.activeFile) {
+
+        const activeFile =
+            project.files.find(
+                file =>
+                    file.id ===
+                    project.activeFile
+            );
+
+
+        if (activeFile) {
+
+            switchEditor(
+                activeFile.id,
+                activeFile
+            );
+
+        }
+
+    }
+
+
+    saveProject();
+
+    setStatus("Saved");
+
+    updatePreview();
+
+}
+
+
+/* =========================================================
+   Preview
+   ========================================================= */
+
+function collectPreviewCode() {
+
+    const htmlFile =
+        project.files.find(
+            file =>
+                file.name.toLowerCase() ===
+                "index.html"
+        );
+
+
+    const cssFiles =
+        project.files.filter(
+            file =>
+                file.name
+                    .toLowerCase()
+                    .endsWith(".css")
+        );
+
+
+    const jsFiles =
+        project.files.filter(
+            file => {
+
+                const name =
+                    file.name.toLowerCase();
+
+                return (
+                    name.endsWith(".js") ||
+                    name.endsWith(".mjs")
+                );
+
+            }
+        );
+
+
+    return {
+
+        html:
+            htmlFile
+                ? getEditorContent(
+                    htmlFile.id
+                )
+                : "",
+
+        css:
+            cssFiles
+                .map(
+                    file =>
+                        getEditorContent(
+                            file.id
+                        )
+                )
+                .join("\n\n"),
+
+        js:
+            jsFiles
+                .map(
+                    file =>
+                        getEditorContent(
+                            file.id
+                        )
+                )
+                .join("\n\n")
+
+    };
+
+}
+
+
+/* =========================================================
+   Console
+   ========================================================= */
+
+let consoleEntries = [];
+
+let consoleFilter =
+    "all";
+
+
+function renderConsole() {
+
+    consoleOutput.innerHTML = "";
+
+
+    const filtered =
+        consoleEntries.filter(
+            entry =>
+                consoleFilter === "all" ||
+                entry.type === consoleFilter
+        );
+
+
+    for (const entry of filtered) {
+
+        const row =
+            document.createElement("div");
+
+        row.className =
+            `console-entry ${entry.type}`;
+
+
+        row.textContent =
+            entry.text;
+
+
+        consoleOutput.appendChild(row);
+
+    }
+
+
+    consoleCount.textContent =
+        `(${consoleEntries.length})`;
+
+}
+
+
+function addConsoleEntry(
+    type,
+    args
+) {
+
+    const text =
+        args.map(value => {
+
+            if (
+                typeof value === "object" &&
+                value !== null
+            ) {
+
+                try {
+
+                    return JSON.stringify(
+                        value
+                    );
+
+                } catch {
+
+                    return String(value);
+
+                }
+
+            }
+
+            return String(value);
+
+        }).join(" ");
+
+
+    consoleEntries.push({
         type,
-
-        message,
-
-        time: new Date()
-
+        text
     });
 
 
@@ -282,309 +959,104 @@ function addConsoleMessage(
 }
 
 
-function renderConsole() {
-
-    const filteredMessages =
-        consoleFilter === "all"
-
-            ? consoleMessages
-
-            : consoleMessages.filter(
-                message =>
-                    message.type ===
-                    consoleFilter
-            );
-
-
-    consoleOutput.innerHTML = "";
-
-
-    if (
-        filteredMessages.length === 0
-    ) {
-
-        const empty =
-            document.createElement(
-                "div"
-            );
-
-        empty.className =
-            "console-empty";
-
-        empty.textContent =
-            consoleMessages.length === 0
-                ? "No console messages."
-                : "No messages match this filter.";
-
-        consoleOutput.appendChild(
-            empty
-        );
-
-    } else {
-
-        for (
-            const entry
-            of filteredMessages
-        ) {
-
-            const row =
-                document.createElement(
-                    "div"
-                );
-
-            row.className =
-                `console-entry ${entry.type}`;
-
-
-            const time =
-                document.createElement(
-                    "span"
-                );
-
-            time.className =
-                "console-time";
-
-            time.textContent =
-                entry.time.toLocaleTimeString(
-                    [],
-                    {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit"
-                    }
-                );
-
-
-            const level =
-                document.createElement(
-                    "span"
-                );
-
-            level.className =
-                "console-level";
-
-            level.textContent =
-                entry.type;
-
-
-            const message =
-                document.createElement(
-                    "span"
-                );
-
-            message.className =
-                "console-message";
-
-            message.textContent =
-                entry.message;
-
-
-            row.append(
-                time,
-                level,
-                message
-            );
-
-
-            consoleOutput.appendChild(
-                row
-            );
-
-        }
-
-    }
-
-
-    consoleCount.textContent =
-        `(${consoleMessages.length})`;
-
-
-    consoleOutput.scrollTop =
-        consoleOutput.scrollHeight;
-
-}
-
-
 function clearConsole() {
 
-    consoleMessages = [];
+    consoleEntries = [];
 
     renderConsole();
 
 }
 
 
-/* =========================
-   CONSOLE BRIDGE
-   ========================= */
-
 const consoleBridge = `
 <script>
-(function () {
+(function() {
 
-    function serialize(value) {
-
-        if (value === undefined) {
-            return "undefined";
-        }
-
-        if (value === null) {
-            return "null";
-        }
-
-        if (
-            typeof value === "string" ||
-            typeof value === "number" ||
-            typeof value === "boolean" ||
-            typeof value === "bigint"
-        ) {
-            return String(value);
-        }
-
-        try {
-            return JSON.stringify(
-                value,
-                null,
-                2
-            );
-        } catch {
-            return String(value);
-        }
-
-    }
-
+    const original = {
+        log: console.log,
+        info: console.info,
+        warn: console.warn,
+        error: console.error
+    };
 
     function send(type, args) {
 
-        const message =
-            args
-                .map(serialize)
-                .join(" ");
-
-
         parent.postMessage({
-
-            source:
-                "buildzen-preview",
-
+            source: "buildzen-console",
             type,
+            args: args.map(value => {
 
-            message
+                try {
+
+                    return typeof value === "object"
+                        ? JSON.stringify(value)
+                        : String(value);
+
+                } catch {
+
+                    return String(value);
+
+                }
+
+            })
 
         }, "*");
 
     }
 
+    console.log = function(...args) {
+        send("log", args);
+        original.log.apply(console, args);
+    };
 
-    const originalLog =
-        console.log;
+    console.info = function(...args) {
+        send("info", args);
+        original.info.apply(console, args);
+    };
 
-    const originalInfo =
-        console.info;
+    console.warn = function(...args) {
+        send("warn", args);
+        original.warn.apply(console, args);
+    };
 
-    const originalWarn =
-        console.warn;
+    console.error = function(...args) {
+        send("error", args);
+        original.error.apply(console, args);
+    };
 
-    const originalError =
-        console.error;
+    window.addEventListener("error", event => {
 
+        send("error", [
+            event.message
+        ]);
 
-    console.log =
-        function (...args) {
-
-            send("log", args);
-
-            originalLog.apply(
-                console,
-                args
-            );
-
-        };
-
-
-    console.info =
-        function (...args) {
-
-            send("info", args);
-
-            originalInfo.apply(
-                console,
-                args
-            );
-
-        };
-
-
-    console.warn =
-        function (...args) {
-
-            send("warn", args);
-
-            originalWarn.apply(
-                console,
-                args
-            );
-
-        };
-
-
-    console.error =
-        function (...args) {
-
-            send("error", args);
-
-            originalError.apply(
-                console,
-                args
-            );
-
-        };
-
-
-    window.addEventListener(
-        "error",
-        function (event) {
-
-            send(
-                "error",
-                [
-                    event.message ||
-                    "Unknown error"
-                ]
-            );
-
-        }
-    );
-
+    });
 
     window.addEventListener(
         "unhandledrejection",
-        function (event) {
+        event => {
 
-            send(
-                "error",
-                [
-                    "Unhandled promise rejection:",
-                    event.reason
-                ]
-            );
+            send("error", [
+                event.reason
+            ]);
 
         }
     );
 
 })();
-<\/script>
+</script>
 `;
 
 
-/* =========================
-   PREVIEW
-   ========================= */
-
 function updatePreview() {
 
-    const project =
-        getProjectCode();
+    const code =
+        collectPreviewCode();
+
+
+    consoleEntries = [];
+
+    renderConsole();
 
 
     const srcdoc = `
@@ -597,7 +1069,7 @@ function updatePreview() {
 <meta charset="UTF-8">
 
 <style>
-${project.css}
+${code.css}
 </style>
 
 ${consoleBridge}
@@ -606,10 +1078,10 @@ ${consoleBridge}
 
 <body>
 
-${project.html}
+${code.html}
 
 <script>
-${project.js}
+${code.js}
 <\/script>
 
 </body>
@@ -618,9 +1090,8 @@ ${project.js}
 `;
 
 
-    consoleMessages = [];
-
-    renderConsole();
+    previewStatus.textContent =
+        "Refreshing…";
 
 
     preview.srcdoc =
@@ -629,34 +1100,54 @@ ${project.js}
 
     setStatus("Live");
 
+
+    preview.addEventListener(
+        "load",
+        () => {
+
+            previewStatus.textContent =
+                "Live";
+
+        },
+        {
+            once: true
+        }
+    );
+
 }
 
 
-/* =========================
-   CONSOLE FILTERS
-   ========================= */
+/* =========================================================
+   Console controls
+   ========================================================= */
 
-consoleFilters.forEach(
-    filter => {
+document
+    .querySelectorAll(".console-filter")
+    .forEach(button => {
 
-        filter.addEventListener(
+        button.addEventListener(
             "click",
             () => {
 
-                consoleFilter =
-                    filter.dataset.filter;
+                document
+                    .querySelectorAll(
+                        ".console-filter"
+                    )
+                    .forEach(
+                        item =>
+                            item.classList.remove(
+                                "active"
+                            )
+                    );
 
 
-                consoleFilters.forEach(
-                    button => {
-
-                        button.classList.toggle(
-                            "active",
-                            button === filter
-                        );
-
-                    }
+                button.classList.add(
+                    "active"
                 );
+
+
+                consoleFilter =
+                    button.dataset.filter;
 
 
                 renderConsole();
@@ -664,13 +1155,8 @@ consoleFilters.forEach(
             }
         );
 
-    }
-);
+    });
 
-
-/* =========================
-   CLEAR CONSOLE
-   ========================= */
 
 clearConsoleBtn.addEventListener(
     "click",
@@ -678,19 +1164,45 @@ clearConsoleBtn.addEventListener(
 );
 
 
-/* =========================
-   REFRESH
-   ========================= */
+/* =========================================================
+   File controls
+   ========================================================= */
 
-refreshBtn.addEventListener(
+newFileBtn.addEventListener(
     "click",
-    updatePreview
+    createFile
 );
 
 
-/* =========================
-   RESET
-   ========================= */
+renameFileBtn.addEventListener(
+    "click",
+    renameFile
+);
+
+
+deleteFileBtn.addEventListener(
+    "click",
+    deleteFile
+);
+
+
+/* =========================================================
+   Preview controls
+   ========================================================= */
+
+refreshBtn.addEventListener(
+    "click",
+    () => {
+
+        updatePreview();
+
+    }
+);
+
+
+/* =========================================================
+   Reset
+   ========================================================= */
 
 resetBtn.addEventListener(
     "click",
@@ -698,7 +1210,7 @@ resetBtn.addEventListener(
 
         const confirmed =
             confirm(
-                "Reset the project to the default Buildzen starter?"
+                "Reset the entire Buildzen project?"
             );
 
 
@@ -712,108 +1224,212 @@ resetBtn.addEventListener(
         );
 
 
-        setProjectCode(
-            starterProject
+        project = {
+
+            files:
+                starterFiles.map(
+                    file => ({
+                        ...file
+                    })
+                ),
+
+            activeFile:
+                "index.html"
+
+        };
+
+
+        syncGlobalFiles();
+
+
+        initializeEditors(
+            project.files
         );
 
 
-        updatePreview();
+        renderFileTree();
 
+
+        const activeFile =
+            project.files.find(
+                file =>
+                    file.id ===
+                    project.activeFile
+            );
+
+
+        if (activeFile) {
+
+            switchEditor(
+                activeFile.id,
+                activeFile
+            );
+
+        }
+
+
+        saveProject();
+
+        updatePreview();
 
         setStatus("Reset");
 
 
-        setTimeout(() => {
-            setStatus("Live");
-        }, 900);
+        setTimeout(
+            () => setStatus("Live"),
+            700
+        );
 
     }
 );
 
 
-/* =========================
-   PREVIEW MESSAGES
-   ========================= */
+/* =========================================================
+   Editor events
+   ========================================================= */
+
+window.addEventListener(
+    "buildzen-edit",
+    event => {
+
+        const file =
+            project.files.find(
+                item =>
+                    item.id ===
+                    event.detail.fileId
+            );
+
+
+        if (!file) {
+            return;
+        }
+
+
+        file.content =
+            event.detail.content;
+
+
+        saveProject();
+
+        setStatus("Saved");
+
+    }
+);
+
+
+window.addEventListener(
+    "buildzen-save",
+    () => {
+
+        const active =
+            getActiveFile();
+
+
+        if (active) {
+
+            active.content =
+                getEditorContent(
+                    active.id
+                );
+
+        }
+
+
+        saveProject();
+
+        setStatus("Saved");
+
+    }
+);
+
+
+window.addEventListener(
+    "buildzen-refresh",
+    () => {
+
+        updatePreview();
+
+    }
+);
+
+
+/* =========================================================
+   Preview -> parent console bridge
+   ========================================================= */
 
 window.addEventListener(
     "message",
     event => {
 
         if (
-            event.source !==
-            preview.contentWindow
+            event.data?.source !==
+            "buildzen-console"
         ) {
+
             return;
+
         }
 
 
-        const data =
-            event.data;
-
-
-        if (
-            !data ||
-            data.source !==
-            "buildzen-preview"
-        ) {
-            return;
-        }
-
-
-        if (
-            ![
-                "log",
-                "info",
-                "warn",
-                "error"
-            ].includes(data.type)
-        ) {
-            return;
-        }
-
-
-        addConsoleMessage(
-            data.type,
-            data.message
+        addConsoleEntry(
+            event.data.type,
+            event.data.args || []
         );
 
     }
 );
 
 
-/* =========================
-   EDITOR EVENTS
-   ========================= */
+/* =========================================================
+   STARTUP
+   ========================================================= */
 
-window.addEventListener(
-    "buildzen-save",
-    saveProject
-);
+/*
+ * Important startup order:
+ *
+ * 1. Load project from localStorage.
+ * 2. Sync the global file list.
+ * 3. Create CodeMirror editors.
+ * 4. Render the project pane.
+ * 5. Select the saved active file.
+ * 6. Build the preview.
+ */
 
+loadProject();
 
-window.addEventListener(
-    "buildzen-refresh",
-    updatePreview
-);
-
-
-/* =========================
-   INITIALIZE
-   ========================= */
-
-const project =
-    loadProject();
-
+syncGlobalFiles();
 
 initializeEditors(
-    project
+    project.files
 );
+
+renderFileTree();
+
+
+if (project.activeFile) {
+
+    const activeFile =
+        project.files.find(
+            file =>
+                file.id ===
+                project.activeFile
+        );
+
+
+    if (activeFile) {
+
+        switchEditor(
+            activeFile.id,
+            activeFile
+        );
+
+    }
+
+}
 
 
 updatePreview();
 
-
-addConsoleMessage(
-    "log",
-    "Buildzen preview loaded."
+console.log(
+    "Buildzen preview loaded"
 );

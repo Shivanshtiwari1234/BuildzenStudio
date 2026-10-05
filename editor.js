@@ -1,358 +1,385 @@
-import { EditorState }
-    from "https://esm.sh/@codemirror/state@6.5.2";
+import {
+    EditorState
+} from "https://esm.sh/@codemirror/state@6.5.2";
 
 import {
     EditorView,
     keymap
-}
-    from "https://esm.sh/@codemirror/view@6.43.13?deps=@codemirror%2Fstate@6.5.2";
+} from "https://esm.sh/@codemirror/view@6.43.13?deps=@codemirror%2Fstate@6.5.2";
 
-import { basicSetup }
-    from "https://esm.sh/codemirror@6.0.1?deps=@codemirror%2Fstate@6.5.2";
+import {
+    basicSetup
+} from "https://esm.sh/codemirror@6.0.1?deps=@codemirror%2Fstate@6.5.2";
 
-import { html }
-    from "https://esm.sh/@codemirror/lang-html@6.4.9?deps=@codemirror%2Fstate@6.5.2";
+import {
+    html
+} from "https://esm.sh/@codemirror/lang-html@6.4.9?deps=@codemirror%2Fstate@6.5.2";
 
-import { css }
-    from "https://esm.sh/@codemirror/lang-css@6.3.1?deps=@codemirror%2Fstate@6.5.2";
+import {
+    css
+} from "https://esm.sh/@codemirror/lang-css@6.3.1?deps=@codemirror%2Fstate@6.5.2";
 
-import { javascript }
-    from "https://esm.sh/@codemirror/lang-javascript@6.2.3?deps=@codemirror%2Fstate@6.5.2";
+import {
+    javascript
+} from "https://esm.sh/@codemirror/lang-javascript@6.2.3?deps=@codemirror%2Fstate@6.5.2";
 
-import { oneDark }
-    from "https://esm.sh/@codemirror/theme-one-dark@6.1.2?deps=@codemirror%2Fstate@6.5.2";
+import {
+    oneDark
+} from "https://esm.sh/@codemirror/theme-one-dark@6.1.2?deps=@codemirror%2Fstate@6.5.2";
 
-import { syntaxHighlighting }
-    from "https://esm.sh/@codemirror/language@6.12.4?deps=@codemirror%2Fstate@6.5.2";
+import {
+    syntaxHighlighting
+} from "https://esm.sh/@codemirror/language@6.12.4?deps=@codemirror%2Fstate@6.5.2";
 
-import { classHighlighter }
-    from "https://esm.sh/@lezer/highlight@1.2.5?target=es2022";
+import {
+    classHighlighter
+} from "https://esm.sh/@lezer/highlight@1.2.5?target=es2022";
 
-import { indentWithTab }
-    from "https://esm.sh/@codemirror/commands@6.11.1?deps=@codemirror%2Fstate@6.5.2";
-
-
-const htmlEditorElement =
-    document.querySelector("#htmlEditor");
-
-const cssEditorElement =
-    document.querySelector("#cssEditor");
-
-const jsEditorElement =
-    document.querySelector("#jsEditor");
-
-const cursorInfo =
-    document.querySelector("#cursorInfo");
-
-const fileName =
-    document.querySelector("#fileName");
-
-const languageInfo =
-    document.querySelector("#languageInfo");
-
-const fileItems =
-    document.querySelectorAll(".file-item");
+import {
+    indentWithTab
+} from "https://esm.sh/@codemirror/commands@6.11.1?deps=@codemirror%2Fstate@6.5.2";
 
 
-export const editorDetails = {
-    html: {
-        file: "index.html",
-        language: "HTML"
-    },
-
-    css: {
-        file: "style.css",
-        language: "CSS"
-    },
-
-    js: {
-        file: "script.js",
-        language: "JavaScript"
-    }
-};
+const editorContainer = document.getElementById("editorContainer");
+const cursorInfo = document.getElementById("cursorInfo");
+const fileName = document.getElementById("fileName");
+const languageInfo = document.getElementById("languageInfo");
 
 
 export const editors = {};
 
-
-let activeEditor = "html";
-
-
-function updateEditorInfo(view, language) {
-    const selection =
-        view.state.selection.main;
-
-    const line =
-        view.state.doc.lineAt(
-            selection.head
-        );
-
-    const column =
-        selection.head -
-        line.from +
-        1;
-
-    cursorInfo.textContent =
-        `Ln ${line.number}, Col ${column}`;
-
-    languageInfo.textContent =
-        language.toUpperCase();
-}
+let activeEditor = null;
 
 
-const buildzenKeymap = keymap.of([
-
-    indentWithTab,
-
-    {
-        key: "Mod-s",
-
-        run() {
-            window.dispatchEvent(
-                new CustomEvent(
-                    "buildzen-save"
-                )
-            );
-
-            return true;
-        }
+const languageMap = {
+    html: {
+        name: "HTML",
+        extension: html
     },
 
-    {
-        key: "Mod-Enter",
+    htm: {
+        name: "HTML",
+        extension: html
+    },
 
-        run() {
-            window.dispatchEvent(
-                new CustomEvent(
-                    "buildzen-refresh"
-                )
-            );
+    css: {
+        name: "CSS",
+        extension: css
+    },
 
-            return true;
-        }
+    js: {
+        name: "JavaScript",
+        extension: javascript
+    },
+
+    mjs: {
+        name: "JavaScript",
+        extension: javascript
     }
-
-]);
-
-
-function createEditor(
-    parent,
-    value,
-    languageExtension,
-    languageName,
-    editorName
-) {
-    const state =
-        EditorState.create({
-
-            doc: value,
-
-            extensions: [
-
-                basicSetup,
-
-                languageExtension,
-
-                oneDark,
-
-                syntaxHighlighting(
-                    classHighlighter
-                ),
-
-                buildzenKeymap,
-
-                EditorView.updateListener.of(
-                    update => {
-
-                        if (
-                            update.selectionSet ||
-                            update.docChanged
-                        ) {
-                            if (
-                                activeEditor ===
-                                editorName
-                            ) {
-                                updateEditorInfo(
-                                    update.view,
-                                    languageName
-                                );
-                            }
-                        }
-
-                        if (
-                            update.docChanged
-                        ) {
-                            window.dispatchEvent(
-                                new CustomEvent(
-                                    "buildzen-edit"
-                                )
-                            );
-                        }
-
-                    }
-                )
-
-            ]
-        });
+};
 
 
-    return new EditorView({
-        state,
-        parent
-    });
-}
+function getLanguage(filename) {
 
+    const extension = filename
+        .split(".")
+        .pop()
+        .toLowerCase();
 
-export function initializeEditors(project) {
-
-    editors.html =
-        createEditor(
-            htmlEditorElement,
-            project.html,
-            html(),
-            "HTML",
-            "html"
-        );
-
-
-    editors.css =
-        createEditor(
-            cssEditorElement,
-            project.css,
-            css(),
-            "CSS",
-            "css"
-        );
-
-
-    editors.js =
-        createEditor(
-            jsEditorElement,
-            project.js,
-            javascript(),
-            "JavaScript",
-            "js"
-        );
-
-
-    switchEditor("html");
-}
-
-
-export function getProjectCode() {
-    return {
-        html:
-            editors.html.state.doc.toString(),
-
-        css:
-            editors.css.state.doc.toString(),
-
-        js:
-            editors.js.state.doc.toString()
+    return languageMap[extension] || {
+        name: "Plain Text",
+        extension: []
     };
 }
 
 
-export function setProjectCode(project) {
+function updateEditorInfo(view) {
 
-    editors.html.dispatch({
-        changes: {
-            from: 0,
-            to: editors.html.state.doc.length,
-            insert: project.html
-        }
-    });
-
-
-    editors.css.dispatch({
-        changes: {
-            from: 0,
-            to: editors.css.state.doc.length,
-            insert: project.css
-        }
-    });
-
-
-    editors.js.dispatch({
-        changes: {
-            from: 0,
-            to: editors.js.state.doc.length,
-            insert: project.js
-        }
-    });
-}
-
-
-export function switchEditor(name) {
-
-    if (!editors[name]) {
+    if (!view) {
         return;
     }
 
-    activeEditor = name;
+    const position = view.state.selection.main.head;
+
+    const line = view.state.doc.lineAt(position);
+
+    const lineNumber = line.number;
+
+    const column = position - line.from + 1;
+
+    cursorInfo.textContent =
+        `Ln ${lineNumber}, Col ${column}`;
+}
 
 
-    document
-        .querySelectorAll(".editor")
-        .forEach(editor => {
-            editor.classList.remove(
-                "active-editor"
-            );
-        });
+function buildzenKeymap() {
+
+    return keymap.of([
+
+        indentWithTab,
+
+        {
+            key: "Mod-s",
+
+            run() {
+
+                window.dispatchEvent(
+                    new CustomEvent("buildzen-save")
+                );
+
+                return true;
+            }
+        },
+
+        {
+            key: "Mod-Enter",
+
+            run() {
+
+                window.dispatchEvent(
+                    new CustomEvent("buildzen-refresh")
+                );
+
+                return true;
+            }
+        }
+
+    ]);
+}
 
 
-    const editorElement =
-        document.querySelector(
-            `#${name}Editor`
-        );
+function createEditor(file) {
 
-    if (editorElement) {
-        editorElement.classList.add(
-            "active-editor"
-        );
-    }
+    const container = document.createElement("div");
+
+    container.className = "editor";
+
+    container.dataset.fileId = file.id;
+
+    editorContainer.appendChild(container);
 
 
-    fileItems.forEach(item => {
+    const language = getLanguage(file.name);
 
-        item.classList.toggle(
-            "active",
-            item.dataset.file === name
-        );
+
+    const state = EditorState.create({
+
+        doc: file.content || "",
+
+        extensions: [
+
+            basicSetup,
+
+            language.extension,
+
+            oneDark,
+
+            syntaxHighlighting(classHighlighter),
+
+            buildzenKeymap(),
+
+            EditorView.updateListener.of(update => {
+
+                if (update.docChanged) {
+
+                    window.dispatchEvent(
+                        new CustomEvent("buildzen-edit", {
+                            detail: {
+                                fileId: file.id,
+                                content: update.state.doc.toString()
+                            }
+                        })
+                    );
+
+                }
+
+                if (
+                    update.selectionSet ||
+                    update.docChanged
+                ) {
+
+                    if (
+                        activeEditor &&
+                        activeEditor.state === update.state
+                    ) {
+                        updateEditorInfo(activeEditor);
+                    }
+
+                }
+
+            })
+
+        ]
 
     });
 
 
-    const details =
-        editorDetails[name];
+    const view = new EditorView({
+
+        state,
+
+        parent: container
+
+    });
 
 
-    fileName.textContent =
-        details.file;
+    editors[file.id] = view;
 
-    languageInfo.textContent =
-        details.language;
-
-
-    updateEditorInfo(
-        editors[name],
-        details.language
-    );
-
-
-    editors[name].focus();
+    return view;
 }
 
 
-fileItems.forEach(item => {
+export function initializeEditors(files) {
 
-    item.addEventListener(
-        "click",
-        () => {
-            switchEditor(
-                item.dataset.file
+    editorContainer.innerHTML = "";
+
+    Object.keys(editors).forEach(id => {
+        delete editors[id];
+    });
+
+
+    for (const file of files) {
+
+        createEditor(file);
+
+    }
+
+
+    if (files.length > 0) {
+
+        switchEditor(files[0].id);
+
+    }
+
+}
+
+
+export function addEditor(file) {
+
+    return createEditor(file);
+
+}
+
+
+export function removeEditor(fileId) {
+
+    const editor = editors[fileId];
+
+    if (!editor) {
+        return;
+    }
+
+    const element = editor.dom;
+
+    editor.destroy();
+
+    if (element.parentElement) {
+        element.parentElement.remove();
+    }
+
+    delete editors[fileId];
+
+}
+
+
+export function switchEditor(fileId) {
+
+    const editor = editors[fileId];
+
+    if (!editor) {
+        return;
+    }
+
+
+    activeEditor = editor;
+
+
+    Object.entries(editors).forEach(
+        ([id, view]) => {
+
+            const active = id === fileId;
+
+            view.dom.classList.toggle(
+                "active-editor",
+                active
             );
+
         }
     );
 
-});
+
+    const currentFile =
+        window.buildzenFiles?.find(
+            file => file.id === fileId
+        );
+
+
+    if (currentFile) {
+
+        const language =
+            getLanguage(currentFile.name);
+
+        fileName.textContent =
+            currentFile.name;
+
+        languageInfo.textContent =
+            language.name;
+
+    }
+
+
+    updateEditorInfo(editor);
+
+    editor.focus();
+
+}
+
+
+export function getEditorContent(fileId) {
+
+    const editor = editors[fileId];
+
+    if (!editor) {
+        return "";
+    }
+
+    return editor.state.doc.toString();
+
+}
+
+
+export function getAllEditorContent() {
+
+    const result = {};
+
+    Object.keys(editors).forEach(id => {
+
+        result[id] =
+            editors[id].state.doc.toString();
+
+    });
+
+    return result;
+
+}
+
+
+export function setEditorContent(fileId, content) {
+
+    const editor = editors[fileId];
+
+    if (!editor) {
+        return;
+    }
+
+    editor.dispatch({
+
+        changes: {
+            from: 0,
+            to: editor.state.doc.length,
+            insert: content
+        }
+
+    });
+
+}

@@ -1,3 +1,8 @@
+/* =========================================================
+   Buildzen Studio
+   Main stylesheet
+   ========================================================= */
+
 * {
     box-sizing: border-box;
 }
@@ -10,325 +15,313 @@ body {
 }
 
 body {
-    background: #0f1117;
-    color: #e6e8ef;
+    overflow: hidden;
+    background: #11151c;
+    color: #d8dde7;
     font-family:
         Inter,
-        "Segoe UI",
+        ui-sans-serif,
         system-ui,
         -apple-system,
         BlinkMacSystemFont,
+        "Segoe UI",
         sans-serif;
-    overflow: hidden;
+    font-size: 13px;
 }
 
 
-/* =========================
-   TOPBAR
-   ========================= */
+/* =========================================================
+   Topbar
+   ========================================================= */
 
 .topbar {
-    height: 52px;
-
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-
-    padding: 0 16px;
-
-    background: #151821;
-    border-bottom: 1px solid #292d38;
+    padding: 0 14px;
+    border-bottom: 1px solid #242936;
+    background: #171b23;
 }
 
 .brand {
     display: flex;
     align-items: baseline;
-    gap: 7px;
-
-    font-size: 15px;
+    gap: 5px;
+    user-select: none;
 }
 
 .brand strong {
-    color: #ffffff;
-    font-size: 16px;
+    color: #f0f2f6;
+    font-size: 15px;
+    font-weight: 700;
 }
 
 .brand span {
-    color: #8b91a1;
+    color: #7f8999;
     font-size: 13px;
 }
 
 .topbar-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
 }
+
+
+/* =========================================================
+   Buttons
+   ========================================================= */
+
+button {
+    font-family: inherit;
+}
+
+.topbar-right button {
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid #303744;
+    border-radius: 5px;
+    background: #202631;
+    color: #aeb6c4;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.topbar-right button:hover {
+    background: #293140;
+    color: #ffffff;
+}
+
+.topbar-right button:active {
+    background: #303846;
+}
+
+
+/* =========================================================
+   Status
+   ========================================================= */
 
 .status {
     display: flex;
     align-items: center;
     gap: 6px;
-
-    margin-right: 6px;
-
-    color: #9da3b2;
+    margin-right: 4px;
+    color: #9da7b7;
     font-size: 12px;
 }
 
 .status-dot {
     width: 7px;
     height: 7px;
-
     border-radius: 50%;
-    background: #35c759;
-    box-shadow: 0 0 7px rgba(53, 199, 89, 0.45);
-}
-
-.topbar button {
-    height: 30px;
-
-    padding: 0 11px;
-
-    border: 1px solid #303541;
-    border-radius: 6px;
-
-    background: #1b1f29;
-    color: #cbd0db;
-
-    font: inherit;
-    font-size: 12px;
-
-    cursor: pointer;
-}
-
-.topbar button:hover {
-    background: #242936;
-    border-color: #3b414f;
-    color: #ffffff;
-}
-
-.topbar button:active {
-    background: #171a22;
+    background: #55c982;
+    box-shadow: 0 0 7px rgba(85, 201, 130, 0.35);
 }
 
 
-/* =========================
-   MAIN WORKSPACE
-   ========================= */
+/* =========================================================
+   Main workspace
+   ========================================================= */
 
 .workspace {
     width: 100%;
-    height: calc(100vh - 52px);
-
+    height: calc(100vh - 48px);
     display: grid;
-    grid-template-columns: 180px minmax(0, 1fr) minmax(0, 1fr);
-
-    overflow: hidden;
+    grid-template-columns:
+        180px minmax(0, 1fr) minmax(0, 1fr);
 }
 
 
-/* =========================
-   PROJECT FILE PANEL
-   ========================= */
+/* =========================================================
+   File panel
+   ========================================================= */
 
 .file-panel {
     min-width: 0;
-
-    background: #13161d;
-    border-right: 1px solid #292d38;
-
-    display: flex;
-    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    border-right: 1px solid #242936;
+    background: #151920;
 }
 
 .file-panel-header {
     height: 42px;
-
     display: flex;
     align-items: center;
-
-    padding: 0 14px;
-
-    border-bottom: 1px solid #292d38;
-
-    color: #8f95a5;
-
+    justify-content: space-between;
+    padding: 0 10px 0 14px;
+    border-bottom: 1px solid #242936;
+    color: #8f98a8;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.08em;
 }
 
+.new-file-btn {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: #aab3c2;
+    font-size: 18px;
+    line-height: 24px;
+    cursor: pointer;
+}
+
+.new-file-btn:hover {
+    background: #242a35;
+    color: #ffffff;
+}
+
 .file-tree {
-    padding: 8px 6px;
+    padding: 7px 6px;
 }
 
 .file-item {
     width: 100%;
     height: 32px;
-
     display: flex;
     align-items: center;
     gap: 9px;
-
-    padding: 0 9px;
-
+    padding: 0 8px;
     border: 0;
     border-radius: 5px;
-
     background: transparent;
-    color: #aeb4c2;
-
-    font: inherit;
-    font-size: 12px;
-
+    color: #aeb6c4;
     text-align: left;
+    font: inherit;
     cursor: pointer;
 }
 
 .file-item:hover {
-    background: #1c2029;
-    color: #e7e9ef;
+    background: #202631;
+    color: #e6eaf0;
 }
 
 .file-item.active {
-    background: #252b38;
+    background: #293140;
     color: #ffffff;
 }
 
 .file-icon {
-    width: 22px;
-    height: 20px;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 4px;
-
-    font-family:
-        "SFMono-Regular",
-        Consolas,
-        "Liberation Mono",
-        monospace;
-
-    font-size: 9px;
+    width: 24px;
+    flex-shrink: 0;
+    text-align: center;
+    font-size: 10px;
     font-weight: 700;
 }
 
 .html-icon {
-    background: rgba(227, 76, 38, 0.16);
-    color: #f0784f;
+    color: #e98b67;
 }
 
 .css-icon {
-    background: rgba(38, 139, 210, 0.16);
-    color: #5ba9e6;
+    color: #65a9ed;
 }
 
 .js-icon {
-    background: rgba(247, 223, 30, 0.14);
-    color: #e6d333;
-    font-size: 8px;
+    color: #e5c76b;
+}
+
+.file-icon-default {
+    color: #929aaa;
+}
+
+.file-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 
-/* =========================
-   EDITOR PANEL
-   ========================= */
+/* =========================================================
+   Editor panel
+   ========================================================= */
 
 .editor-panel {
     min-width: 0;
     min-height: 0;
-
     display: flex;
     flex-direction: column;
-
-    background: #101319;
+    background: #11151c;
+    border-right: 1px solid #242936;
 }
 
 .editor-header {
     height: 42px;
-
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-
-    background: #151821;
-    border-bottom: 1px solid #292d38;
-}
-
-.tabs {
-    height: 100%;
-
-    display: flex;
-    align-items: stretch;
-}
-
-.tab {
-    min-width: 64px;
-
-    padding: 0 14px;
-
-    border: 0;
-    border-right: 1px solid #292d38;
-
-    background: transparent;
-    color: #7f8696;
-
-    font: inherit;
-    font-size: 12px;
-
-    cursor: pointer;
-}
-
-.tab:hover {
-    background: #1b1f28;
-    color: #c7ccd7;
-}
-
-.tab.active {
-    background: #101319;
-    color: #ffffff;
-
-    box-shadow: inset 0 -2px 0 #5b8cff;
+    padding: 0 10px 0 14px;
+    border-bottom: 1px solid #242936;
+    background: #171b23;
 }
 
 .editor-title {
-    padding-right: 14px;
-
-    color: #858b9a;
-
-    font-family:
-        "SFMono-Regular",
-        Consolas,
-        "Liberation Mono",
-        monospace;
-
-    font-size: 11px;
+    min-width: 0;
+    color: #d8dde7;
+    font-size: 12px;
 }
+
+.editor-title span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.editor-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.editor-actions button {
+    padding: 5px 8px;
+    border: 1px solid #303744;
+    border-radius: 5px;
+    background: #202631;
+    color: #aeb6c4;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.editor-actions button:hover {
+    background: #293140;
+    color: #ffffff;
+}
+
+.editor-actions button:active {
+    background: #303846;
+}
+
+
+/* =========================================================
+   CodeMirror editor
+   ========================================================= */
 
 .editor-container {
     position: relative;
-
     flex: 1;
     min-height: 0;
-
     overflow: hidden;
 }
 
 .editor {
     position: absolute;
     inset: 0;
-
     display: none;
 }
 
 .editor.active-editor {
     display: block;
 }
-
-
-/* CodeMirror */
 
 .editor .cm-editor {
     width: 100%;
@@ -340,201 +333,173 @@ body {
 }
 
 .editor .cm-content {
-    padding-top: 12px;
-    padding-bottom: 20px;
+    min-height: 100%;
 }
 
 .editor .cm-gutters {
-    background: #101319;
-    border-right: 1px solid #242833;
+    border-right: 1px solid #242936;
 }
 
 .editor .cm-activeLineGutter {
-    background: #191d26;
+    background: transparent;
 }
 
-.editor .cm-activeLine {
-    background: rgba(255, 255, 255, 0.025);
+.editor .cm-selectionBackground {
+    background: #30415d !important;
 }
+
+
+/* =========================================================
+   Editor footer
+   ========================================================= */
 
 .editor-footer {
     height: 28px;
-
+    flex-shrink: 0;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-
-    gap: 15px;
-
-    padding: 0 12px;
-
-    background: #151821;
-    border-top: 1px solid #292d38;
-
-    color: #737a8b;
-
+    gap: 16px;
+    padding: 0 10px;
+    border-top: 1px solid #242936;
+    background: #171b23;
+    color: #7f8999;
     font-size: 10px;
 }
 
+.editor-footer span {
+    white-space: nowrap;
+}
 
-/* =========================
-   RIGHT PANEL
-   ========================= */
+#languageInfo {
+    margin-left: auto;
+}
+
+
+/* =========================================================
+   Right panel
+   ========================================================= */
 
 .right-panel {
     min-width: 0;
     min-height: 0;
-
     display: grid;
-    grid-template-rows: minmax(0, 60%) minmax(180px, 40%);
-
-    background: #0d1015;
-
-    border-left: 1px solid #292d38;
+    grid-template-rows: minmax(0, 1.6fr) minmax(180px, 0.8fr);
+    background: #11151c;
 }
 
 
-/* =========================
-   PANEL HEADERS
-   ========================= */
+/* =========================================================
+   Shared panel header
+   ========================================================= */
 
 .panel-header {
-    height: 40px;
-
+    height: 38px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     padding: 0 12px;
-
-    background: #151821;
-    border-bottom: 1px solid #292d38;
-
-    color: #c8ccd6;
-
-    font-size: 12px;
+    border-bottom: 1px solid #242936;
+    background: #171b23;
+    color: #aeb6c4;
+    font-size: 11px;
     font-weight: 600;
 }
 
+#previewStatus {
+    color: #6f7989;
+    font-weight: 400;
+}
 
-/* =========================
-   PREVIEW
-   ========================= */
+
+/* =========================================================
+   Preview
+   ========================================================= */
 
 .preview-panel {
     min-width: 0;
     min-height: 0;
-
     display: flex;
     flex-direction: column;
+    border-bottom: 1px solid #242936;
 }
 
 .browser-bar {
     height: 34px;
-
+    flex-shrink: 0;
     display: flex;
     align-items: center;
-    gap: 10px;
-
+    gap: 12px;
     padding: 0 10px;
-
-    background: #101319;
-    border-bottom: 1px solid #242833;
+    border-bottom: 1px solid #242936;
+    background: #13171e;
 }
 
 .browser-dots {
     display: flex;
+    align-items: center;
     gap: 5px;
 }
 
 .browser-dots span {
     width: 7px;
     height: 7px;
-
     border-radius: 50%;
-
-    background: #454b58;
+    background: #454d5a;
 }
 
 .browser-address {
     min-width: 0;
     flex: 1;
-
     height: 22px;
-
     display: flex;
     align-items: center;
-
     padding: 0 9px;
-
-    border: 1px solid #292e39;
+    border: 1px solid #292f3a;
     border-radius: 5px;
-
-    background: #171b23;
-    color: #737a89;
-
-    font-family:
-        "SFMono-Regular",
-        Consolas,
-        "Liberation Mono",
-        monospace;
-
+    background: #191e26;
+    color: #6f7989;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
     font-size: 10px;
-
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
 }
 
 #preview {
     width: 100%;
     height: 100%;
-
     flex: 1;
-
+    min-height: 0;
     display: block;
-
     border: 0;
-
     background: #ffffff;
 }
 
 .preview-footer {
-    height: 25px;
-
+    height: 26px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     padding: 0 10px;
-
-    background: #151821;
-    border-top: 1px solid #292d38;
-
-    color: #686f7e;
-
-    font-size: 9px;
+    border-top: 1px solid #242936;
+    background: #171b23;
+    color: #687282;
+    font-size: 10px;
 }
 
 
-/* =========================
-   CONSOLE
-   ========================= */
+/* =========================================================
+   Console
+   ========================================================= */
 
 .console-panel {
     min-width: 0;
     min-height: 0;
-
     display: flex;
     flex-direction: column;
-
-    border-top: 1px solid #292d38;
 }
 
 .console-header {
-    height: 40px;
-
-    flex-shrink: 0;
+    height: 38px;
 }
 
 .console-title {
@@ -544,7 +509,7 @@ body {
 }
 
 #consoleCount {
-    color: #686f7e;
+    color: #687282;
     font-weight: 400;
 }
 
@@ -552,140 +517,86 @@ body {
     display: flex;
     align-items: center;
     gap: 3px;
+    overflow-x: auto;
 }
 
 .console-filter,
 #clearConsoleBtn {
-    height: 24px;
-
+    height: 23px;
     padding: 0 7px;
-
     border: 1px solid transparent;
     border-radius: 4px;
-
     background: transparent;
-    color: #747b8b;
-
-    font: inherit;
+    color: #7f8999;
     font-size: 10px;
-
+    white-space: nowrap;
     cursor: pointer;
 }
 
 .console-filter:hover,
 #clearConsoleBtn:hover {
-    background: #1d222c;
-    color: #c9ced8;
+    background: #232a35;
+    color: #c9d0da;
 }
 
 .console-filter.active {
-    background: #242a35;
-    border-color: #303746;
-    color: #e1e4eb;
-}
-
-#clearConsoleBtn {
-    margin-left: 4px;
-
-    border-color: #303541;
-    color: #9aa1b0;
+    border-color: #303744;
+    background: #252c37;
+    color: #dce1e8;
 }
 
 .console-output {
     flex: 1;
     min-height: 0;
-
     overflow: auto;
-
-    background: #0d1015;
-}
-
-.console-entry {
-    min-height: 29px;
-
-    display: grid;
-    grid-template-columns: 62px 65px minmax(0, 1fr);
-    align-items: center;
-
-    border-bottom: 1px solid #1b1f27;
-
+    padding: 4px 0;
+    background: #10141a;
     font-family:
-        "SFMono-Regular",
+        ui-monospace,
+        SFMono-Regular,
         Consolas,
         "Liberation Mono",
         monospace;
-
-    font-size: 10px;
+    font-size: 11px;
 }
 
-.console-entry:hover {
-    background: #151922;
-}
-
-.console-time {
-    padding: 0 8px;
-
-    color: #555c6b;
-}
-
-.console-level {
-    padding: 0 7px;
-
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-.console-message {
-    min-width: 0;
-
-    padding: 6px 8px;
-
-    color: #b8bdc8;
-
+.console-entry {
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-bottom: 1px solid #1b2029;
+    color: #b8c0cc;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
 
-.console-entry.log .console-level {
-    color: #8f96a5;
+.console-entry.log {
+    color: #c4cad4;
 }
 
-.console-entry.info .console-level {
-    color: #5da8ff;
+.console-entry.info {
+    color: #79a9d8;
 }
 
-.console-entry.warn .console-level {
-    color: #e3b341;
+.console-entry.warn {
+    color: #d6b56c;
+    background: rgba(214, 181, 108, 0.035);
 }
 
-.console-entry.error .console-level {
-    color: #f06a6a;
-}
-
-.console-entry.error .console-message {
-    color: #d7a0a0;
-}
-
-.console-empty {
-    height: 100%;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    color: #555c6b;
-
-    font-size: 11px;
+.console-entry.error {
+    color: #df8585;
+    background: rgba(223, 133, 133, 0.035);
 }
 
 
-/* =========================
-   SCROLLBARS
-   ========================= */
+/* =========================================================
+   Scrollbars
+   ========================================================= */
 
 * {
     scrollbar-width: thin;
-    scrollbar-color: #343a47 transparent;
+    scrollbar-color: #353d4a transparent;
 }
 
 *::-webkit-scrollbar {
@@ -698,33 +609,24 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-    background: #343a47;
-    border-radius: 5px;
+    border-radius: 4px;
+    background: #353d4a;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-    background: #454c5b;
+    background: #46505f;
 }
 
 
-/* =========================
-   RESPONSIVE
-   ========================= */
+/* =========================================================
+   Responsive layout
+   ========================================================= */
 
 @media (max-width: 1100px) {
 
     .workspace {
         grid-template-columns:
-            160px minmax(0, 1fr) minmax(0, 1fr);
-    }
-
-    .console-controls {
-        gap: 1px;
-    }
-
-    .console-filter,
-    #clearConsoleBtn {
-        padding: 0 5px;
+            165px minmax(0, 1fr) minmax(0, 1fr);
     }
 
 }
@@ -733,23 +635,22 @@ body {
 @media (max-width: 900px) {
 
     .workspace {
-        grid-template-columns: 160px minmax(0, 1fr);
-        grid-template-rows: minmax(0, 55%) minmax(0, 45%);
+        grid-template-columns:
+            160px minmax(0, 1fr);
     }
 
     .right-panel {
         grid-column: 1 / -1;
-
-        border-left: 0;
-        border-top: 1px solid #292d38;
-
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr;
+        grid-row: 2;
+        min-height: 420px;
     }
 
-    .console-panel {
-        border-top: 0;
-        border-left: 1px solid #292d38;
+    .editor-panel {
+        min-height: 420px;
+    }
+
+    .workspace {
+        overflow: auto;
     }
 
 }
@@ -757,39 +658,38 @@ body {
 
 @media (max-width: 650px) {
 
+    body {
+        overflow: auto;
+    }
+
     .topbar {
-        padding: 0 10px;
-    }
-
-    .brand span {
-        display: none;
-    }
-
-    .status {
-        display: none;
+        height: 46px;
     }
 
     .workspace {
-        grid-template-columns: 135px minmax(0, 1fr);
+        height: calc(100vh - 46px);
+        grid-template-columns: 145px minmax(0, 1fr);
     }
 
-    .editor-footer span:nth-child(2),
-    .editor-footer span:nth-child(3) {
+    .editor-header {
+        padding-left: 10px;
+    }
+
+    .editor-actions button {
+        padding: 4px 6px;
+        font-size: 10px;
+    }
+
+    .editor-footer {
+        gap: 9px;
+    }
+
+    .editor-footer span:nth-child(2) {
         display: none;
-    }
-
-    .right-panel {
-        grid-template-columns: 1fr;
-        grid-template-rows: 1fr 180px;
-    }
-
-    .console-panel {
-        border-left: 0;
-        border-top: 1px solid #292d38;
     }
 
     .console-controls {
-        display: none;
+        max-width: 60%;
     }
 
 }
@@ -797,55 +697,83 @@ body {
 
 @media (max-width: 480px) {
 
-    .workspace {
-        grid-template-columns: 1fr;
-        grid-template-rows:
-            34px minmax(0, 1fr) minmax(0, 45%);
+    .topbar {
+        padding: 0 9px;
     }
 
-    .file-panel {
-        border-right: 0;
-        border-bottom: 1px solid #292d38;
-
-        overflow-x: auto;
+    .brand strong {
+        font-size: 14px;
     }
 
-    .file-panel-header {
+    .brand span {
         display: none;
     }
 
-    .file-tree {
-        height: 34px;
+    .topbar-right {
+        gap: 4px;
+    }
 
+    .status {
+        display: none;
+    }
+
+    .workspace {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 46px);
+    }
+
+    .file-panel {
+        height: 82px;
+        flex-shrink: 0;
+        border-right: 0;
+        border-bottom: 1px solid #242936;
+    }
+
+    .file-panel-header {
+        height: 34px;
+    }
+
+    .file-tree {
+        height: 48px;
         display: flex;
         align-items: center;
-
-        padding: 2px 5px;
-
-        gap: 2px;
+        gap: 4px;
+        padding: 5px 6px;
+        overflow-x: auto;
     }
 
     .file-item {
         width: auto;
-        min-width: 0;
-        height: 28px;
-
-        padding: 0 8px;
+        min-width: 120px;
+        height: 34px;
     }
 
-    .file-icon {
-        display: none;
+    .editor-panel {
+        height: 430px;
+        min-height: 430px;
+        flex-shrink: 0;
+        border-right: 0;
+        border-bottom: 1px solid #242936;
     }
 
     .right-panel {
-        grid-column: 1;
-
-        grid-template-columns: 1fr;
-        grid-template-rows: 1fr 160px;
+        height: 550px;
+        min-height: 550px;
+        flex-shrink: 0;
     }
 
-    .console-panel {
-        border-left: 0;
+    .editor-footer {
+        gap: 8px;
+        font-size: 9px;
+    }
+
+    #languageInfo {
+        margin-left: auto;
+    }
+
+    .console-controls {
+        max-width: 55%;
     }
 
 }

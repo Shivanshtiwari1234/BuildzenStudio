@@ -4,159 +4,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Buildzen Studio</title>
-
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
     <header class="topbar">
-
         <div class="brand">
             <strong>Buildzen</strong>
             <span>Studio</span>
         </div>
 
         <div class="topbar-right">
-
             <span id="status" class="status">
                 <span class="status-dot"></span>
                 Live
             </span>
 
-            <button id="resetBtn">
-                Reset
-            </button>
-
-            <button id="refreshBtn">
-                Refresh
-            </button>
-
+            <button id="resetBtn">Reset</button>
+            <button id="refreshBtn">Refresh</button>
         </div>
-
     </header>
-
 
     <main class="workspace">
 
-        <!-- PROJECT FILES -->
         <aside class="file-panel">
-
             <div class="file-panel-header">
                 <span>PROJECT</span>
+                <button id="newFileBtn" class="new-file-btn" title="New File">+</button>
             </div>
 
-            <div class="file-tree">
-
-                <button class="file-item active" data-file="html">
-
-                    <span class="file-icon html-icon">
-                        &lt;&gt;
-                    </span>
-
-                    <span>index.html</span>
-
-                </button>
-
-
-                <button class="file-item" data-file="css">
-
-                    <span class="file-icon css-icon">
-                        #
-                    </span>
-
-                    <span>style.css</span>
-
-                </button>
-
-
-                <button class="file-item" data-file="js">
-
-                    <span class="file-icon js-icon">
-                        JS
-                    </span>
-
-                    <span>script.js</span>
-
-                </button>
-
-            </div>
-
+            <div id="fileTree" class="file-tree"></div>
         </aside>
 
-
-        <!-- EDITOR -->
         <section class="editor-panel">
 
             <div class="editor-header">
-
                 <div class="editor-title">
-                    <span id="fileName">
-                        index.html
-                    </span>
+                    <span id="fileName">index.html</span>
                 </div>
 
+                <div class="editor-actions">
+                    <button id="renameFileBtn" title="Rename file">Rename</button>
+                    <button id="deleteFileBtn" title="Delete file">Delete</button>
+                </div>
             </div>
 
-
-            <div class="editor-container">
-
-                <div id="htmlEditor" class="editor active-editor">
-                </div>
-
-                <div id="cssEditor" class="editor">
-                </div>
-
-                <div id="jsEditor" class="editor">
-                </div>
-
-            </div>
-
+            <div id="editorContainer" class="editor-container"></div>
 
             <div class="editor-footer">
-
-                <span id="cursorInfo">
-                    Ln 1, Col 1
-                </span>
-
-                <span>
-                    Spaces: 2
-                </span>
-
-                <span>
-                    UTF-8
-                </span>
-
-                <span id="languageInfo">
-                    HTML
-                </span>
-
+                <span id="cursorInfo">Ln 1, Col 1</span>
+                <span>Spaces: 2</span>
+                <span>UTF-8</span>
+                <span id="languageInfo">HTML</span>
             </div>
 
         </section>
 
-
-        <!-- RIGHT SIDE -->
         <section class="right-panel">
 
-            <!-- PREVIEW -->
             <div class="preview-panel">
 
                 <div class="panel-header">
-
                     <span>Preview</span>
-
-                    <span id="previewStatus">
-                        Live
-                    </span>
-
+                    <span id="previewStatus">Live</span>
                 </div>
 
-
                 <div class="browser-bar">
-
                     <div class="browser-dots">
                         <span></span>
                         <span></span>
@@ -166,44 +81,26 @@
                     <div class="browser-address">
                         buildzen://preview
                     </div>
-
                 </div>
-
 
                 <iframe id="preview" title="Live preview" sandbox="allow-scripts allow-forms allow-modals">
                 </iframe>
 
-
                 <div class="preview-footer">
-
-                    <span>
-                        Buildzen Preview
-                    </span>
-
-                    <span>
-                        Auto-refresh enabled
-                    </span>
-
+                    <span>Buildzen Preview</span>
+                    <span>Auto-refresh enabled</span>
                 </div>
 
             </div>
 
-
-            <!-- CONSOLE -->
             <div class="console-panel">
 
                 <div class="panel-header console-header">
 
                     <div class="console-title">
-
                         <span>Console</span>
-
-                        <span id="consoleCount">
-                            (0)
-                        </span>
-
+                        <span id="consoleCount">(0)</span>
                     </div>
-
 
                     <div class="console-controls">
 
@@ -235,9 +132,7 @@
 
                 </div>
 
-
-                <div id="consoleOutput" class="console-output">
-                </div>
+                <div id="consoleOutput" class="console-output"></div>
 
             </div>
 
@@ -245,9 +140,7 @@
 
     </main>
 
-
-    <script type="module" src="app.js">
-    </script>
+    <script type="module" src="app.js"></script>
 
 </body>
 
