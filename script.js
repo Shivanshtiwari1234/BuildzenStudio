@@ -13,6 +13,12 @@ import { basicSetup }
 import { html }
   from "https://esm.sh/@codemirror/lang-html@6.4.9?deps=@codemirror%2Fstate@6.5.2";
 
+import { css }
+  from "https://esm.sh/@codemirror/lang-css@6.3.1?deps=@codemirror%2Fstate@6.5.2";
+
+import { javascript }
+  from "https://esm.sh/@codemirror/lang-javascript@6.2.3?deps=@codemirror%2Fstate@6.5.2";
+
 import { oneDark }
   from "https://esm.sh/@codemirror/theme-one-dark@6.1.2?deps=@codemirror%2Fstate@6.5.2";
 
@@ -26,501 +32,401 @@ import { indentWithTab }
   from "https://esm.sh/@codemirror/commands@6.11.1?deps=@codemirror%2Fstate@6.5.2";
 
 
-// ============================================================
-// SYNTAX HIGHLIGHTING CSS
-// ============================================================
+/* =========================
+   STARTER PROJECT
+   ========================= */
 
-const syntaxStyle = document.createElement("style");
+const starterProject = {
 
-syntaxStyle.id = "buildzen-syntax-highlighting";
+  html: `<div class="card">
+    <h1>Hello, Buildzen!</h1>
+    <p>This page is built with separate HTML, CSS and JavaScript files.</p>
 
-syntaxStyle.textContent = `
-    /* HTML / XML */
+    <button id="helloBtn">
+        Click me
+    </button>
+</div>`,
 
-    .tok-angleBracket {
-        color: #abb2bf;
-    }
+  css: `body {
+    margin: 0;
+    min-height: 100vh;
 
-    .tok-tagName {
-        color: #e06c75;
-    }
+    display: grid;
+    place-items: center;
 
-    .tok-attributeName {
-        color: #d19a66;
-    }
+    font-family: Arial, sans-serif;
+    background: #f3f4f6;
+}
 
-    .tok-propertyName {
-        color: #61afef;
-    }
+.card {
+    width: 360px;
 
-    .tok-string {
-        color: #98c379;
-    }
+    padding: 30px;
 
-    .tok-comment {
-        color: #7f848e;
-        font-style: italic;
-    }
+    text-align: center;
 
-    .tok-meta {
-        color: #c678dd;
-    }
+    background: white;
 
-    /* JavaScript / CSS */
+    border-radius: 16px;
 
-    .tok-keyword {
-        color: #c678dd;
-    }
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.12);
+}
 
-    .tok-variableName {
-        color: #e06c75;
-    }
+h1 {
+    margin-top: 0;
+}
 
-    .tok-variableName2 {
-        color: #61afef;
-    }
+button {
+    padding: 10px 16px;
 
-    .tok-definition {
-        color: #61afef;
-    }
+    border: none;
+    border-radius: 8px;
 
-    .tok-typeName {
-        color: #e5c07b;
-    }
+    background: #2563eb;
+    color: white;
 
-    .tok-className {
-        color: #e5c07b;
-    }
+    cursor: pointer;
+}
 
-    .tok-number {
-        color: #d19a66;
-    }
+button:hover {
+    background: #1d4ed8;
+}`,
 
-    .tok-bool {
-        color: #d19a66;
-    }
+  js: `console.log("Buildzen preview loaded.");
 
-    .tok-atom {
-        color: #d19a66;
-    }
+const button = document.querySelector("#helloBtn");
 
-    .tok-operator {
-        color: #56b6c2;
-    }
+button.addEventListener("click", () => {
+    console.log("Button clicked!");
 
-    .tok-punctuation {
-        color: #abb2bf;
-    }
+    alert("Hello from Buildzen!");
+});`
 
-    .tok-string2 {
-        color: #98c379;
-    }
-
-    .tok-regexp {
-        color: #56b6c2;
-    }
-
-    .tok-escape {
-        color: #56b6c2;
-    }
-
-    .tok-link {
-        color: #61afef;
-        text-decoration: underline;
-    }
-
-    .tok-invalid {
-        color: #ffffff;
-        background: #e06c75;
-    }
-
-    .tok-content {
-        color: #abb2bf;
-    }
-
-    .tok-labelName {
-        color: #61afef;
-    }
-
-    .tok-macroName {
-        color: #c678dd;
-    }
-
-    .tok-function {
-        color: #61afef;
-    }
-`;
-
-document.head.appendChild(syntaxStyle);
+};
 
 
-// ============================================================
-// STARTER CODE
-// ============================================================
+/* =========================
+   DOM
+   ========================= */
 
-const starterCode = `<!DOCTYPE html>
-<html lang="en">
+const htmlEditorElement = document.getElementById("htmlEditor");
+const cssEditorElement = document.getElementById("cssEditor");
+const jsEditorElement = document.getElementById("jsEditor");
 
-<head>
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Buildzen Website</title>
-
-    <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-        }
-
-        .card {
-            padding: 40px;
-
-            text-align: center;
-
-            background: white;
-            border-radius: 16px;
-
-            box-shadow:
-                0 10px 30px
-                rgba(0, 0, 0, 0.12);
-        }
-
-        .button {
-            padding: 12px 20px;
-
-            border: none;
-            border-radius: 8px;
-
-            background: #4f7cff;
-            color: white;
-
-            cursor: pointer;
-        }
-
-        .button:hover {
-            background: #3d68e6;
-        }
-    </style>
-</head>
-
-<body>
-
-    <div class="card">
-        <h1>Hello from Buildzen!</h1>
-
-        <p>Start editing the code.</p>
-
-        <button
-            class="button"
-            onclick="testBuildzen()"
-        >
-            Test Buildzen
-        </button>
-    </div>
-
-    <script>
-        function testBuildzen() {
-            console.log("Button clicked!");
-
-            alert("Buildzen JavaScript is working!");
-        }
-
-        console.log("Buildzen preview loaded.");
-    <\/script>
-
-</body>
-</html>`;
-
-
-// ============================================================
-// ELEMENTS
-// ============================================================
-
-const editorElement = document.getElementById("editor");
 const preview = document.getElementById("preview");
 
-const status = document.getElementById("status");
-const lineCount = document.getElementById("lineCount");
-const cursorPosition = document.getElementById("cursorPosition");
+const statusElement = document.getElementById("status");
 
-const previewStatus = document.getElementById("previewStatus");
+const cursorInfo = document.getElementById("cursorInfo");
 
-const consoleOutput = document.getElementById("consoleOutput");
-const consoleCount = document.getElementById("consoleCount");
+const fileName = document.getElementById("fileName");
+const languageInfo = document.getElementById("languageInfo");
 
 const resetBtn = document.getElementById("resetBtn");
 const refreshBtn = document.getElementById("refreshBtn");
-const clearConsoleBtn = document.getElementById("clearConsole");
+
+const clearConsoleBtn =
+  document.getElementById("clearConsoleBtn");
+
+const consoleOutput =
+  document.getElementById("consoleOutput");
+
+const consoleCount =
+  document.getElementById("consoleCount");
+
+const tabs =
+  document.querySelectorAll(".tab");
 
 
-// ============================================================
-// CONSOLE
-// ============================================================
+/* =========================
+   CONSOLE
+   ========================= */
 
 let consoleMessages = 0;
 
 function clearConsole() {
+  consoleOutput.innerHTML = "";
+
   consoleMessages = 0;
 
-  consoleCount.textContent = "0";
-
-  consoleOutput.innerHTML = `
-        <div class="console-empty">
-            Console output will appear here...
-        </div>
-    `;
+  consoleCount.textContent = "(0)";
 }
 
-
 function addConsoleMessage(type, message) {
-  if (consoleOutput.querySelector(".console-empty")) {
-    consoleOutput.innerHTML = "";
-  }
-
-  consoleMessages++;
-
-  consoleCount.textContent = consoleMessages;
 
   const entry = document.createElement("div");
 
-  entry.className = `console-entry console-${type}`;
+  entry.className = `console-entry ${type}`;
 
-  const time = new Date().toLocaleTimeString();
-
-  entry.innerHTML = `
-        <span class="console-time">${time}</span>
-        <span class="console-type">${type}</span>
-        <span class="console-message"></span>
-    `;
-
-  entry.querySelector(".console-message").textContent = message;
+  entry.textContent = message;
 
   consoleOutput.appendChild(entry);
 
-  consoleOutput.scrollTop = consoleOutput.scrollHeight;
+  consoleMessages++;
+
+  consoleCount.textContent =
+    `(${consoleMessages})`;
+
+  consoleOutput.scrollTop =
+    consoleOutput.scrollHeight;
 }
 
 
-// ============================================================
-// PREVIEW CONSOLE BRIDGE
-// ============================================================
+/* =========================
+   PREVIEW CONSOLE BRIDGE
+   ========================= */
 
 const consoleBridge = `
 <script>
 (function () {
 
-    function serialize(value) {
+    const send = (type, args) => {
+
+        let message;
+
         try {
-            if (typeof value === "string") {
-                return value;
-            }
+            message = args
+                .map(value => {
 
-            return JSON.stringify(value, null, 2);
-        } catch (error) {
-            return String(value);
+                    if (typeof value === "object") {
+                        try {
+                            return JSON.stringify(value, null, 2);
+                        } catch {
+                            return String(value);
+                        }
+                    }
+
+                    return String(value);
+                })
+                .join(" ");
+
+        } catch {
+            message = "Unable to display console message.";
         }
-    }
 
-    function send(type, args) {
         parent.postMessage({
             source: "buildzen-preview",
-            type: type,
-            message: args.map(serialize).join(" ")
+            type,
+            message
         }, "*");
-    }
+    };
+
 
     const originalLog = console.log;
     const originalInfo = console.info;
     const originalWarn = console.warn;
     const originalError = console.error;
 
-    console.log = function (...args) {
+
+    console.log = (...args) => {
+        originalLog(...args);
         send("log", args);
-        originalLog.apply(console, args);
     };
 
-    console.info = function (...args) {
+
+    console.info = (...args) => {
+        originalInfo(...args);
         send("info", args);
-        originalInfo.apply(console, args);
     };
 
-    console.warn = function (...args) {
+
+    console.warn = (...args) => {
+        originalWarn(...args);
         send("warn", args);
-        originalWarn.apply(console, args);
     };
 
-    console.error = function (...args) {
+
+    console.error = (...args) => {
+        originalError(...args);
         send("error", args);
-        originalError.apply(console, args);
     };
 
-    window.addEventListener("error", function (event) {
+
+    window.addEventListener("error", event => {
+
         send("error", [
-            event.message,
-            "Line " + event.lineno
+            event.message || "Unknown error"
         ]);
+
     });
+
 
     window.addEventListener(
         "unhandledrejection",
-        function (event) {
+        event => {
+
             send("error", [
                 "Unhandled promise rejection:",
                 event.reason
             ]);
+
         }
     );
 
 })();
-</script>
+<\/script>
 `;
 
 
-// ============================================================
-// PREVIEW
-// ============================================================
-
-function createPreviewHTML(code) {
-  if (code.includes("</head>")) {
-    return code.replace(
-      "</head>",
-      consoleBridge + "</head>"
-    );
-  }
-
-  if (code.includes("<body>")) {
-    return code.replace(
-      "<body>",
-      "<body>" + consoleBridge
-    );
-  }
-
-  return consoleBridge + code;
-}
-
+/* =========================
+   CREATE PREVIEW
+   ========================= */
 
 function updatePreview() {
-  const code = editor.state.doc.toString();
 
-  preview.srcdoc = createPreviewHTML(code);
+  const htmlCode = editors.html.state.doc.toString();
+  const cssCode = editors.css.state.doc.toString();
+  const jsCode = editors.js.state.doc.toString();
 
-  previewStatus.textContent = "Preview updated";
+
+  const srcdoc = `
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<style>
+${cssCode}
+</style>
+
+${consoleBridge}
+
+</head>
+
+<body>
+
+${htmlCode}
+
+<script>
+${jsCode}
+<\/script>
+
+</body>
+
+</html>
+`;
+
+
+  preview.srcdoc = srcdoc;
 
   setStatus("Live");
 }
 
 
-// ============================================================
-// STATUS
-// ============================================================
+/* =========================
+   STATUS
+   ========================= */
 
 function setStatus(text) {
-  status.innerHTML = `
+
+  statusElement.innerHTML = `
         <span class="status-dot"></span>
         ${text}
     `;
 }
 
 
-// ============================================================
-// EDITOR INFORMATION
-// ============================================================
+/* =========================
+   EDITOR INFO
+   ========================= */
+
+let activeEditorName = "html";
 
 function updateEditorInfo(view) {
-  const state = view.state;
 
-  const lines = state.doc.lines;
+  const position =
+    view.state.selection.main.head;
 
-  lineCount.textContent =
-    `${lines} ${lines === 1 ? "line" : "lines"}`;
-
-  const cursor = state.selection.main.head;
-
-  const line = state.doc.lineAt(cursor);
+  const line =
+    view.state.doc.lineAt(position);
 
   const column =
-    cursor - line.from + 1;
+    position - line.from + 1;
 
-  cursorPosition.textContent =
+  cursorInfo.textContent =
     `Ln ${line.number}, Col ${column}`;
 }
 
 
-// ============================================================
-// SAVE
-// ============================================================
+/* =========================
+   SAVE
+   ========================= */
 
 function saveProject() {
-  const code = editor.state.doc.toString();
+
+  const project = {
+
+    html: editors.html.state.doc.toString(),
+
+    css: editors.css.state.doc.toString(),
+
+    js: editors.js.state.doc.toString()
+
+  };
 
   localStorage.setItem(
-    "buildzen-code",
-    code
+    "buildzen-project",
+    JSON.stringify(project)
   );
 
   setStatus("Saved");
 
   setTimeout(() => {
     setStatus("Live");
-  }, 1000);
+  }, 800);
 }
 
 
-// ============================================================
-// RESET
-// ============================================================
+/* =========================
+   LOAD
+   ========================= */
 
-function resetProject() {
-  const confirmed = confirm(
-    "Reset the editor to the default Buildzen project?"
-  );
+function loadProject() {
 
-  if (!confirmed) {
-    return;
+  const saved =
+    localStorage.getItem("buildzen-project");
+
+  if (!saved) {
+    return starterProject;
   }
 
-  editor.dispatch({
-    changes: {
-      from: 0,
-      to: editor.state.doc.length,
-      insert: starterCode
-    }
-  });
+  try {
 
-  localStorage.removeItem("buildzen-code");
+    const project =
+      JSON.parse(saved);
 
-  updatePreview();
+    return {
+      html: project.html ?? starterProject.html,
+      css: project.css ?? starterProject.css,
+      js: project.js ?? starterProject.js
+    };
 
-  clearConsole();
+  } catch {
 
-  setStatus("Reset");
+    return starterProject;
+  }
 }
 
 
-// ============================================================
-// KEYMAP
-// ============================================================
+/* =========================
+   KEYMAP
+   ========================= */
 
 const buildzenKeymap = keymap.of([
+
   indentWithTab,
 
   {
     key: "Mod-s",
 
     run: () => {
+
       saveProject();
+
       return true;
     }
   },
@@ -529,79 +435,267 @@ const buildzenKeymap = keymap.of([
     key: "Mod-Enter",
 
     run: () => {
+
       updatePreview();
+
       return true;
     }
   }
+
 ]);
 
 
-// ============================================================
-// EDITOR
-// ============================================================
+/* =========================
+   EDITOR CREATION
+   ========================= */
 
-const savedCode =
-  localStorage.getItem("buildzen-code");
+function createEditor({
+  parent,
+  value,
+  language
+}) {
 
-const initialCode =
-  savedCode || starterCode;
+  let languageExtension;
+
+  if (language === "html") {
+    languageExtension = html();
+  }
+
+  if (language === "css") {
+    languageExtension = css();
+  }
+
+  if (language === "javascript") {
+    languageExtension = javascript();
+  }
 
 
-const updateListener =
-  EditorView.updateListener.of((update) => {
+  return new EditorView({
 
-    if (update.docChanged) {
-      updatePreview();
+    state: EditorState.create({
 
-      setStatus("Live");
-    }
+      doc: value,
 
-    if (update.selectionSet || update.docChanged) {
-      updateEditorInfo(update.view);
-    }
+      extensions: [
+
+        basicSetup,
+
+        languageExtension,
+
+        oneDark,
+
+        syntaxHighlighting(
+          classHighlighter
+        ),
+
+        buildzenKeymap,
+
+        EditorView.updateListener.of(
+          update => {
+
+            if (
+              update.docChanged ||
+              update.selectionSet
+            ) {
+
+              updateEditorInfo(
+                update.view
+              );
+            }
+
+            if (update.docChanged) {
+
+              updatePreview();
+
+              setStatus("Live");
+            }
+          }
+        )
+
+      ]
+
+    }),
+
+    parent
+
+  });
+}
+
+
+/* =========================
+   EDITORS
+   ========================= */
+
+const project = loadProject();
+
+const editors = {
+
+  html: createEditor({
+    parent: htmlEditorElement,
+    value: project.html,
+    language: "html"
+  }),
+
+  css: createEditor({
+    parent: cssEditorElement,
+    value: project.css,
+    language: "css"
+  }),
+
+  js: createEditor({
+    parent: jsEditorElement,
+    value: project.js,
+    language: "javascript"
+  })
+
+};
+
+
+/* =========================
+   TAB SWITCHING
+   ========================= */
+
+function switchEditor(name) {
+
+  activeEditorName = name;
+
+
+  document
+    .querySelectorAll(".editor")
+    .forEach(editor => {
+
+      editor.classList.remove(
+        "active-editor"
+      );
+
+    });
+
+
+  document
+    .getElementById(`${name}Editor`)
+    .classList.add("active-editor");
+
+
+  tabs.forEach(tab => {
+
+    tab.classList.toggle(
+      "active",
+      tab.dataset.editor === name
+    );
+
   });
 
 
-const editor = new EditorView({
-  state: EditorState.create({
-    doc: initialCode,
+  const info = {
 
-    extensions: [
+    html: {
+      file: "index.html",
+      language: "HTML"
+    },
 
-      basicSetup,
+    css: {
+      file: "style.css",
+      language: "CSS"
+    },
 
-      // HTML parser, including embedded CSS and JS
-      html(),
+    js: {
+      file: "script.js",
+      language: "JavaScript"
+    }
 
-      // One Dark editor UI
-      oneDark,
+  };
 
-      // Stable tok-* syntax classes
-      syntaxHighlighting(classHighlighter),
 
-      buildzenKeymap,
+  fileName.textContent =
+    info[name].file;
 
-      updateListener
-    ]
-  }),
+  languageInfo.textContent =
+    info[name].language;
 
-  parent: editorElement
+
+  const editor =
+    editors[name];
+
+  editor.requestMeasure();
+
+  editor.focus();
+
+  updateEditorInfo(editor);
+}
+
+
+tabs.forEach(tab => {
+
+  tab.addEventListener("click", () => {
+
+    switchEditor(
+      tab.dataset.editor
+    );
+
+  });
+
 });
 
 
-// ============================================================
-// EVENTS
-// ============================================================
-
-resetBtn.addEventListener(
-  "click",
-  resetProject
-);
+/* =========================
+   BUTTONS
+   ========================= */
 
 refreshBtn.addEventListener(
   "click",
   updatePreview
 );
+
+
+resetBtn.addEventListener(
+  "click",
+  () => {
+
+    editors.html.dispatch({
+      changes: {
+        from: 0,
+        to: editors.html.state.doc.length,
+        insert: starterProject.html
+      }
+    });
+
+
+    editors.css.dispatch({
+      changes: {
+        from: 0,
+        to: editors.css.state.doc.length,
+        insert: starterProject.css
+      }
+    });
+
+
+    editors.js.dispatch({
+      changes: {
+        from: 0,
+        to: editors.js.state.doc.length,
+        insert: starterProject.js
+      }
+    });
+
+
+    localStorage.removeItem(
+      "buildzen-project"
+    );
+
+
+    clearConsole();
+
+    updatePreview();
+
+    setStatus("Reset");
+
+    setTimeout(() => {
+      setStatus("Live");
+    }, 800);
+
+  }
+);
+
 
 clearConsoleBtn.addEventListener(
   "click",
@@ -609,35 +703,47 @@ clearConsoleBtn.addEventListener(
 );
 
 
-// ============================================================
-// PREVIEW MESSAGES
-// ============================================================
+/* =========================
+   PREVIEW MESSAGES
+   ========================= */
 
 window.addEventListener(
   "message",
-  (event) => {
+  event => {
 
     if (
-      !event.data ||
-      event.data.source !== "buildzen-preview"
+      event.source !== preview.contentWindow
     ) {
       return;
     }
+
+    if (
+      !event.data ||
+      event.data.source !==
+      "buildzen-preview"
+    ) {
+      return;
+    }
+
 
     addConsoleMessage(
       event.data.type || "log",
       event.data.message || ""
     );
+
   }
 );
 
 
-// ============================================================
-// INITIALIZE
-// ============================================================
+/* =========================
+   INITIALIZE
+   ========================= */
 
-updateEditorInfo(editor);
+switchEditor("html");
 
 updatePreview();
 
-setStatus("Live");
+addConsoleMessage(
+  "log",
+  "Buildzen preview loaded."
+);
