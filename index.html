@@ -36,13 +36,34 @@
             <div class="file-panel-header">
                 <span>PROJECT</span>
 
-                <button id="newFileBtn" class="new-file-btn" title="New File" aria-label="New File" type="button">
+                <button id="newFileBtn" class="new-file-btn" title="New File" aria-label="New File">
                     +
                 </button>
             </div>
 
             <div id="fileTree" class="file-tree"></div>
 
+
+            <div class="asset-section">
+
+                <div class="asset-section-header">
+                    <span>ASSETS</span>
+
+                    <button id="uploadAssetBtn" class="new-file-btn" title="Upload Asset" aria-label="Upload Asset"
+                        type="button">
+                        +
+                    </button>
+                </div>
+
+                <div id="assetTree" class="asset-tree">
+                    <div class="empty-assets">
+                        No assets yet
+                    </div>
+                </div>
+
+                <input id="assetInput" type="file" multiple hidden>
+
+            </div>
         </aside>
 
 

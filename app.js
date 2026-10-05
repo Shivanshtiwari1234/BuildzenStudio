@@ -7,9 +7,9 @@ import {
 } from "./editor.js";
 
 
-/* =========================================================
-   DOM REFERENCES
-   ========================================================= */
+// ============================================================
+// DOM REFERENCES
+// ============================================================
 
 const preview =
     document.getElementById("preview");
@@ -47,13 +47,20 @@ const consoleCount =
 const clearConsoleBtn =
     document.getElementById("clearConsoleBtn");
 
-const consoleFilters =
-    document.querySelectorAll(".console-filter");
+
+// Assets
+
+const assetTree =
+    document.getElementById("assetTree");
+
+const uploadAssetBtn =
+    document.getElementById("uploadAssetBtn");
+
+const assetInput =
+    document.getElementById("assetInput");
 
 
-/* =========================================================
-   MODAL DOM
-   ========================================================= */
+// Modal
 
 const modalOverlay =
     document.getElementById("modalOverlay");
@@ -83,9 +90,9 @@ const modalConfirmBtn =
     document.getElementById("modalConfirmBtn");
 
 
-/* =========================================================
-   MODAL SYSTEM
-   ========================================================= */
+// ============================================================
+// CUSTOM MODAL SYSTEM
+// ============================================================
 
 let modalResolver = null;
 let modalType = "alert";
@@ -98,48 +105,26 @@ function finishModal(result) {
         return;
     }
 
-
-    const resolver =
-        modalResolver;
+    const resolver = modalResolver;
 
     modalResolver = null;
 
+    modalOverlay.classList.remove("open");
+    modalOverlay.setAttribute("aria-hidden", "true");
 
-    modalOverlay.classList.remove(
-        "visible"
-    );
+    document.body.classList.remove("modal-open");
 
-    modalOverlay.setAttribute(
-        "aria-hidden",
-        "true"
-    );
+    modalInput.value = "";
 
+    if (modalPreviousFocus) {
 
-    document.body.style.overflow = "";
+        try {
+            modalPreviousFocus.focus();
+        } catch { }
 
-
-    const previous =
-        modalPreviousFocus;
-
-    modalPreviousFocus = null;
-
-
-    if (
-        previous &&
-        typeof previous.focus === "function"
-    ) {
-
-        requestAnimationFrame(() => {
-
-            try {
-                previous.focus();
-            } catch {
-                // Focus restoration is best-effort.
-            }
-
-        });
     }
 
+    modalPreviousFocus = null;
 
     resolver(result);
 }
@@ -147,191 +132,97 @@ function finishModal(result) {
 
 function closeModal() {
 
-    if (!modalResolver) {
+    if (modalType === "alert") {
+        finishModal(true);
         return;
     }
 
-
-    if (modalType === "alert") {
-
-        finishModal(true);
-
-    } else if (modalType === "confirm") {
-
+    if (modalType === "confirm") {
         finishModal(false);
-
-    } else {
-
-        finishModal(null);
+        return;
     }
 
+    finishModal(null);
 }
 
 
 function showModal({
-
     type = "alert",
-
     title = "Buildzen",
-
     message = "",
-
     confirmText = "OK",
-
     cancelText = "Cancel",
-
     inputValue = "",
-
     danger = false
-
 } = {}) {
 
-    /*
-     * Buildzen dialogs are intentionally serialized.
-     * This prevents two UI operations from fighting over
-     * the same modal.
-     */
-
     if (modalResolver) {
-
         return Promise.reject(
-            new Error(
-                "A Buildzen modal is already open."
-            )
+            new Error("A modal is already open.")
         );
-
     }
 
+    modalType = type;
+
+    modalPreviousFocus =
+        document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+
+    modalTitle.textContent = title;
+
+    modalMessage.textContent = message;
+
+    modalIcon.className =
+        `modal-icon ${danger ? "danger" : "info"}`;
+
+    if (type === "alert") {
+        modalIcon.textContent = "i";
+    } else if (danger) {
+        modalIcon.textContent = "!";
+    } else {
+        modalIcon.textContent = "?";
+    }
+
+    modalConfirmBtn.textContent =
+        confirmText;
+
+    modalCancelBtn.textContent =
+        cancelText;
+
+    modalInput.value =
+        inputValue;
+
+    const isPrompt =
+        type === "prompt";
+
+    modalInput.hidden = !isPrompt;
+
+    modalCancelBtn.hidden =
+        type === "alert";
+
+    modalConfirmBtn.hidden = false;
+
+    modalConfirmBtn.classList.toggle(
+        "danger",
+        danger
+    );
+
+    modalOverlay.classList.add("open");
+    modalOverlay.setAttribute("aria-hidden", "false");
+
+    document.body.classList.add("modal-open");
 
     return new Promise(resolve => {
 
-        modalType = type;
-
         modalResolver = resolve;
-
-        modalPreviousFocus =
-            document.activeElement;
-
-
-        modalTitle.textContent =
-            title;
-
-        modalMessage.textContent =
-            message;
-
-
-        modalConfirmBtn.textContent =
-            confirmText;
-
-        modalCancelBtn.textContent =
-            cancelText;
-
-
-        /* Icon */
-
-        modalIcon.className =
-            "modal-icon";
-
-
-        if (danger) {
-
-            modalIcon.classList.add(
-                "danger"
-            );
-
-            modalIcon.textContent =
-                "!";
-
-        } else if (type === "confirm") {
-
-            modalIcon.classList.add(
-                "warning"
-            );
-
-            modalIcon.textContent =
-                "?";
-
-        } else if (type === "prompt") {
-
-            modalIcon.classList.add(
-                "info"
-            );
-
-            modalIcon.textContent =
-                "✎";
-
-        } else {
-
-            modalIcon.classList.add(
-                "info"
-            );
-
-            modalIcon.textContent =
-                "i";
-        }
-
-
-        /* Confirm button */
-
-        modalConfirmBtn.classList.toggle(
-            "modal-btn-danger",
-            danger
-        );
-
-
-        /* Cancel button */
-
-        modalCancelBtn.style.display =
-            type === "alert"
-                ? "none"
-                : "";
-
-
-        /* Input */
-
-        if (type === "prompt") {
-
-            modalInput.style.display =
-                "block";
-
-            modalInput.value =
-                inputValue;
-
-        } else {
-
-            modalInput.style.display =
-                "none";
-
-            modalInput.value =
-                "";
-        }
-
-
-        /* Open */
-
-        modalOverlay.classList.add(
-            "visible"
-        );
-
-        modalOverlay.setAttribute(
-            "aria-hidden",
-            "false"
-        );
-
-
-        document.body.style.overflow =
-            "hidden";
-
 
         requestAnimationFrame(() => {
 
-            if (type === "prompt") {
-
+            if (isPrompt) {
                 modalInput.focus();
                 modalInput.select();
-
             } else {
-
                 modalConfirmBtn.focus();
             }
 
@@ -348,84 +239,61 @@ function bzAlert(
 ) {
 
     return showModal({
-
         type: "alert",
-
         title,
-
         message,
-
         confirmText:
             options.confirmText || "OK",
-
         danger:
-            options.danger === true
-
+            Boolean(options.danger)
     });
+
 }
 
 
 function bzConfirm(
     message,
-    title = "Confirm",
+    title = "Buildzen",
     options = {}
 ) {
 
     return showModal({
-
         type: "confirm",
-
         title,
-
         message,
-
         confirmText:
-            options.confirmText || "Confirm",
-
+            options.confirmText || "OK",
         cancelText:
             options.cancelText || "Cancel",
-
         danger:
-            options.danger === true
-
+            Boolean(options.danger)
     });
+
 }
 
 
 function bzPrompt(
     message,
-    title = "Input",
+    title = "Buildzen",
     defaultValue = "",
     options = {}
 ) {
 
     return showModal({
-
         type: "prompt",
-
         title,
-
         message,
-
+        inputValue: defaultValue,
         confirmText:
             options.confirmText || "OK",
-
         cancelText:
             options.cancelText || "Cancel",
-
-        inputValue:
-            defaultValue,
-
         danger:
-            options.danger === true
-
+            Boolean(options.danger)
     });
+
 }
 
-
-/* =========================================================
-   MODAL EVENTS
-   ========================================================= */
 
 modalConfirmBtn.addEventListener(
     "click",
@@ -437,10 +305,10 @@ modalConfirmBtn.addEventListener(
                 modalInput.value
             );
 
-        } else {
-
-            finishModal(true);
+            return;
         }
+
+        finishModal(true);
 
     }
 );
@@ -449,16 +317,7 @@ modalConfirmBtn.addEventListener(
 modalCancelBtn.addEventListener(
     "click",
     () => {
-
-        if (modalType === "prompt") {
-
-            finishModal(null);
-
-        } else {
-
-            finishModal(false);
-        }
-
+        finishModal(false);
     }
 );
 
@@ -473,14 +332,9 @@ modalOverlay.addEventListener(
     "click",
     event => {
 
-        if (
-            event.target !==
-            modalOverlay
-        ) {
-            return;
+        if (event.target === modalOverlay) {
+            closeModal();
         }
-
-        closeModal();
 
     }
 );
@@ -491,13 +345,11 @@ document.addEventListener(
     event => {
 
         if (
-            !modalOverlay.classList.contains(
-                "visible"
-            )
+            !modalResolver ||
+            !modalOverlay.classList.contains("open")
         ) {
             return;
         }
-
 
         if (event.key === "Escape") {
 
@@ -508,12 +360,10 @@ document.addEventListener(
             return;
         }
 
-
         if (
             event.key === "Enter" &&
             modalType === "prompt" &&
-            document.activeElement ===
-            modalInput
+            document.activeElement === modalInput
         ) {
 
             event.preventDefault();
@@ -528,13 +378,12 @@ document.addEventListener(
 );
 
 
-/* =========================================================
-   PROJECT DATA
-   ========================================================= */
+// ============================================================
+// PROJECT STORAGE
+// ============================================================
 
 const STORAGE_KEY =
     "buildzen-project";
-
 
 const REQUIRED_FILES = [
     "index.html",
@@ -547,86 +396,81 @@ const starterFiles = [
 
     {
         id: "index.html",
-
         name: "index.html",
 
-        content: `<!DOCTYPE html>
+        content:
+            `<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Buildzen Project</title>
-    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-    <main>
-        <h1>Hello, Buildzen!</h1>
-        <p>Edit the files to start building.</p>
-    </main>
+    <h1>Hello, Buildzen!</h1>
 
-    <script src="script.js"></script>
+    <p>
+        Start building your website here.
+    </p>
+
 </body>
+
 </html>`
     },
 
     {
         id: "style.css",
-
         name: "style.css",
 
-        content: `body {
+        content:
+            `* {
+    box-sizing: border-box;
+}
+
+body {
     margin: 0;
-    min-height: 100vh;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    font-family: system-ui, sans-serif;
-
-    background: #111318;
-    color: #f1f3f5;
-}
-
-main {
-    text-align: center;
-}
-
-h1 {
-    margin-bottom: 8px;
+    font-family: Arial, sans-serif;
 }`
     },
 
     {
         id: "script.js",
-
         name: "script.js",
 
-        content: `console.log("Buildzen project loaded.");`
+        content:
+            `console.log("Buildzen project loaded.");`
     }
 
 ];
 
 
 let project = {
-    files: [],
+
+    files: cloneStarterFiles(),
+
     activeFile: "index.html"
+
 };
 
 
-window.buildzenFiles =
-    project.files;
+function cloneStarterFiles() {
 
+    return starterFiles.map(file => ({
+        ...file
+    }));
 
-/* =========================================================
-   PROJECT STORAGE
-   ========================================================= */
+}
+
 
 function syncGlobalFiles() {
 
     window.buildzenFiles =
         project.files;
+
 }
 
 
@@ -642,205 +486,118 @@ function saveProject() {
     } catch (error) {
 
         console.error(
-            "Could not save Buildzen project:",
+            "Failed to save project:",
             error
         );
 
     }
-
-}
-
-
-function cloneStarterFiles() {
-
-    return starterFiles.map(
-        file => ({
-            id: file.id,
-            name: file.name,
-            content: file.content
-        })
-    );
 
 }
 
 
 function loadProject() {
 
-    const saved =
-        localStorage.getItem(
-            STORAGE_KEY
-        );
-
-
-    if (!saved) {
-
-        project = {
-            files: cloneStarterFiles(),
-            activeFile: "index.html"
-        };
-
-        return;
-    }
-
-
     try {
+
+        const saved =
+            localStorage.getItem(
+                STORAGE_KEY
+            );
+
+        if (!saved) {
+            return;
+        }
 
         const parsed =
             JSON.parse(saved);
 
-
-        /* Current format */
-
         if (
-            parsed &&
-            Array.isArray(parsed.files)
+            !parsed ||
+            !Array.isArray(parsed.files)
         ) {
+            return;
+        }
 
-            project = {
+        project.files =
+            parsed.files
+                .filter(file =>
+                    file &&
+                    typeof file.name === "string" &&
+                    typeof file.content === "string"
+                )
+                .map(file => ({
+                    id:
+                        typeof file.id === "string"
+                            ? file.id
+                            : file.name,
 
-                files: parsed.files
-                    .filter(file =>
-                        file &&
-                        typeof file.id ===
-                        "string" &&
-                        typeof file.name ===
-                        "string" &&
-                        typeof file.content ===
-                        "string"
-                    ),
+                    name: file.name,
 
-                activeFile:
-                    typeof parsed.activeFile ===
-                        "string"
-                        ? parsed.activeFile
-                        : "index.html"
+                    content: file.content
+                }));
 
-            };
+        if (!project.files.length) {
+
+            project.files =
+                cloneStarterFiles();
+
+        }
+
+        project.activeFile =
+            typeof parsed.activeFile === "string"
+                ? parsed.activeFile
+                : project.files[0].id;
 
 
-            /*
-             * Ensure the three required files exist.
-             */
+        // Migrate older projects that may be
+        // missing one of the core files.
 
-            for (
-                const required of REQUIRED_FILES
-            ) {
+        for (const required of REQUIRED_FILES) {
 
-                const exists =
-                    project.files.some(
+            const exists =
+                project.files.some(
+                    file =>
+                        file.name === required
+                );
+
+            if (!exists) {
+
+                const starter =
+                    starterFiles.find(
                         file =>
-                            file.name ===
-                            required
+                            file.name === required
                     );
 
+                if (starter) {
 
-                if (!exists) {
-
-                    const starter =
-                        starterFiles.find(
-                            file =>
-                                file.name ===
-                                required
-                        );
-
-
-                    if (starter) {
-
-                        project.files.push({
-                            ...starter
-                        });
-
-                    }
+                    project.files.push({
+                        ...starter
+                    });
 
                 }
 
             }
 
-
-            if (
-                !project.files.some(
-                    file =>
-                        file.id ===
-                        project.activeFile
-                )
-            ) {
-
-                const index =
-                    project.files.find(
-                        file =>
-                            file.name ===
-                            "index.html"
-                    );
-
-
-                project.activeFile =
-                    index?.id ||
-                    project.files[0]?.id ||
-                    "index.html";
-            }
-
-
-            return;
         }
-
-
-        /* Legacy format */
 
         if (
-            parsed &&
-            typeof parsed.html ===
-            "string" &&
-            typeof parsed.css ===
-            "string" &&
-            typeof parsed.js ===
-            "string"
+            !project.files.some(
+                file =>
+                    file.id === project.activeFile
+            )
         ) {
 
-            project = {
+            project.activeFile =
+                project.files[0].id;
 
-                files: [
-
-                    {
-                        id: "index.html",
-                        name: "index.html",
-                        content: parsed.html
-                    },
-
-                    {
-                        id: "style.css",
-                        name: "style.css",
-                        content: parsed.css
-                    },
-
-                    {
-                        id: "script.js",
-                        name: "script.js",
-                        content: parsed.js
-                    }
-
-                ],
-
-                activeFile: "index.html"
-            };
-
-
-            saveProject();
-
-            return;
         }
-
-
-        throw new Error(
-            "Unsupported project format"
-        );
 
     } catch (error) {
 
-        console.warn(
-            "Buildzen project could not be loaded. Starting fresh.",
+        console.error(
+            "Failed to load project:",
             error
         );
-
 
         project = {
 
@@ -849,6 +606,7 @@ function loadProject() {
 
             activeFile:
                 "index.html"
+
         };
 
     }
@@ -856,16 +614,11 @@ function loadProject() {
 }
 
 
-/* =========================================================
-   FILE HELPERS
-   ========================================================= */
-
 function getActiveFile() {
 
     return project.files.find(
         file =>
-            file.id ===
-            project.activeFile
+            file.id === project.activeFile
     );
 
 }
@@ -888,11 +641,15 @@ function isValidFilename(name) {
         return false;
     }
 
-
     if (name.length > 255) {
         return false;
     }
 
+    if (
+        /[<>:"/\\|?*\x00-\x1F]/.test(name)
+    ) {
+        return false;
+    }
 
     if (
         name === "." ||
@@ -901,156 +658,129 @@ function isValidFilename(name) {
         return false;
     }
 
-
-    /*
-     * Buildzen currently has a flat project tree,
-     * so path separators are intentionally forbidden.
-     */
-
-    if (
-        /[<>:"/\\|?*\x00-\x1F]/.test(
-            name
-        )
-    ) {
-        return false;
-    }
-
-
-    if (
-        name.endsWith(".") ||
-        name.endsWith(" ")
-    ) {
-        return false;
-    }
-
-
     return true;
+
 }
 
 
 function getDefaultContent(filename) {
 
-    const lower =
-        filename.toLowerCase();
+    const extension =
+        filename
+            .split(".")
+            .pop()
+            .toLowerCase();
 
 
     if (
-        lower.endsWith(".html") ||
-        lower.endsWith(".htm")
+        extension === "html" ||
+        extension === "htm"
     ) {
 
         return `<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>${filename}</title>
 </head>
+
 <body>
 
 </body>
+
 </html>`;
+
     }
 
 
-    if (lower.endsWith(".css")) {
+    if (extension === "css") {
 
         return `/* ${filename} */
 
 `;
+
     }
 
 
     if (
-        lower.endsWith(".js") ||
-        lower.endsWith(".mjs")
+        extension === "js" ||
+        extension === "mjs"
     ) {
 
         return `// ${filename}
 
 `;
+
     }
 
 
     return "";
+
 }
 
 
-/* =========================================================
-   FILE TREE
-   ========================================================= */
+// ============================================================
+// FILE TREE
+// ============================================================
 
 function getFileIcon(filename) {
 
-    const lower =
-        filename.toLowerCase();
+    const extension =
+        filename
+            .split(".")
+            .pop()
+            .toLowerCase();
 
 
     if (
-        lower.endsWith(".html") ||
-        lower.endsWith(".htm")
+        extension === "html" ||
+        extension === "htm"
     ) {
-        return "◇";
+        return "HTML";
     }
 
-
-    if (lower.endsWith(".css")) {
-        return "#";
+    if (extension === "css") {
+        return "CSS";
     }
-
 
     if (
-        lower.endsWith(".js") ||
-        lower.endsWith(".mjs")
+        extension === "js" ||
+        extension === "mjs"
     ) {
         return "JS";
     }
 
+    return "FILE";
 
-    if (lower.endsWith(".json")) {
-        return "{}";
-    }
-
-
-    if (lower.endsWith(".md")) {
-        return "M";
-    }
-
-
-    return "•";
 }
 
 
 function renderFileTree() {
 
-    fileTree.replaceChildren();
+    fileTree.innerHTML = "";
 
 
     for (const file of project.files) {
 
         const item =
-            document.createElement(
-                "button"
-            );
-
+            document.createElement("button");
 
         item.type = "button";
 
         item.className =
             "file-item";
 
-
         item.classList.toggle(
             "active",
-            file.id ===
-            project.activeFile
+            file.id === project.activeFile
         );
 
 
         const icon =
-            document.createElement(
-                "span"
-            );
+            document.createElement("span");
 
         icon.className =
             "file-icon";
@@ -1060,9 +790,7 @@ function renderFileTree() {
 
 
         const name =
-            document.createElement(
-                "span"
-            );
+            document.createElement("span");
 
         name.className =
             "file-name";
@@ -1079,8 +807,11 @@ function renderFileTree() {
 
         item.addEventListener(
             "click",
-            () =>
-                openFile(file.id)
+            () => {
+
+                openFile(file.id);
+
+            }
         );
 
 
@@ -1099,57 +830,48 @@ function openFile(fileId) {
                 item.id === fileId
         );
 
-
     if (!file) {
         return;
     }
 
-
     project.activeFile =
-        file.id;
-
+        fileId;
 
     syncGlobalFiles();
 
     renderFileTree();
 
-    switchEditor(
-        file.id,
-        file
-    );
+    switchEditor(fileId);
 
     saveProject();
 
 }
 
 
-/* =========================================================
-   CREATE FILE
-   ========================================================= */
+// ============================================================
+// FILE MANAGER
+// ============================================================
 
 async function createFile() {
 
-    const name =
+    const filename =
         await bzPrompt(
-            "Enter the name for the new file.",
+            "Enter the name of the new file.",
             "New File",
-            "untitled.txt",
-            {
-                confirmText: "Create"
-            }
+            "untitled.html"
         );
 
 
-    if (name === null) {
+    if (filename === null) {
         return;
     }
 
 
-    const filename =
-        name.trim();
+    const name =
+        filename.trim();
 
 
-    if (!isValidFilename(filename)) {
+    if (!isValidFilename(name)) {
 
         await bzAlert(
             "That filename is not valid.",
@@ -1160,10 +882,10 @@ async function createFile() {
     }
 
 
-    if (fileExists(filename)) {
+    if (fileExists(name)) {
 
         await bzAlert(
-            `A file named "${filename}" already exists.`,
+            "A file with that name already exists.",
             "File Already Exists"
         );
 
@@ -1176,31 +898,26 @@ async function createFile() {
         id:
             crypto.randomUUID(),
 
-        name:
-            filename,
+        name,
 
         content:
-            getDefaultContent(filename)
+            getDefaultContent(name)
 
     };
 
 
     project.files.push(file);
 
-    project.activeFile =
-        file.id;
-
+    syncGlobalFiles();
 
     addEditor(file);
 
-    syncGlobalFiles();
+    project.activeFile =
+        file.id;
 
     renderFileTree();
 
-    switchEditor(
-        file.id,
-        file
-    );
+    switchEditor(file.id);
 
     saveProject();
 
@@ -1209,15 +926,10 @@ async function createFile() {
 }
 
 
-/* =========================================================
-   RENAME FILE
-   ========================================================= */
-
 async function renameFile() {
 
     const file =
         getActiveFile();
-
 
     if (!file) {
         return;
@@ -1228,10 +940,7 @@ async function renameFile() {
         await bzPrompt(
             "Enter the new filename.",
             "Rename File",
-            file.name,
-            {
-                confirmText: "Rename"
-            }
+            file.name
         );
 
 
@@ -1240,11 +949,11 @@ async function renameFile() {
     }
 
 
-    const filename =
+    const name =
         newName.trim();
 
 
-    if (!isValidFilename(filename)) {
+    if (!isValidFilename(name)) {
 
         await bzAlert(
             "That filename is not valid.",
@@ -1256,12 +965,13 @@ async function renameFile() {
 
 
     if (
-        filename !== file.name &&
-        fileExists(filename)
+        name.toLowerCase() !==
+        file.name.toLowerCase() &&
+        fileExists(name)
     ) {
 
         await bzAlert(
-            `A file named "${filename}" already exists.`,
+            "A file with that name already exists.",
             "File Already Exists"
         );
 
@@ -1269,18 +979,13 @@ async function renameFile() {
     }
 
 
-    file.name =
-        filename;
-
+    file.name = name;
 
     syncGlobalFiles();
 
     renderFileTree();
 
-    switchEditor(
-        file.id,
-        file
-    );
+    switchEditor(file.id);
 
     saveProject();
 
@@ -1289,15 +994,10 @@ async function renameFile() {
 }
 
 
-/* =========================================================
-   DELETE FILE
-   ========================================================= */
-
 async function deleteFile() {
 
     const file =
         getActiveFile();
-
 
     if (!file) {
         return;
@@ -1311,11 +1011,8 @@ async function deleteFile() {
     ) {
 
         await bzAlert(
-            `"${file.name}" is a required Buildzen file and cannot be deleted.`,
-            "Cannot Delete File",
-            {
-                danger: true
-            }
+            `${file.name} is a required Buildzen file and cannot be deleted.`,
+            "Cannot Delete File"
         );
 
         return;
@@ -1324,10 +1021,11 @@ async function deleteFile() {
 
     const confirmed =
         await bzConfirm(
-            `Are you sure you want to delete "${file.name}"?\n\nThis cannot be undone.`,
+            `Delete "${file.name}"? This cannot be undone.`,
             "Delete File",
             {
                 confirmText: "Delete",
+                cancelText: "Cancel",
                 danger: true
             }
         );
@@ -1341,8 +1039,7 @@ async function deleteFile() {
     const index =
         project.files.findIndex(
             item =>
-                item.id ===
-                file.id
+                item.id === file.id
         );
 
 
@@ -1360,37 +1057,33 @@ async function deleteFile() {
 
 
     const nextFile =
-        project.files[index] ||
-        project.files[index - 1] ||
-        project.files[0];
+        project.files[
+        Math.max(
+            0,
+            index - 1
+        )
+        ];
 
 
-    if (!nextFile) {
+    if (nextFile) {
 
-        await bzAlert(
-            "Buildzen cannot delete the last remaining file.",
-            "Cannot Delete File",
-            {
-                danger: true
-            }
-        );
+        project.activeFile =
+            nextFile.id;
 
-        return;
     }
-
-
-    project.activeFile =
-        nextFile.id;
 
 
     syncGlobalFiles();
 
     renderFileTree();
 
-    switchEditor(
-        nextFile.id,
-        nextFile
-    );
+    if (nextFile) {
+
+        switchEditor(
+            nextFile.id
+        );
+
+    }
 
     saveProject();
 
@@ -1399,59 +1092,36 @@ async function deleteFile() {
 }
 
 
-/* =========================================================
-   STATUS
-   ========================================================= */
+// ============================================================
+// PREVIEW
+// ============================================================
 
-function setStatus(
-    text,
-    live = true
-) {
+function setStatus(text) {
 
-    status.replaceChildren();
-
-
-    const dot =
-        document.createElement(
-            "span"
-        );
-
-    dot.className =
-        "status-dot";
-
-
-    status.append(
-        dot,
-        document.createTextNode(
-            text
-        )
-    );
-
-
-    previewStatus.textContent =
-        live
-            ? "Live"
-            : text;
+    status.lastChild.textContent =
+        ` ${text}`;
 
 }
 
-
-/* =========================================================
-   PREVIEW BUILD
-   ========================================================= */
 
 function collectPreviewCode() {
 
     const htmlFile =
         project.files.find(
             file =>
-                file.name.toLowerCase() ===
+                file.name ===
                 "index.html"
         );
 
 
     if (!htmlFile) {
-        return "";
+
+        return {
+            html: "",
+            css: "",
+            js: ""
+        };
+
     }
 
 
@@ -1461,248 +1131,155 @@ function collectPreviewCode() {
         );
 
 
-    const cssFiles =
-        project.files.filter(
-            file =>
-                file.name
-                    .toLowerCase()
-                    .endsWith(".css")
-        );
+    let css = "";
+
+    let js = "";
 
 
-    const jsFiles =
-        project.files.filter(
-            file => {
+    for (const file of project.files) {
 
-                const name =
-                    file.name.toLowerCase();
-
-                return (
-                    name.endsWith(".js") ||
-                    name.endsWith(".mjs")
-                );
-
-            }
-        );
+        const extension =
+            file.name
+                .split(".")
+                .pop()
+                .toLowerCase();
 
 
-    const css =
-        cssFiles
-            .map(
-                file =>
-                    getEditorContent(
-                        file.id
-                    )
-            )
-            .join("\n\n");
+        if (extension === "css") {
 
+            css +=
+                `\n/* ${file.name} */\n` +
+                getEditorContent(file.id) +
+                "\n";
 
-    const js =
-        jsFiles
-            .map(
-                file =>
-                    getEditorContent(
-                        file.id
-                    )
-            )
-            .join("\n\n");
-
-
-    if (css.trim()) {
-
-        const style =
-            `<style>\n${css}\n</style>`;
+        }
 
 
         if (
-            html.includes(
-                "</head>"
-            )
+            extension === "js" ||
+            extension === "mjs"
         ) {
 
-            html =
-                html.replace(
-                    "</head>",
-                    `${style}\n</head>`
-                );
+            js +=
+                `\n// ${file.name}\n` +
+                getEditorContent(file.id) +
+                "\n";
 
-        } else {
-
-            html =
-                `${style}\n${html}`;
         }
 
     }
 
 
-    if (js.trim()) {
-
-        const script =
-            `<script>\n${js}\n<\/script>`;
-
-
-        if (
-            html.includes(
-                "</body>"
-            )
-        ) {
-
-            html =
-                html.replace(
-                    "</body>",
-                    `${script}\n</body>`
-                );
-
-        } else {
-
-            html +=
-                script;
-        }
-
-    }
-
-
-    return html;
+    return {
+        html,
+        css,
+        js
+    };
 
 }
 
 
-/* =========================================================
-   PREVIEW CONSOLE BRIDGE
-   ========================================================= */
-
 function createPreviewBridge() {
 
-    return `
-<script>
-(() => {
+    return `<script>
+(function () {
 
-    const serialize = value => {
-
-        if (typeof value === "string") {
-            return value;
-        }
+    function send(type, args) {
 
         try {
 
-            const result =
-                JSON.stringify(value);
+            parent.postMessage({
+                source: "buildzen-preview",
+                type: type,
+                args: args
+            }, "*");
 
-            return result === undefined
-                ? String(value)
-                : result;
+        } catch {}
 
-        } catch {
-
-            return String(value);
-        }
-
-    };
-
-
-    const send = (
-        type,
-        args
-    ) => {
-
-        try {
-
-            window.parent.postMessage(
-                {
-                    source:
-                        "buildzen-preview",
-
-                    type,
-
-                    args:
-                        args.map(serialize)
-                },
-                "*"
-            );
-
-        } catch {
-            // Ignore bridge failures.
-        }
-
-    };
+    }
 
 
     const originalLog =
-        console.log;
+        console.log.bind(console);
 
     const originalInfo =
-        console.info;
+        console.info.bind(console);
 
     const originalWarn =
-        console.warn;
+        console.warn.bind(console);
 
     const originalError =
-        console.error;
+        console.error.bind(console);
 
 
-    console.log =
-        (...args) => {
+    console.log = function () {
 
-            send("log", args);
+        const args =
+            Array.from(arguments);
 
-            originalLog.apply(
-                console,
-                args
-            );
+        send("log", args);
 
-        };
+        originalLog.apply(
+            console,
+            arguments
+        );
 
-
-    console.info =
-        (...args) => {
-
-            send("info", args);
-
-            originalInfo.apply(
-                console,
-                args
-            );
-
-        };
+    };
 
 
-    console.warn =
-        (...args) => {
+    console.info = function () {
 
-            send("warn", args);
+        const args =
+            Array.from(arguments);
 
-            originalWarn.apply(
-                console,
-                args
-            );
+        send("info", args);
 
-        };
+        originalInfo.apply(
+            console,
+            arguments
+        );
+
+    };
 
 
-    console.error =
-        (...args) => {
+    console.warn = function () {
 
-            send("error", args);
+        const args =
+            Array.from(arguments);
 
-            originalError.apply(
-                console,
-                args
-            );
+        send("warn", args);
 
-        };
+        originalWarn.apply(
+            console,
+            arguments
+        );
+
+    };
+
+
+    console.error = function () {
+
+        const args =
+            Array.from(arguments);
+
+        send("error", args);
+
+        originalError.apply(
+            console,
+            arguments
+        );
+
+    };
 
 
     window.addEventListener(
         "error",
-        event => {
+        function (event) {
 
-            send(
-                "error",
-                [
-                    event.message ||
-                    "Unknown runtime error"
-                ]
-            );
+            send("error", [
+                event.message ||
+                "Unknown error"
+            ]);
 
         }
     );
@@ -1710,45 +1287,52 @@ function createPreviewBridge() {
 
     window.addEventListener(
         "unhandledrejection",
-        event => {
+        function (event) {
 
-            send(
-                "error",
-                [
-                    String(
-                        event.reason
-                    )
-                ]
-            );
+            send("error", [
+                String(
+                    event.reason
+                )
+            ]);
 
         }
     );
 
 })();
-</script>
-`;
+</script>`;
 
 }
 
 
 function updatePreview() {
 
+    const {
+        html,
+        css,
+        js
+    } = collectPreviewCode();
+
+
+    setStatus("Building...");
+
     previewStatus.textContent =
-        "Updating...";
-
-
-    setStatus(
-        "Building",
-        false
-    );
-
-
-    const html =
-        collectPreviewCode();
+        "Building";
 
 
     const bridge =
         createPreviewBridge();
+
+
+    const style =
+        `<style>
+${css}
+</style>`;
+
+
+    const script =
+        `<script>
+${js}
+<\/script>`;
 
 
     let finalHTML =
@@ -1756,31 +1340,48 @@ function updatePreview() {
 
 
     if (
-        finalHTML.includes(
-            "</head>"
+        /<\/head>/i.test(
+            finalHTML
         )
     ) {
 
         finalHTML =
             finalHTML.replace(
-                "</head>",
-                `${bridge}\n</head>`
+                /<\/head>/i,
+                `${bridge}\n${style}\n</head>`
             );
 
     } else {
 
         finalHTML =
-            bridge +
-            finalHTML;
+            `${bridge}\n${style}\n${finalHTML}`;
+
+    }
+
+
+    if (
+        /<\/body>/i.test(
+            finalHTML
+        )
+    ) {
+
+        finalHTML =
+            finalHTML.replace(
+                /<\/body>/i,
+                `${script}\n</body>`
+            );
+
+    } else {
+
+        finalHTML +=
+            script;
+
     }
 
 
     preview.onload = () => {
 
-        setStatus(
-            "Live",
-            true
-        );
+        setStatus("Live");
 
         previewStatus.textContent =
             "Live";
@@ -1794,14 +1395,56 @@ function updatePreview() {
 }
 
 
-/* =========================================================
-   CONSOLE
-   ========================================================= */
+// ============================================================
+// CONSOLE
+// ============================================================
 
 let consoleEntries = [];
 
 let activeConsoleFilter =
     "all";
+
+
+function stringifyConsoleValue(value) {
+
+    if (
+        value === null
+    ) {
+        return "null";
+    }
+
+
+    if (
+        value === undefined
+    ) {
+        return "undefined";
+    }
+
+
+    if (
+        typeof value === "object"
+    ) {
+
+        try {
+
+            return JSON.stringify(
+                value,
+                null,
+                2
+            );
+
+        } catch {
+
+            return String(value);
+
+        }
+
+    }
+
+
+    return String(value);
+
+}
 
 
 function addConsoleEntry(
@@ -1810,8 +1453,17 @@ function addConsoleEntry(
 ) {
 
     consoleEntries.push({
+
         type,
-        args
+
+        args:
+            args.map(
+                stringifyConsoleValue
+            ),
+
+        time:
+            new Date()
+
     });
 
 
@@ -1822,15 +1474,12 @@ function addConsoleEntry(
 
 function renderConsole() {
 
-    consoleOutput.replaceChildren();
+    consoleOutput.innerHTML = "";
 
 
     const filtered =
-        activeConsoleFilter ===
-            "all"
-
+        activeConsoleFilter === "all"
             ? consoleEntries
-
             : consoleEntries.filter(
                 entry =>
                     entry.type ===
@@ -1838,31 +1487,52 @@ function renderConsole() {
             );
 
 
-    for (
-        const entry of filtered
-    ) {
+    consoleCount.textContent =
+        `(${consoleEntries.length})`;
+
+
+    for (const entry of filtered) {
 
         const row =
-            document.createElement(
-                "div"
-            );
-
+            document.createElement("div");
 
         row.className =
             `console-entry ${entry.type}`;
 
 
-        const message =
-            document.createElement(
-                "span"
-            );
+        const time =
+            document.createElement("span");
 
+        time.className =
+            "console-time";
+
+        time.textContent =
+            entry.time.toLocaleTimeString();
+
+
+        const type =
+            document.createElement("span");
+
+        type.className =
+            "console-type";
+
+        type.textContent =
+            entry.type.toUpperCase();
+
+
+        const message =
+            document.createElement("pre");
+
+        message.className =
+            "console-message";
 
         message.textContent =
             entry.args.join(" ");
 
 
-        row.appendChild(
+        row.append(
+            time,
+            type,
             message
         );
 
@@ -1874,67 +1544,322 @@ function renderConsole() {
     }
 
 
-    consoleCount.textContent =
-        `(${consoleEntries.length})`;
+    consoleOutput.scrollTop =
+        consoleOutput.scrollHeight;
 
 }
 
-
-/* =========================================================
-   PREVIEW MESSAGES
-   ========================================================= */
 
 window.addEventListener(
     "message",
     event => {
 
+        const data =
+            event.data;
+
+
         if (
-            !event.data ||
-            event.data.source !==
+            !data ||
+            data.source !==
             "buildzen-preview"
         ) {
             return;
         }
 
 
-        const type =
-            [
-                "log",
-                "info",
-                "warn",
-                "error"
-            ].includes(
-                event.data.type
-            )
-                ? event.data.type
-                : "log";
-
-
-        const args =
-            Array.isArray(
-                event.data.args
-            )
-                ? event.data.args
-                : [
-                    String(
-                        event.data.args ??
-                        ""
-                    )
-                ];
-
-
         addConsoleEntry(
-            type,
-            args
+            data.type || "log",
+            Array.isArray(data.args)
+                ? data.args
+                : [data.args]
         );
 
     }
 );
 
 
-/* =========================================================
-   EVENT HANDLERS
-   ========================================================= */
+// ============================================================
+// ASSETS — INDEXEDDB
+// ============================================================
+
+const ASSET_DB_NAME =
+    "buildzen-assets";
+
+const ASSET_DB_VERSION =
+    1;
+
+const ASSET_STORE =
+    "assets";
+
+
+function openAssetDatabase() {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            const request =
+                indexedDB.open(
+                    ASSET_DB_NAME,
+                    ASSET_DB_VERSION
+                );
+
+
+            request.onupgradeneeded =
+                event => {
+
+                    const db =
+                        event.target.result;
+
+
+                    if (
+                        !db.objectStoreNames
+                            .contains(
+                                ASSET_STORE
+                            )
+                    ) {
+
+                        db.createObjectStore(
+                            ASSET_STORE,
+                            {
+                                keyPath: "id"
+                            }
+                        );
+
+                    }
+
+                };
+
+
+            request.onsuccess = () => {
+
+                resolve(
+                    request.result
+                );
+
+            };
+
+
+            request.onerror = () => {
+
+                reject(
+                    request.error
+                );
+
+            };
+
+        }
+    );
+
+}
+
+
+async function saveAsset(file) {
+
+    const db =
+        await openAssetDatabase();
+
+
+    return new Promise(
+        (resolve, reject) => {
+
+            const transaction =
+                db.transaction(
+                    ASSET_STORE,
+                    "readwrite"
+                );
+
+
+            const store =
+                transaction.objectStore(
+                    ASSET_STORE
+                );
+
+
+            const asset = {
+
+                id:
+                    crypto.randomUUID(),
+
+                name:
+                    file.name,
+
+                type:
+                    file.type ||
+                    "application/octet-stream",
+
+                size:
+                    file.size,
+
+                lastModified:
+                    file.lastModified,
+
+                file
+
+            };
+
+
+            const request =
+                store.add(asset);
+
+
+            request.onsuccess = () => {
+
+                resolve(asset);
+
+            };
+
+
+            request.onerror = () => {
+
+                reject(
+                    request.error
+                );
+
+            };
+
+        }
+    );
+
+}
+
+
+async function getAllAssets() {
+
+    const db =
+        await openAssetDatabase();
+
+
+    return new Promise(
+        (resolve, reject) => {
+
+            const transaction =
+                db.transaction(
+                    ASSET_STORE,
+                    "readonly"
+                );
+
+
+            const store =
+                transaction.objectStore(
+                    ASSET_STORE
+                );
+
+
+            const request =
+                store.getAll();
+
+
+            request.onsuccess = () => {
+
+                resolve(
+                    request.result
+                );
+
+            };
+
+
+            request.onerror = () => {
+
+                reject(
+                    request.error
+                );
+
+            };
+
+        }
+    );
+
+}
+
+function getAssetIcon(asset) {
+
+    const type = asset.type || "";
+
+    if (type.startsWith("image/")) {
+        return "IMG";
+    }
+
+    if (type.startsWith("video/")) {
+        return "VID";
+    }
+
+    if (type.startsWith("audio/")) {
+        return "AUD";
+    }
+
+    if (type.includes("font")) {
+        return "FONT";
+    }
+
+    if (type.includes("pdf")) {
+        return "PDF";
+    }
+
+    return "FILE";
+}
+
+
+uploadAssetBtn.addEventListener(
+    "click",
+    () => {
+
+        assetInput.click();
+
+    }
+);
+
+
+assetInput.addEventListener(
+    "change",
+    async () => {
+
+        const files =
+            Array.from(
+                assetInput.files || []
+            );
+
+
+        if (!files.length) {
+            return;
+        }
+
+
+        try {
+
+            for (const file of files) {
+
+                await saveAsset(file);
+
+            }
+
+            await renderAssets();
+
+            console.log(
+                `Uploaded ${files.length} asset${files.length === 1
+                    ? ""
+                    : "s"
+                }.`
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Failed to save asset:",
+                error
+            );
+
+        }
+
+
+        assetInput.value = "";
+
+    }
+);
+
+
+// ============================================================
+// EVENT HANDLERS
+// ============================================================
 
 newFileBtn.addEventListener(
     "click",
@@ -1972,19 +1897,24 @@ clearConsoleBtn.addEventListener(
 );
 
 
-consoleFilters.forEach(
-    button => {
+document
+    .querySelectorAll(".console-filter")
+    .forEach(button => {
 
         button.addEventListener(
             "click",
             () => {
 
-                consoleFilters.forEach(
-                    item =>
-                        item.classList.remove(
-                            "active"
-                        )
-                );
+                document
+                    .querySelectorAll(
+                        ".console-filter"
+                    )
+                    .forEach(
+                        item =>
+                            item.classList.remove(
+                                "active"
+                            )
+                    );
 
 
                 button.classList.add(
@@ -2001,13 +1931,8 @@ consoleFilters.forEach(
             }
         );
 
-    }
-);
+    });
 
-
-/* =========================================================
-   RESET PROJECT
-   ========================================================= */
 
 resetBtn.addEventListener(
     "click",
@@ -2015,30 +1940,19 @@ resetBtn.addEventListener(
 
         const confirmed =
             await bzConfirm(
-
-                "Reset the entire project to the default Buildzen project?\n\nAll current files and changes will be lost.",
-
+                "Reset the project to the default Buildzen files? All current source code will be replaced.",
                 "Reset Project",
-
                 {
-                    confirmText:
-                        "Reset Project",
-
-                    danger:
-                        true
+                    confirmText: "Reset",
+                    cancelText: "Cancel",
+                    danger: true
                 }
-
             );
 
 
         if (!confirmed) {
             return;
         }
-
-
-        localStorage.removeItem(
-            STORAGE_KEY
-        );
 
 
         project = {
@@ -2054,36 +1968,15 @@ resetBtn.addEventListener(
 
         syncGlobalFiles();
 
-
         initializeEditors(
             project.files
         );
 
-
         renderFileTree();
 
-
-        const activeFile =
-            project.files.find(
-                file =>
-                    file.id ===
-                    project.activeFile
-            );
-
-
-        if (activeFile) {
-
-            switchEditor(
-                activeFile.id,
-                activeFile
-            );
-
-        }
-
-
-        consoleEntries = [];
-
-        renderConsole();
+        switchEditor(
+            project.activeFile
+        );
 
         saveProject();
 
@@ -2093,10 +1986,6 @@ resetBtn.addEventListener(
 );
 
 
-/* =========================================================
-   EDITOR EVENTS
-   ========================================================= */
-
 window.addEventListener(
     "buildzen-edit",
     event => {
@@ -2104,22 +1993,14 @@ window.addEventListener(
         const {
             fileId,
             content
-        } = event.detail || {};
-
-
-        if (
-            typeof fileId !==
-            "string"
-        ) {
-            return;
-        }
+        } =
+            event.detail || {};
 
 
         const file =
             project.files.find(
                 item =>
-                    item.id ===
-                    fileId
+                    item.id === fileId
             );
 
 
@@ -2129,10 +2010,7 @@ window.addEventListener(
 
 
         file.content =
-            typeof content ===
-                "string"
-                ? content
-                : "";
+            content;
 
 
         saveProject();
@@ -2147,21 +2025,24 @@ window.addEventListener(
     "buildzen-save",
     () => {
 
-        const activeFile =
+        const file =
             getActiveFile();
 
 
-        if (activeFile) {
-
-            activeFile.content =
-                getEditorContent(
-                    activeFile.id
-                );
-
+        if (!file) {
+            return;
         }
 
 
+        file.content =
+            getEditorContent(
+                file.id
+            );
+
+
         saveProject();
+
+        updatePreview();
 
     }
 );
@@ -2173,39 +2054,118 @@ window.addEventListener(
 );
 
 
-/* =========================================================
-   STARTUP
-   ========================================================= */
+// ============================================================
+// STARTUP
+// ============================================================
 
 loadProject();
 
 syncGlobalFiles();
 
-
 initializeEditors(
     project.files
 );
 
-
 renderFileTree();
 
 
-const activeFile =
-    project.files.find(
+if (
+    project.files.some(
         file =>
             file.id ===
             project.activeFile
-    );
-
-
-if (activeFile) {
+    )
+) {
 
     switchEditor(
-        activeFile.id,
-        activeFile
+        project.activeFile
     );
 
 }
 
 
 updatePreview();
+
+
+// Load stored assets so the asset
+// database is initialized now.
+
+renderAssets()
+    .catch(error => {
+
+        console.error(
+            "Failed to load assets:",
+            error
+        );
+
+    });
+
+async function renderAssets() {
+
+    const assets =
+        await getAllAssets();
+
+    assetTree.innerHTML = "";
+
+    if (!assets.length) {
+
+        const empty =
+            document.createElement("div");
+
+        empty.className =
+            "empty-assets";
+
+        empty.textContent =
+            "No assets yet";
+
+        assetTree.appendChild(empty);
+
+        return;
+    }
+
+    assets.sort((a, b) =>
+        a.name.localeCompare(b.name)
+    );
+
+    for (const asset of assets) {
+
+        const item =
+            document.createElement("div");
+
+        item.className =
+            "asset-item";
+
+
+        const icon =
+            document.createElement("span");
+
+        icon.className =
+            "asset-icon";
+
+        icon.textContent =
+            getAssetIcon(asset);
+
+
+        const name =
+            document.createElement("span");
+
+        name.className =
+            "asset-name";
+
+        name.textContent =
+            asset.name;
+
+        name.title =
+            asset.name;
+
+
+        item.append(
+            icon,
+            name
+        );
+
+        assetTree.appendChild(item);
+
+    }
+
+}
