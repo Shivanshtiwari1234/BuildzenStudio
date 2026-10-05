@@ -1,0 +1,545 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+
+    font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    background: #0b0d12;
+    color: #fff;
+}
+
+
+/* =========================
+   TOP BAR
+   ========================= */
+
+.topbar {
+    height: 60px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 18px;
+
+    background: #12151c;
+    border-bottom: 1px solid #272c36;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo {
+    width: 34px;
+    height: 34px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 9px;
+
+    background:
+        linear-gradient(135deg,
+            #9b8cff,
+            #6657e8);
+
+    font-weight: 800;
+}
+
+.brand-name {
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.brand-subtitle {
+    color: #858d9f;
+    font-size: 11px;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+button {
+    border: 1px solid #303645;
+
+    background: #191d26;
+    color: #fff;
+
+    padding: 8px 12px;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+
+    font-size: 12px;
+}
+
+button:hover {
+    background: #222735;
+}
+
+.run-button {
+    background: #7565ee;
+    border-color: #7565ee;
+}
+
+.run-button:hover {
+    background: #6656df;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    color: #8e97a9;
+    font-size: 11px;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #4bd6a0;
+
+    box-shadow:
+        0 0 8px #4bd6a0;
+}
+
+
+/* =========================
+   WORKSPACE
+   ========================= */
+
+.workspace {
+    height: calc(100vh - 60px);
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr) minmax(0, 1fr);
+
+    gap: 12px;
+
+    padding: 12px;
+}
+
+.panel {
+    min-width: 0;
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    background: #12151c;
+
+    border: 1px solid #292e39;
+    border-radius: 10px;
+
+    overflow: hidden;
+}
+
+
+/* =========================
+   PANEL HEADER
+   ========================= */
+
+.panel-header {
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 14px;
+
+    background: #151820;
+
+    border-bottom: 1px solid #292e39;
+}
+
+.panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.panel-icon {
+    width: 24px;
+    height: 24px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 6px;
+
+    background: rgba(117, 101, 238, 0.15);
+
+    color: #a99eff;
+
+    font-size: 11px;
+}
+
+.panel-info {
+    color: #747d90;
+    font-size: 10px;
+}
+
+.live {
+    color: #4bd6a0;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+/* =========================
+   CODE EDITOR
+   ========================= */
+
+.editor {
+    flex: 1;
+
+    display: flex;
+
+    min-height: 0;
+
+    background: #0d1016;
+}
+
+.line-numbers {
+    width: 45px;
+
+    flex-shrink: 0;
+
+    padding:
+        15px 9px 15px 0;
+
+    text-align: right;
+
+    color: #505868;
+
+    border-right: 1px solid #222731;
+
+    font-family:
+        "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        monospace;
+
+    font-size: 12px;
+    line-height: 1.7;
+
+    white-space: pre;
+
+    overflow: hidden;
+
+    user-select: none;
+}
+
+#code {
+    flex: 1;
+
+    width: 0;
+
+    resize: none;
+
+    border: none;
+    outline: none;
+
+    padding: 15px;
+
+    background: transparent;
+
+    color: #dce3f2;
+
+    font-family:
+        "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        monospace;
+
+    font-size: 12px;
+    line-height: 1.7;
+
+    tab-size: 2;
+
+    white-space: pre;
+
+    overflow: auto;
+}
+
+#code::selection {
+    background: rgba(117, 101, 238, 0.35);
+}
+
+
+/* =========================
+   PREVIEW
+   ========================= */
+
+.preview-panel {
+    min-height: 0;
+}
+
+.preview-container {
+    flex: 1;
+
+    min-height: 0;
+
+    padding: 12px;
+
+    background: #0d1016;
+}
+
+.browser-bar {
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 0 10px;
+
+    background: #1a1e27;
+
+    border:
+        1px solid #303642;
+
+    border-bottom: none;
+
+    border-radius:
+        7px 7px 0 0;
+}
+
+.browser-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #596173;
+}
+
+.address {
+    flex: 1;
+
+    margin-left: 6px;
+
+    padding: 3px 8px;
+
+    background: #11141a;
+
+    border-radius: 5px;
+
+    color: #747e91;
+
+    font-size: 10px;
+}
+
+#preview {
+    width: 100%;
+    height: calc(100% - 34px);
+
+    display: block;
+
+    border:
+        1px solid #303642;
+
+    border-radius:
+        0 0 7px 7px;
+
+    background: white;
+}
+
+
+/* =========================
+   CONSOLE
+   ========================= */
+
+.console {
+    height: 180px;
+
+    display: flex;
+    flex-direction: column;
+
+    flex-shrink: 0;
+
+    background: #0b0e13;
+
+    border-top: 1px solid #292e39;
+}
+
+.console-header {
+    height: 36px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 12px;
+
+    background: #151820;
+
+    border-bottom: 1px solid #292e39;
+}
+
+.console-title {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.console-icon {
+    color: #8f82ff;
+
+    font-family:
+        "SFMono-Regular",
+        Consolas,
+        monospace;
+}
+
+.console-clear {
+    padding: 4px 8px;
+
+    font-size: 10px;
+}
+
+.console-output {
+    flex: 1;
+
+    padding: 7px 0;
+
+    overflow-y: auto;
+
+    font-family:
+        "SFMono-Regular",
+        Consolas,
+        monospace;
+
+    font-size: 11px;
+}
+
+.console-line {
+    padding: 4px 12px;
+
+    border-bottom: 1px solid #171b22;
+
+    white-space: pre-wrap;
+
+    word-break: break-word;
+}
+
+.console-log {
+    color: #d4d9e5;
+}
+
+.console-info {
+    color: #8fbaff;
+}
+
+.console-warn {
+    color: #e6bd68;
+}
+
+.console-error {
+    color: #ff7777;
+}
+
+.console-empty {
+    padding: 10px 12px;
+
+    color: #555e70;
+}
+
+
+/* =========================
+   FOOTER
+   ========================= */
+
+.panel-footer {
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 12px;
+
+    color: #70798b;
+
+    border-top: 1px solid #292e39;
+
+    font-size: 10px;
+}
+
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 900px) {
+
+    body {
+        overflow: auto;
+    }
+
+    .workspace {
+        height: auto;
+        min-height: calc(100vh - 60px);
+
+        grid-template-columns: 1fr;
+    }
+
+    .panel {
+        min-height: 500px;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .brand-subtitle {
+        display: none;
+    }
+
+    .status {
+        display: none;
+    }
+
+    .workspace {
+        padding: 8px;
+        gap: 8px;
+    }
+
+}
