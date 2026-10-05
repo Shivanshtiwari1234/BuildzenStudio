@@ -126,19 +126,42 @@
 
                 <div class="panel-header console-header">
 
-                    <span>
-                        Console
+                    <div class="console-title">
+                        <span>Console</span>
                         <span id="consoleCount">(0)</span>
-                    </span>
+                    </div>
 
-                    <button id="clearConsoleBtn">
-                        Clear
-                    </button>
+                    <div class="console-controls">
+
+                        <button class="console-filter active" data-filter="all">
+                            All
+                        </button>
+
+                        <button class="console-filter" data-filter="log">
+                            Logs
+                        </button>
+
+                        <button class="console-filter" data-filter="info">
+                            Info
+                        </button>
+
+                        <button class="console-filter" data-filter="warn">
+                            Warnings
+                        </button>
+
+                        <button class="console-filter" data-filter="error">
+                            Errors
+                        </button>
+
+                        <button id="clearConsoleBtn">
+                            Clear
+                        </button>
+
+                    </div>
 
                 </div>
 
                 <div id="consoleOutput" class="console-output"></div>
-
             </div>
 
         </section>

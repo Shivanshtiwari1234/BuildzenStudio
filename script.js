@@ -110,21 +110,35 @@ button.addEventListener("click", () => {
    DOM
    ========================= */
 
-const htmlEditorElement = document.getElementById("htmlEditor");
-const cssEditorElement = document.getElementById("cssEditor");
-const jsEditorElement = document.getElementById("jsEditor");
+const htmlEditorElement =
+  document.getElementById("htmlEditor");
 
-const preview = document.getElementById("preview");
+const cssEditorElement =
+  document.getElementById("cssEditor");
 
-const statusElement = document.getElementById("status");
+const jsEditorElement =
+  document.getElementById("jsEditor");
 
-const cursorInfo = document.getElementById("cursorInfo");
+const preview =
+  document.getElementById("preview");
 
-const fileName = document.getElementById("fileName");
-const languageInfo = document.getElementById("languageInfo");
+const statusElement =
+  document.getElementById("status");
 
-const resetBtn = document.getElementById("resetBtn");
-const refreshBtn = document.getElementById("refreshBtn");
+const cursorInfo =
+  document.getElementById("cursorInfo");
+
+const fileName =
+  document.getElementById("fileName");
+
+const languageInfo =
+  document.getElementById("languageInfo");
+
+const resetBtn =
+  document.getElementById("resetBtn");
+
+const refreshBtn =
+  document.getElementById("refreshBtn");
 
 const clearConsoleBtn =
   document.getElementById("clearConsoleBtn");
@@ -138,38 +152,202 @@ const consoleCount =
 const tabs =
   document.querySelectorAll(".tab");
 
+const consoleFilters =
+  document.querySelectorAll(".console-filter");
+
 
 /* =========================
-   CONSOLE
+   CONSOLE STATE
    ========================= */
 
-let consoleMessages = 0;
+let consoleMessages = [];
 
-function clearConsole() {
-  consoleOutput.innerHTML = "";
+let consoleFilter = "all";
 
-  consoleMessages = 0;
 
-  consoleCount.textContent = "(0)";
+/* =========================
+   CONSOLE VALUE FORMATTER
+   ========================= */
+
+function formatConsoleValue(value) {
+
+  if (value === null) {
+    return "null";
+  }
+
+  if (value === undefined) {
+    return "undefined";
+  }
+
+
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean" ||
+    typeof value === "bigint"
+  ) {
+    return String(value);
+  }
+
+
+  if (typeof value === "object") {
+
+    try {
+
+      return JSON.stringify(
+        value,
+        null,
+        2
+      );
+
+    } catch {
+
+      return String(value);
+
+    }
+
+  }
+
+
+  return String(value);
 }
 
-function addConsoleMessage(type, message) {
 
-  const entry = document.createElement("div");
+/* =========================
+   ADD CONSOLE MESSAGE
+   ========================= */
 
-  entry.className = `console-entry ${type}`;
+function addConsoleMessage(
+  type,
+  message
+) {
 
-  entry.textContent = message;
+  consoleMessages.push({
 
-  consoleOutput.appendChild(entry);
+    type,
 
-  consoleMessages++;
+    message,
+
+    time: new Date().toLocaleTimeString(
+      [],
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      }
+    )
+
+  });
+
+  renderConsole();
+}
+
+
+/* =========================
+   RENDER CONSOLE
+   ========================= */
+
+function renderConsole() {
+
+  consoleOutput.innerHTML = "";
+
+
+  const filteredMessages =
+    consoleMessages.filter(message => {
+
+      if (consoleFilter === "all") {
+        return true;
+      }
+
+      return message.type === consoleFilter;
+
+    });
+
+
+  if (filteredMessages.length === 0) {
+
+    const empty =
+      document.createElement("div");
+
+    empty.className =
+      "console-empty";
+
+    empty.textContent =
+      consoleMessages.length === 0
+        ? "Console is empty."
+        : "No messages match this filter.";
+
+    consoleOutput.appendChild(empty);
+
+  }
+
+
+  for (const message of filteredMessages) {
+
+    const entry =
+      document.createElement("div");
+
+    entry.className =
+      `console-entry ${message.type}`;
+
+
+    const time =
+      document.createElement("div");
+
+    time.className =
+      "console-time";
+
+    time.textContent =
+      message.time;
+
+
+    const level =
+      document.createElement("div");
+
+    level.className =
+      "console-level";
+
+    level.textContent =
+      message.type.toUpperCase();
+
+
+    const content =
+      document.createElement("div");
+
+    content.className =
+      "console-message";
+
+    content.textContent =
+      message.message;
+
+
+    entry.appendChild(time);
+    entry.appendChild(level);
+    entry.appendChild(content);
+
+    consoleOutput.appendChild(entry);
+  }
+
 
   consoleCount.textContent =
-    `(${consoleMessages})`;
+    `(${consoleMessages.length})`;
+
 
   consoleOutput.scrollTop =
     consoleOutput.scrollHeight;
+}
+
+
+/* =========================
+   CLEAR CONSOLE
+   ========================= */
+
+function clearConsole() {
+
+  consoleMessages = [];
+
+  renderConsole();
+
 }
 
 
@@ -181,75 +359,130 @@ const consoleBridge = `
 <script>
 (function () {
 
-    const send = (type, args) => {
+    function serialize(value) {
 
-        let message;
-
-        try {
-            message = args
-                .map(value => {
-
-                    if (typeof value === "object") {
-                        try {
-                            return JSON.stringify(value, null, 2);
-                        } catch {
-                            return String(value);
-                        }
-                    }
-
-                    return String(value);
-                })
-                .join(" ");
-
-        } catch {
-            message = "Unable to display console message.";
+        if (value === null) {
+            return "null";
         }
 
+        if (value === undefined) {
+            return "undefined";
+        }
+
+
+        if (
+            typeof value === "string" ||
+            typeof value === "number" ||
+            typeof value === "boolean" ||
+            typeof value === "bigint"
+        ) {
+            return String(value);
+        }
+
+
+        if (typeof value === "object") {
+
+            try {
+
+                return JSON.stringify(
+                    value,
+                    null,
+                    2
+                );
+
+            } catch {
+
+                return String(value);
+
+            }
+
+        }
+
+
+        return String(value);
+    }
+
+
+    function send(type, args) {
+
+        const message = args
+            .map(serialize)
+            .join(" ");
+
+
         parent.postMessage({
+
             source: "buildzen-preview",
+
             type,
+
             message
+
         }, "*");
-    };
+
+    }
 
 
-    const originalLog = console.log;
-    const originalInfo = console.info;
-    const originalWarn = console.warn;
-    const originalError = console.error;
+    const originalLog =
+        console.log;
+
+    const originalInfo =
+        console.info;
+
+    const originalWarn =
+        console.warn;
+
+    const originalError =
+        console.error;
 
 
     console.log = (...args) => {
+
         originalLog(...args);
+
         send("log", args);
+
     };
 
 
     console.info = (...args) => {
+
         originalInfo(...args);
+
         send("info", args);
+
     };
 
 
     console.warn = (...args) => {
+
         originalWarn(...args);
+
         send("warn", args);
+
     };
 
 
     console.error = (...args) => {
+
         originalError(...args);
+
         send("error", args);
+
     };
 
 
-    window.addEventListener("error", event => {
+    window.addEventListener(
+        "error",
+        event => {
 
-        send("error", [
-            event.message || "Unknown error"
-        ]);
+            send("error", [
+                event.message ||
+                "Unknown JavaScript error"
+            ]);
 
-    });
+        }
+    );
 
 
     window.addEventListener(
@@ -264,20 +497,150 @@ const consoleBridge = `
         }
     );
 
+
 })();
 <\/script>
 `;
 
 
 /* =========================
-   CREATE PREVIEW
+   STATUS
+   ========================= */
+
+function setStatus(text) {
+
+  statusElement.innerHTML = `
+        <span class="status-dot"></span>
+        ${text}
+    `;
+
+}
+
+
+/* =========================
+   EDITOR INFO
+   ========================= */
+
+let activeEditorName = "html";
+
+
+function updateEditorInfo(view) {
+
+  const position =
+    view.state.selection.main.head;
+
+  const line =
+    view.state.doc.lineAt(position);
+
+  const column =
+    position - line.from + 1;
+
+
+  cursorInfo.textContent =
+    `Ln ${line.number}, Col ${column}`;
+}
+
+
+/* =========================
+   LOAD PROJECT
+   ========================= */
+
+function loadProject() {
+
+  const saved =
+    localStorage.getItem(
+      "buildzen-project"
+    );
+
+
+  if (!saved) {
+    return starterProject;
+  }
+
+
+  try {
+
+    const project =
+      JSON.parse(saved);
+
+
+    return {
+
+      html:
+        project.html ??
+        starterProject.html,
+
+      css:
+        project.css ??
+        starterProject.css,
+
+      js:
+        project.js ??
+        starterProject.js
+
+    };
+
+  } catch {
+
+    return starterProject;
+
+  }
+
+}
+
+
+/* =========================
+   SAVE PROJECT
+   ========================= */
+
+function saveProject() {
+
+  const project = {
+
+    html:
+      editors.html.state.doc.toString(),
+
+    css:
+      editors.css.state.doc.toString(),
+
+    js:
+      editors.js.state.doc.toString()
+
+  };
+
+
+  localStorage.setItem(
+    "buildzen-project",
+    JSON.stringify(project)
+  );
+
+
+  setStatus("Saved");
+
+
+  setTimeout(() => {
+
+    setStatus("Live");
+
+  }, 800);
+
+}
+
+
+/* =========================
+   PREVIEW
    ========================= */
 
 function updatePreview() {
 
-  const htmlCode = editors.html.state.doc.toString();
-  const cssCode = editors.css.state.doc.toString();
-  const jsCode = editors.js.state.doc.toString();
+  const htmlCode =
+    editors.html.state.doc.toString();
+
+  const cssCode =
+    editors.css.state.doc.toString();
+
+  const jsCode =
+    editors.js.state.doc.toString();
 
 
   const srcdoc = `
@@ -311,104 +674,12 @@ ${jsCode}
 `;
 
 
-  preview.srcdoc = srcdoc;
+  preview.srcdoc =
+    srcdoc;
+
 
   setStatus("Live");
-}
 
-
-/* =========================
-   STATUS
-   ========================= */
-
-function setStatus(text) {
-
-  statusElement.innerHTML = `
-        <span class="status-dot"></span>
-        ${text}
-    `;
-}
-
-
-/* =========================
-   EDITOR INFO
-   ========================= */
-
-let activeEditorName = "html";
-
-function updateEditorInfo(view) {
-
-  const position =
-    view.state.selection.main.head;
-
-  const line =
-    view.state.doc.lineAt(position);
-
-  const column =
-    position - line.from + 1;
-
-  cursorInfo.textContent =
-    `Ln ${line.number}, Col ${column}`;
-}
-
-
-/* =========================
-   SAVE
-   ========================= */
-
-function saveProject() {
-
-  const project = {
-
-    html: editors.html.state.doc.toString(),
-
-    css: editors.css.state.doc.toString(),
-
-    js: editors.js.state.doc.toString()
-
-  };
-
-  localStorage.setItem(
-    "buildzen-project",
-    JSON.stringify(project)
-  );
-
-  setStatus("Saved");
-
-  setTimeout(() => {
-    setStatus("Live");
-  }, 800);
-}
-
-
-/* =========================
-   LOAD
-   ========================= */
-
-function loadProject() {
-
-  const saved =
-    localStorage.getItem("buildzen-project");
-
-  if (!saved) {
-    return starterProject;
-  }
-
-  try {
-
-    const project =
-      JSON.parse(saved);
-
-    return {
-      html: project.html ?? starterProject.html,
-      css: project.css ?? starterProject.css,
-      js: project.js ?? starterProject.js
-    };
-
-  } catch {
-
-    return starterProject;
-  }
 }
 
 
@@ -428,7 +699,9 @@ const buildzenKeymap = keymap.of([
       saveProject();
 
       return true;
+
     }
+
   },
 
   {
@@ -439,14 +712,16 @@ const buildzenKeymap = keymap.of([
       updatePreview();
 
       return true;
+
     }
+
   }
 
 ]);
 
 
 /* =========================
-   EDITOR CREATION
+   CREATE EDITOR
    ========================= */
 
 function createEditor({
@@ -457,16 +732,28 @@ function createEditor({
 
   let languageExtension;
 
+
   if (language === "html") {
-    languageExtension = html();
+
+    languageExtension =
+      html();
+
   }
+
 
   if (language === "css") {
-    languageExtension = css();
+
+    languageExtension =
+      css();
+
   }
 
+
   if (language === "javascript") {
-    languageExtension = javascript();
+
+    languageExtension =
+      javascript();
+
   }
 
 
@@ -490,6 +777,7 @@ function createEditor({
 
         buildzenKeymap,
 
+
         EditorView.updateListener.of(
           update => {
 
@@ -501,14 +789,20 @@ function createEditor({
               updateEditorInfo(
                 update.view
               );
+
             }
 
-            if (update.docChanged) {
+
+            if (
+              update.docChanged
+            ) {
 
               updatePreview();
 
               setStatus("Live");
+
             }
+
           }
         )
 
@@ -519,45 +813,72 @@ function createEditor({
     parent
 
   });
+
 }
 
 
 /* =========================
-   EDITORS
+   CREATE ALL EDITORS
    ========================= */
 
-const project = loadProject();
+const project =
+  loadProject();
+
 
 const editors = {
 
   html: createEditor({
-    parent: htmlEditorElement,
-    value: project.html,
-    language: "html"
+
+    parent:
+      htmlEditorElement,
+
+    value:
+      project.html,
+
+    language:
+      "html"
+
   }),
+
 
   css: createEditor({
-    parent: cssEditorElement,
-    value: project.css,
-    language: "css"
+
+    parent:
+      cssEditorElement,
+
+    value:
+      project.css,
+
+    language:
+      "css"
+
   }),
 
+
   js: createEditor({
-    parent: jsEditorElement,
-    value: project.js,
-    language: "javascript"
+
+    parent:
+      jsEditorElement,
+
+    value:
+      project.js,
+
+    language:
+      "javascript"
+
   })
 
 };
 
 
 /* =========================
-   TAB SWITCHING
+   SWITCH EDITOR TAB
    ========================= */
 
 function switchEditor(name) {
 
-  activeEditorName = name;
+  activeEditorName =
+    name;
 
 
   document
@@ -572,8 +893,12 @@ function switchEditor(name) {
 
 
   document
-    .getElementById(`${name}Editor`)
-    .classList.add("active-editor");
+    .getElementById(
+      `${name}Editor`
+    )
+    .classList.add(
+      "active-editor"
+    );
 
 
   tabs.forEach(tab => {
@@ -589,18 +914,33 @@ function switchEditor(name) {
   const info = {
 
     html: {
-      file: "index.html",
-      language: "HTML"
+
+      file:
+        "index.html",
+
+      language:
+        "HTML"
+
     },
 
     css: {
-      file: "style.css",
-      language: "CSS"
+
+      file:
+        "style.css",
+
+      language:
+        "CSS"
+
     },
 
     js: {
-      file: "script.js",
-      language: "JavaScript"
+
+      file:
+        "script.js",
+
+      language:
+        "JavaScript"
+
     }
 
   };
@@ -609,6 +949,7 @@ function switchEditor(name) {
   fileName.textContent =
     info[name].file;
 
+
   languageInfo.textContent =
     info[name].language;
 
@@ -616,29 +957,76 @@ function switchEditor(name) {
   const editor =
     editors[name];
 
+
   editor.requestMeasure();
 
   editor.focus();
 
   updateEditorInfo(editor);
+
 }
 
 
+/* =========================
+   TAB EVENTS
+   ========================= */
+
 tabs.forEach(tab => {
 
-  tab.addEventListener("click", () => {
+  tab.addEventListener(
+    "click",
+    () => {
 
-    switchEditor(
-      tab.dataset.editor
-    );
+      switchEditor(
+        tab.dataset.editor
+      );
 
-  });
+    }
+  );
 
 });
 
 
 /* =========================
-   BUTTONS
+   CONSOLE FILTERS
+   ========================= */
+
+consoleFilters.forEach(button => {
+
+  button.addEventListener(
+    "click",
+    () => {
+
+      consoleFilters.forEach(
+        other => {
+
+          other.classList.remove(
+            "active"
+          );
+
+        }
+      );
+
+
+      button.classList.add(
+        "active"
+      );
+
+
+      consoleFilter =
+        button.dataset.filter;
+
+
+      renderConsole();
+
+    }
+  );
+
+});
+
+
+/* =========================
+   BUTTON EVENTS
    ========================= */
 
 refreshBtn.addEventListener(
@@ -647,34 +1035,64 @@ refreshBtn.addEventListener(
 );
 
 
+clearConsoleBtn.addEventListener(
+  "click",
+  clearConsole
+);
+
+
 resetBtn.addEventListener(
   "click",
   () => {
 
     editors.html.dispatch({
+
       changes: {
+
         from: 0,
-        to: editors.html.state.doc.length,
-        insert: starterProject.html
+
+        to:
+          editors.html.state.doc.length,
+
+        insert:
+          starterProject.html
+
       }
+
     });
 
 
     editors.css.dispatch({
+
       changes: {
+
         from: 0,
-        to: editors.css.state.doc.length,
-        insert: starterProject.css
+
+        to:
+          editors.css.state.doc.length,
+
+        insert:
+          starterProject.css
+
       }
+
     });
 
 
     editors.js.dispatch({
+
       changes: {
+
         from: 0,
-        to: editors.js.state.doc.length,
-        insert: starterProject.js
+
+        to:
+          editors.js.state.doc.length,
+
+        insert:
+          starterProject.js
+
       }
+
     });
 
 
@@ -689,17 +1107,14 @@ resetBtn.addEventListener(
 
     setStatus("Reset");
 
+
     setTimeout(() => {
+
       setStatus("Live");
+
     }, 800);
 
   }
-);
-
-
-clearConsoleBtn.addEventListener(
-  "click",
-  clearConsole
 );
 
 
@@ -712,10 +1127,12 @@ window.addEventListener(
   event => {
 
     if (
-      event.source !== preview.contentWindow
+      event.source !==
+      preview.contentWindow
     ) {
       return;
     }
+
 
     if (
       !event.data ||
@@ -727,8 +1144,13 @@ window.addEventListener(
 
 
     addConsoleMessage(
-      event.data.type || "log",
-      event.data.message || ""
+
+      event.data.type ||
+      "log",
+
+      event.data.message ||
+      ""
+
     );
 
   }
