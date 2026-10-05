@@ -12,144 +12,98 @@
 
 <body>
 
-    <!-- TOP BAR -->
-
     <header class="topbar">
 
         <div class="brand">
-
-            <div class="logo">
-                B
-            </div>
+            <div class="logo">B</div>
 
             <div>
-                <div class="brand-name">
-                    Buildzen Studio
-                </div>
-
-                <div class="brand-subtitle">
-                    Build websites directly in your browser
-                </div>
+                <div class="brand-name">Buildzen Studio</div>
+                <div class="brand-subtitle">Web Builder</div>
             </div>
-
         </div>
 
+        <div class="topbar-actions">
 
-        <div class="topbar-right">
-
-            <div class="status">
+            <span id="status" class="status">
                 <span class="status-dot"></span>
-                Live preview
-            </div>
+                Ready
+            </span>
 
-            <button id="resetButton">
-                Reset
-            </button>
-
-            <button class="run-button" id="runButton">
-                Refresh Preview
-            </button>
+            <button id="resetBtn">Reset</button>
+            <button id="refreshBtn">Refresh</button>
 
         </div>
 
     </header>
 
 
-    <!-- WORKSPACE -->
-
     <main class="workspace">
 
-        <!-- CODE PANEL -->
+        <!-- EDITOR -->
 
-        <section class="panel">
+        <section class="editor-panel">
 
             <div class="panel-header">
 
                 <div class="panel-title">
-
-                    <div class="panel-icon">
-                        &lt;/&gt;
-                    </div>
-
-                    Code
-
+                    <span class="panel-icon html-icon">&lt;/&gt;</span>
+                    HTML
                 </div>
 
-                <div class="panel-info" id="lineCount">
-                    1 line
-                </div>
+                <span id="lineCount">1 line</span>
 
             </div>
 
+            <div id="editor"></div>
 
-            <div class="editor">
+            <div class="editor-footer">
 
-                <div class="line-numbers" id="lineNumbers">
-                    1
-                </div>
-
-                <textarea id="code" spellcheck="false" autocomplete="off" autocorrect="off"
-                    autocapitalize="off"></textarea>
-
-            </div>
-
-
-            <div class="panel-footer">
-
-                <span>
-                    HTML · CSS · JavaScript
+                <span id="cursorPosition">
+                    Ln 1, Col 1
                 </span>
 
-                <span>
-                    Tab = indent
-                </span>
+                <span>Spaces: 2</span>
+                <span>UTF-8</span>
+                <span>HTML</span>
 
             </div>
 
         </section>
 
 
-        <!-- PREVIEW PANEL -->
+        <!-- PREVIEW -->
 
-        <section class="panel preview-panel">
+        <section class="preview-panel">
 
             <div class="panel-header">
 
                 <div class="panel-title">
-
-                    <div class="panel-icon">
-                        ◩
-                    </div>
-
-                    Preview
-
-                </div>
-
-                <div class="live">
-                    ● LIVE
+                    <span class="panel-icon preview-icon">▶</span>
+                    Live Preview
                 </div>
 
             </div>
 
 
-            <!-- PREVIEW -->
-
             <div class="preview-container">
 
                 <div class="browser-bar">
 
-                    <span class="browser-dot"></span>
-                    <span class="browser-dot"></span>
-                    <span class="browser-dot"></span>
+                    <div class="browser-buttons">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
 
-                    <div class="address">
-                        buildzen-preview.local
+                    <div class="browser-address">
+                        buildzen://preview
                     </div>
 
                 </div>
 
-
-                <iframe id="preview" title="Live preview" sandbox="allow-scripts allow-forms allow-modals"></iframe>
+                <iframe id="preview" title="Live preview" sandbox="allow-scripts allow-forms allow-modals">
+                </iframe>
 
             </div>
 
@@ -161,37 +115,31 @@
                 <div class="console-header">
 
                     <div class="console-title">
-
-                        <span class="console-icon">
-                            &gt;_
-                        </span>
-
-                        Console
-
+                        <span>Console</span>
+                        <span id="consoleCount">0</span>
                     </div>
 
-                    <button class="console-clear" id="clearConsole">
+                    <button id="clearConsole">
                         Clear
                     </button>
 
                 </div>
 
+                <div id="consoleOutput" class="console-output">
 
-                <div class="console-output" id="consoleOutput"></div>
+                    <div class="console-empty">
+                        Console output will appear here...
+                    </div>
+
+                </div>
 
             </div>
 
 
-            <div class="panel-footer">
-
-                <span>
-                    Live output
-                </span>
-
+            <div class="preview-footer">
                 <span id="previewStatus">
-                    Up to date
+                    Preview ready
                 </span>
-
             </div>
 
         </section>
@@ -199,7 +147,7 @@
     </main>
 
 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 
 </body>
 

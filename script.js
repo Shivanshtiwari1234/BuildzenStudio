@@ -1,701 +1,643 @@
-/* =========================
-   STARTER CODE
-   ========================= */
+import { EditorState }
+  from "https://esm.sh/@codemirror/state@6.5.2";
+
+import {
+  EditorView,
+  keymap
+}
+  from "https://esm.sh/@codemirror/view@6.43.13?deps=@codemirror%2Fstate@6.5.2";
+
+import { basicSetup }
+  from "https://esm.sh/codemirror@6.0.1?deps=@codemirror%2Fstate@6.5.2";
+
+import { html }
+  from "https://esm.sh/@codemirror/lang-html@6.4.9?deps=@codemirror%2Fstate@6.5.2";
+
+import { oneDark }
+  from "https://esm.sh/@codemirror/theme-one-dark@6.1.2?deps=@codemirror%2Fstate@6.5.2";
+
+import { syntaxHighlighting }
+  from "https://esm.sh/@codemirror/language@6.12.4?deps=@codemirror%2Fstate@6.5.2";
+
+import { classHighlighter }
+  from "https://esm.sh/@lezer/highlight@1.2.5?target=es2022";
+
+import { indentWithTab }
+  from "https://esm.sh/@codemirror/commands@6.11.1?deps=@codemirror%2Fstate@6.5.2";
+
+
+// ============================================================
+// SYNTAX HIGHLIGHTING CSS
+// ============================================================
+
+const syntaxStyle = document.createElement("style");
+
+syntaxStyle.id = "buildzen-syntax-highlighting";
+
+syntaxStyle.textContent = `
+    /* HTML / XML */
+
+    .tok-angleBracket {
+        color: #abb2bf;
+    }
+
+    .tok-tagName {
+        color: #e06c75;
+    }
+
+    .tok-attributeName {
+        color: #d19a66;
+    }
+
+    .tok-propertyName {
+        color: #61afef;
+    }
+
+    .tok-string {
+        color: #98c379;
+    }
+
+    .tok-comment {
+        color: #7f848e;
+        font-style: italic;
+    }
+
+    .tok-meta {
+        color: #c678dd;
+    }
+
+    /* JavaScript / CSS */
+
+    .tok-keyword {
+        color: #c678dd;
+    }
+
+    .tok-variableName {
+        color: #e06c75;
+    }
+
+    .tok-variableName2 {
+        color: #61afef;
+    }
+
+    .tok-definition {
+        color: #61afef;
+    }
+
+    .tok-typeName {
+        color: #e5c07b;
+    }
+
+    .tok-className {
+        color: #e5c07b;
+    }
+
+    .tok-number {
+        color: #d19a66;
+    }
+
+    .tok-bool {
+        color: #d19a66;
+    }
+
+    .tok-atom {
+        color: #d19a66;
+    }
+
+    .tok-operator {
+        color: #56b6c2;
+    }
+
+    .tok-punctuation {
+        color: #abb2bf;
+    }
+
+    .tok-string2 {
+        color: #98c379;
+    }
+
+    .tok-regexp {
+        color: #56b6c2;
+    }
+
+    .tok-escape {
+        color: #56b6c2;
+    }
+
+    .tok-link {
+        color: #61afef;
+        text-decoration: underline;
+    }
+
+    .tok-invalid {
+        color: #ffffff;
+        background: #e06c75;
+    }
+
+    .tok-content {
+        color: #abb2bf;
+    }
+
+    .tok-labelName {
+        color: #61afef;
+    }
+
+    .tok-macroName {
+        color: #c678dd;
+    }
+
+    .tok-function {
+        color: #61afef;
+    }
+`;
+
+document.head.appendChild(syntaxStyle);
+
+
+// ============================================================
+// STARTER CODE
+// ============================================================
 
 const starterCode = `<!DOCTYPE html>
 <html lang="en">
 
 <head>
+    <meta charset="UTF-8">
 
-  <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+    <title>Buildzen Website</title>
 
-  <title>My Buildzen Website</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
 
-  <style>
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
-    body {
-      margin: 0;
-      min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+        }
 
-      display: grid;
-      place-items: center;
+        .card {
+            padding: 40px;
 
-      font-family: system-ui, sans-serif;
+            text-align: center;
 
-      background:
-        linear-gradient(
-          135deg,
-          #f4f1ff,
-          #e8f5ff
-        );
+            background: white;
+            border-radius: 16px;
 
-      color: #20243a;
-    }
+            box-shadow:
+                0 10px 30px
+                rgba(0, 0, 0, 0.12);
+        }
 
-    .card {
-      width: min(90%, 500px);
+        .button {
+            padding: 12px 20px;
 
-      padding: 40px;
+            border: none;
+            border-radius: 8px;
 
-      text-align: center;
+            background: #4f7cff;
+            color: white;
 
-      background: white;
+            cursor: pointer;
+        }
 
-      border-radius: 20px;
-
-      box-shadow:
-        0 20px 60px #0002;
-    }
-
-    h1 {
-      margin-bottom: 10px;
-    }
-
-    p {
-      color: #697086;
-
-      line-height: 1.7;
-    }
-
-    button {
-      padding: 12px 20px;
-
-      border: none;
-      border-radius: 10px;
-
-      background: #7565ee;
-      color: white;
-
-      font-weight: bold;
-
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #6252dc;
-    }
-
-  </style>
-
+        .button:hover {
+            background: #3d68e6;
+        }
+    </style>
 </head>
-
 
 <body>
 
-  <div class="card">
+    <div class="card">
+        <h1>Hello from Buildzen!</h1>
 
-    <h1>
-      Hello from Buildzen!
-    </h1>
+        <p>Start editing the code.</p>
 
-    <p>
-      Edit the code on the left and
-      watch this page update instantly.
-    </p>
+        <button
+            class="button"
+            onclick="testBuildzen()"
+        >
+            Test Buildzen
+        </button>
+    </div>
 
-    <button
-      onclick="console.log('Button clicked!'); alert('Buildzen works!')"
-    >
-      Test Button
-    </button>
+    <script>
+        function testBuildzen() {
+            console.log("Button clicked!");
 
-  </div>
+            alert("Buildzen JavaScript is working!");
+        }
+
+        console.log("Buildzen preview loaded.");
+    <\/script>
 
 </body>
-
 </html>`;
 
 
-/* =========================
-   ELEMENTS
-   ========================= */
+// ============================================================
+// ELEMENTS
+// ============================================================
 
-const code =
-    document.getElementById("code");
+const editorElement = document.getElementById("editor");
+const preview = document.getElementById("preview");
 
-const preview =
-    document.getElementById("preview");
+const status = document.getElementById("status");
+const lineCount = document.getElementById("lineCount");
+const cursorPosition = document.getElementById("cursorPosition");
 
-const lineNumbers =
-    document.getElementById("lineNumbers");
+const previewStatus = document.getElementById("previewStatus");
 
-const lineCount =
-    document.getElementById("lineCount");
+const consoleOutput = document.getElementById("consoleOutput");
+const consoleCount = document.getElementById("consoleCount");
 
-const previewStatus =
-    document.getElementById("previewStatus");
-
-const consoleOutput =
-    document.getElementById("consoleOutput");
-
-const clearConsoleButton =
-    document.getElementById("clearConsole");
+const resetBtn = document.getElementById("resetBtn");
+const refreshBtn = document.getElementById("refreshBtn");
+const clearConsoleBtn = document.getElementById("clearConsole");
 
 
-/* =========================
-   LINE NUMBERS
-   ========================= */
+// ============================================================
+// CONSOLE
+// ============================================================
 
-function updateLineNumbers() {
-
-    const lines =
-        code.value.split("\n").length;
-
-    let numbers = "";
-
-    for (
-        let i = 1;
-        i <= lines;
-        i++
-    ) {
-
-        numbers += i;
-
-        if (i < lines) {
-            numbers += "\n";
-        }
-
-    }
-
-    lineNumbers.textContent =
-        numbers;
-
-    lineCount.textContent =
-        lines === 1
-            ? "1 line"
-            : `${lines} lines`;
-}
-
-
-/* =========================
-   CONSOLE
-   ========================= */
+let consoleMessages = 0;
 
 function clearConsole() {
+  consoleMessages = 0;
 
+  consoleCount.textContent = "0";
+
+  consoleOutput.innerHTML = `
+        <div class="console-empty">
+            Console output will appear here...
+        </div>
+    `;
+}
+
+
+function addConsoleMessage(type, message) {
+  if (consoleOutput.querySelector(".console-empty")) {
     consoleOutput.innerHTML = "";
-
-    const empty =
-        document.createElement("div");
-
-    empty.className =
-        "console-empty";
-
-    empty.textContent =
-        "Console cleared.";
-
-    consoleOutput.appendChild(empty);
-}
-
-
-function addConsoleMessage(
-    type,
-    message
-) {
-
-    const empty =
-        consoleOutput.querySelector(
-            ".console-empty"
-        );
-
-    if (empty) {
-        empty.remove();
-    }
-
-
-    const line =
-        document.createElement("div");
-
-    line.className =
-        `console-line console-${type}`;
-
-
-    const prefixes = {
-
-        log: ">",
-
-        info: "ℹ",
-
-        warn: "⚠",
-
-        error: "✕"
-
-    };
-
-
-    const prefix =
-        prefixes[type] || ">";
-
-
-    line.textContent =
-        `${prefix} ${message}`;
-
-
-    consoleOutput.appendChild(line);
-
-
-    consoleOutput.scrollTop =
-        consoleOutput.scrollHeight;
-}
-
-
-/* =========================
-   CONVERT JS VALUES TO TEXT
-   ========================= */
-
-function stringifyValue(value) {
-
-    if (
-        typeof value === "object" &&
-        value !== null
-    ) {
-
-        try {
-
-            return JSON.stringify(
-                value,
-                null,
-                2
-            );
-
-        } catch {
-
-            return String(value);
-
-        }
-
-    }
-
-    return String(value);
-}
-
-
-/* =========================
-   LIVE PREVIEW
-   ========================= */
-
-function updatePreview() {
-
-    clearConsole();
-
-    previewStatus.textContent =
-        "Updating...";
-
-
-    /*
-      This script is injected into
-      the preview before the user's
-      HTML.
-  
-      It forwards console messages
-      back to Buildzen Studio.
-    */
-
-    const consoleBridge = `
-
-<script>
-
-(function () {
-
-  function send(type, args) {
-
-    try {
-
-      const message =
-        args.map(function (arg) {
-
-          if (
-            typeof arg === "object" &&
-            arg !== null
-          ) {
-
-            try {
-
-              return JSON.stringify(
-                arg,
-                null,
-                2
-              );
-
-            } catch {
-
-              return String(arg);
-
-            }
-
-          }
-
-          return String(arg);
-
-        }).join(" ");
-
-
-      parent.postMessage({
-
-        source:
-          "buildzen-preview",
-
-        type:
-          type,
-
-        message:
-          message
-
-      }, "*");
-
-
-    } catch (error) {
-
-      parent.postMessage({
-
-        source:
-          "buildzen-preview",
-
-        type:
-          "error",
-
-        message:
-          String(error)
-
-      }, "*");
-
-    }
-
   }
 
+  consoleMessages++;
 
-  /*
-    console.log()
-  */
+  consoleCount.textContent = consoleMessages;
 
-  const originalLog =
-    console.log;
+  const entry = document.createElement("div");
 
-  console.log =
-    function () {
+  entry.className = `console-entry console-${type}`;
 
-      send(
-        "log",
-        Array.from(arguments)
-      );
+  const time = new Date().toLocaleTimeString();
 
-      originalLog.apply(
-        console,
-        arguments
-      );
+  entry.innerHTML = `
+        <span class="console-time">${time}</span>
+        <span class="console-type">${type}</span>
+        <span class="console-message"></span>
+    `;
 
-    };
+  entry.querySelector(".console-message").textContent = message;
 
+  consoleOutput.appendChild(entry);
 
-  /*
-    console.info()
-  */
-
-  const originalInfo =
-    console.info;
-
-  console.info =
-    function () {
-
-      send(
-        "info",
-        Array.from(arguments)
-      );
-
-      originalInfo.apply(
-        console,
-        arguments
-      );
-
-    };
+  consoleOutput.scrollTop = consoleOutput.scrollHeight;
+}
 
 
-  /*
-    console.warn()
-  */
+// ============================================================
+// PREVIEW CONSOLE BRIDGE
+// ============================================================
 
-  const originalWarn =
-    console.warn;
+const consoleBridge = `
+<script>
+(function () {
 
-  console.warn =
-    function () {
+    function serialize(value) {
+        try {
+            if (typeof value === "string") {
+                return value;
+            }
 
-      send(
-        "warn",
-        Array.from(arguments)
-      );
-
-      originalWarn.apply(
-        console,
-        arguments
-      );
-
-    };
-
-
-  /*
-    console.error()
-  */
-
-  const originalError =
-    console.error;
-
-  console.error =
-    function () {
-
-      send(
-        "error",
-        Array.from(arguments)
-      );
-
-      originalError.apply(
-        console,
-        arguments
-      );
-
-    };
-
-
-  /*
-    JavaScript errors
-  */
-
-  window.addEventListener(
-    "error",
-    function (event) {
-
-      send(
-        "error",
-        [
-          event.message +
-          " (" +
-          event.lineno +
-          ":" +
-          event.colno +
-          ")"
-        ]
-      );
-
+            return JSON.stringify(value, null, 2);
+        } catch (error) {
+            return String(value);
+        }
     }
-  );
 
-
-  /*
-    Unhandled promises
-  */
-
-  window.addEventListener(
-    "unhandledrejection",
-    function (event) {
-
-      send(
-        "error",
-        [
-          "Unhandled promise rejection:",
-          event.reason
-        ]
-      );
-
+    function send(type, args) {
+        parent.postMessage({
+            source: "buildzen-preview",
+            type: type,
+            message: args.map(serialize).join(" ")
+        }, "*");
     }
-  );
 
+    const originalLog = console.log;
+    const originalInfo = console.info;
+    const originalWarn = console.warn;
+    const originalError = console.error;
+
+    console.log = function (...args) {
+        send("log", args);
+        originalLog.apply(console, args);
+    };
+
+    console.info = function (...args) {
+        send("info", args);
+        originalInfo.apply(console, args);
+    };
+
+    console.warn = function (...args) {
+        send("warn", args);
+        originalWarn.apply(console, args);
+    };
+
+    console.error = function (...args) {
+        send("error", args);
+        originalError.apply(console, args);
+    };
+
+    window.addEventListener("error", function (event) {
+        send("error", [
+            event.message,
+            "Line " + event.lineno
+        ]);
+    });
+
+    window.addEventListener(
+        "unhandledrejection",
+        function (event) {
+            send("error", [
+                "Unhandled promise rejection:",
+                event.reason
+            ]);
+        }
+    );
 
 })();
-
-<\/script>
-
+</script>
 `;
 
 
-    /*
-      Run the user's webpage.
-    */
+// ============================================================
+// PREVIEW
+// ============================================================
 
-    preview.srcdoc =
-        consoleBridge +
-        code.value;
-
-
-    setTimeout(
-        () => {
-
-            previewStatus.textContent =
-                "Up to date";
-
-        },
-        100
+function createPreviewHTML(code) {
+  if (code.includes("</head>")) {
+    return code.replace(
+      "</head>",
+      consoleBridge + "</head>"
     );
+  }
 
+  if (code.includes("<body>")) {
+    return code.replace(
+      "<body>",
+      "<body>" + consoleBridge
+    );
+  }
+
+  return consoleBridge + code;
 }
 
 
-/* =========================
-   RECEIVE CONSOLE MESSAGES
-   ========================= */
+function updatePreview() {
+  const code = editor.state.doc.toString();
+
+  preview.srcdoc = createPreviewHTML(code);
+
+  previewStatus.textContent = "Preview updated";
+
+  setStatus("Live");
+}
+
+
+// ============================================================
+// STATUS
+// ============================================================
+
+function setStatus(text) {
+  status.innerHTML = `
+        <span class="status-dot"></span>
+        ${text}
+    `;
+}
+
+
+// ============================================================
+// EDITOR INFORMATION
+// ============================================================
+
+function updateEditorInfo(view) {
+  const state = view.state;
+
+  const lines = state.doc.lines;
+
+  lineCount.textContent =
+    `${lines} ${lines === 1 ? "line" : "lines"}`;
+
+  const cursor = state.selection.main.head;
+
+  const line = state.doc.lineAt(cursor);
+
+  const column =
+    cursor - line.from + 1;
+
+  cursorPosition.textContent =
+    `Ln ${line.number}, Col ${column}`;
+}
+
+
+// ============================================================
+// SAVE
+// ============================================================
+
+function saveProject() {
+  const code = editor.state.doc.toString();
+
+  localStorage.setItem(
+    "buildzen-code",
+    code
+  );
+
+  setStatus("Saved");
+
+  setTimeout(() => {
+    setStatus("Live");
+  }, 1000);
+}
+
+
+// ============================================================
+// RESET
+// ============================================================
+
+function resetProject() {
+  const confirmed = confirm(
+    "Reset the editor to the default Buildzen project?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  editor.dispatch({
+    changes: {
+      from: 0,
+      to: editor.state.doc.length,
+      insert: starterCode
+    }
+  });
+
+  localStorage.removeItem("buildzen-code");
+
+  updatePreview();
+
+  clearConsole();
+
+  setStatus("Reset");
+}
+
+
+// ============================================================
+// KEYMAP
+// ============================================================
+
+const buildzenKeymap = keymap.of([
+  indentWithTab,
+
+  {
+    key: "Mod-s",
+
+    run: () => {
+      saveProject();
+      return true;
+    }
+  },
+
+  {
+    key: "Mod-Enter",
+
+    run: () => {
+      updatePreview();
+      return true;
+    }
+  }
+]);
+
+
+// ============================================================
+// EDITOR
+// ============================================================
+
+const savedCode =
+  localStorage.getItem("buildzen-code");
+
+const initialCode =
+  savedCode || starterCode;
+
+
+const updateListener =
+  EditorView.updateListener.of((update) => {
+
+    if (update.docChanged) {
+      updatePreview();
+
+      setStatus("Live");
+    }
+
+    if (update.selectionSet || update.docChanged) {
+      updateEditorInfo(update.view);
+    }
+  });
+
+
+const editor = new EditorView({
+  state: EditorState.create({
+    doc: initialCode,
+
+    extensions: [
+
+      basicSetup,
+
+      // HTML parser, including embedded CSS and JS
+      html(),
+
+      // One Dark editor UI
+      oneDark,
+
+      // Stable tok-* syntax classes
+      syntaxHighlighting(classHighlighter),
+
+      buildzenKeymap,
+
+      updateListener
+    ]
+  }),
+
+  parent: editorElement
+});
+
+
+// ============================================================
+// EVENTS
+// ============================================================
+
+resetBtn.addEventListener(
+  "click",
+  resetProject
+);
+
+refreshBtn.addEventListener(
+  "click",
+  updatePreview
+);
+
+clearConsoleBtn.addEventListener(
+  "click",
+  clearConsole
+);
+
+
+// ============================================================
+// PREVIEW MESSAGES
+// ============================================================
 
 window.addEventListener(
-    "message",
-    event => {
+  "message",
+  (event) => {
 
-        if (
-            !event.data ||
-            event.data.source !==
-            "buildzen-preview"
-        ) {
-            return;
-        }
-
-
-        addConsoleMessage(
-            event.data.type,
-            event.data.message
-        );
-
+    if (
+      !event.data ||
+      event.data.source !== "buildzen-preview"
+    ) {
+      return;
     }
-);
 
-
-/* =========================
-   TYPING
-   ========================= */
-
-code.addEventListener(
-    "input",
-    () => {
-
-        updateLineNumbers();
-
-        updatePreview();
-
-    }
-);
-
-
-/* =========================
-   TAB SUPPORT
-   ========================= */
-
-code.addEventListener(
-    "keydown",
-    event => {
-
-        if (event.key === "Tab") {
-
-            event.preventDefault();
-
-
-            const start =
-                code.selectionStart;
-
-            const end =
-                code.selectionEnd;
-
-
-            code.setRangeText(
-                "  ",
-                start,
-                end,
-                "end"
-            );
-
-
-            updateLineNumbers();
-
-            updatePreview();
-
-        }
-
-    }
-);
-
-
-/* =========================
-   CTRL + ENTER
-   ========================= */
-
-code.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.key === "Enter" &&
-            (event.ctrlKey ||
-                event.metaKey)
-        ) {
-
-            event.preventDefault();
-
-            updatePreview();
-
-        }
-
-    }
-);
-
-
-/* =========================
-   EDITOR SCROLL
-   ========================= */
-
-code.addEventListener(
-    "scroll",
-    () => {
-
-        lineNumbers.scrollTop =
-            code.scrollTop;
-
-    }
-);
-
-
-/* =========================
-   BUTTONS
-   ========================= */
-
-document
-    .getElementById("runButton")
-    .addEventListener(
-        "click",
-        updatePreview
+    addConsoleMessage(
+      event.data.type || "log",
+      event.data.message || ""
     );
+  }
+);
 
 
-document
-    .getElementById("resetButton")
-    .addEventListener(
-        "click",
-        () => {
+// ============================================================
+// INITIALIZE
+// ============================================================
 
-            code.value =
-                starterCode;
-
-            updateLineNumbers();
-
-            updatePreview();
-
-        }
-    );
-
-
-clearConsoleButton
-    .addEventListener(
-        "click",
-        clearConsole
-    );
-
-
-/* =========================
-   INITIALIZE
-   ========================= */
-
-code.value =
-    starterCode;
-
-updateLineNumbers();
+updateEditorInfo(editor);
 
 updatePreview();
+
+setStatus("Live");
