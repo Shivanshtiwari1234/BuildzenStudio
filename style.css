@@ -777,3 +777,353 @@ button {
     }
 
 }
+
+/* =========================================================
+   Buildzen Modal System
+   ========================================================= */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+
+    z-index: 10000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(5, 7, 10, 0.68);
+
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity 0.16s ease,
+        visibility 0.16s ease;
+}
+
+.modal-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+.modal {
+    width: min(440px, 100%);
+
+    overflow: hidden;
+
+    background: #171b23;
+
+    border: 1px solid #303744;
+    border-radius: 10px;
+
+    box-shadow:
+        0 30px 90px rgba(0, 0, 0, 0.55),
+        0 8px 24px rgba(0, 0, 0, 0.28);
+
+    transform:
+        translateY(8px) scale(0.97);
+
+    transition:
+        transform 0.16s ease;
+}
+
+.modal-overlay.visible .modal {
+    transform:
+        translateY(0) scale(1);
+}
+
+
+/* =========================================================
+   Modal Header
+   ========================================================= */
+
+.modal-header {
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 12px 0 16px;
+
+    border-bottom: 1px solid #242936;
+
+    background: #1a1f28;
+
+    color: #e8ebf0;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+.modal-close {
+    width: 28px;
+    height: 28px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 5px;
+
+    background: transparent;
+
+    color: #7f8999;
+
+    font-family: inherit;
+    font-size: 20px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        background 0.12s ease,
+        color 0.12s ease;
+}
+
+.modal-close:hover {
+    background: #282e39;
+    color: #ffffff;
+}
+
+.modal-close:focus-visible {
+    outline: 2px solid #5c9cff;
+    outline-offset: 1px;
+}
+
+
+/* =========================================================
+   Modal Body
+   ========================================================= */
+
+.modal-body {
+    display: flex;
+
+    gap: 14px;
+
+    padding: 20px;
+}
+
+
+.modal-icon {
+    width: 34px;
+    height: 34px;
+
+    flex: 0 0 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+.modal-icon.info {
+    background: rgba(80, 150, 255, 0.13);
+    color: #70a8ff;
+}
+
+
+.modal-icon.warning {
+    background: rgba(235, 180, 72, 0.13);
+    color: #e9b85d;
+}
+
+
+.modal-icon.danger {
+    background: rgba(235, 75, 75, 0.13);
+    color: #ef7474;
+}
+
+
+.modal-content {
+    min-width: 0;
+    flex: 1;
+}
+
+
+.modal-message {
+    color: #cbd1db;
+
+    font-size: 13px;
+    line-height: 1.55;
+
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   Modal Input
+   ========================================================= */
+
+.modal-input {
+    width: 100%;
+
+    display: none;
+
+    margin-top: 13px;
+    padding: 9px 10px;
+
+    border: 1px solid #353c49;
+    border-radius: 5px;
+
+    outline: none;
+
+    background: #10141a;
+    color: #e8ebf0;
+
+    font-family: inherit;
+    font-size: 13px;
+
+    transition:
+        border-color 0.12s ease,
+        box-shadow 0.12s ease;
+}
+
+.modal-input:focus {
+    border-color: #5c9cff;
+
+    box-shadow:
+        0 0 0 2px rgba(92, 156, 255, 0.13);
+}
+
+
+/* =========================================================
+   Modal Footer
+   ========================================================= */
+
+.modal-footer {
+    min-height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 7px;
+
+    padding: 10px 14px;
+
+    border-top: 1px solid #242936;
+
+    background: #151920;
+}
+
+
+.modal-btn {
+    min-width: 72px;
+
+    height: 30px;
+
+    padding: 0 12px;
+
+    border: 1px solid transparent;
+    border-radius: 5px;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+        background 0.12s ease,
+        border-color 0.12s ease,
+        color 0.12s ease;
+}
+
+
+.modal-btn:active {
+    transform: translateY(1px);
+}
+
+
+.modal-btn:focus-visible {
+    outline: 2px solid #5c9cff;
+    outline-offset: 1px;
+}
+
+
+.modal-btn-primary {
+    border-color: #4a86d8;
+
+    background: #3975c5;
+    color: #ffffff;
+}
+
+.modal-btn-primary:hover {
+    border-color: #5794e5;
+    background: #4585d8;
+}
+
+
+.modal-btn-secondary {
+    border-color: #303744;
+
+    background: #202631;
+    color: #aeb6c4;
+}
+
+.modal-btn-secondary:hover {
+    border-color: #3b4350;
+    background: #293140;
+    color: #ffffff;
+}
+
+
+.modal-btn-danger {
+    border-color: #c44a4a;
+
+    background: #b83c3c;
+    color: #ffffff;
+}
+
+.modal-btn-danger:hover {
+    border-color: #df5a5a;
+    background: #cc4848;
+}
+
+
+/* =========================================================
+   Modal Mobile
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+    .modal-overlay {
+        padding: 12px;
+    }
+
+    .modal {
+        border-radius: 8px;
+    }
+
+    .modal-body {
+        padding: 17px;
+    }
+
+    .modal-footer {
+        padding: 10px;
+    }
+
+    .modal-btn {
+        min-width: 0;
+        flex: 1;
+    }
+
+}
