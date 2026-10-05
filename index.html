@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buildzen Studio</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
+                "Segoe UI", sans-serif;
+            background: #0b0d12;
+            color: #fff;
+        }
+
+        /* =========================
+       TOP BAR
+       ========================= */
+
+        .topbar {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 18px;
+
+            background: #12151c;
+            border-bottom: 1px solid #272c36;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo {
+            width: 34px;
+            height: 34px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 9px;
+
+            background: linear-gradient(135deg,
+                    #9b8cff,
+                    #6657e8);
+
+            font-weight: 800;
+        }
+
+        .brand-name {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .brand-subtitle {
+            color: #858d9f;
+            font-size: 11px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button {
+            border: 1px solid #303645;
+            background: #191d26;
+            color: #fff;
+
+            padding: 8px 12px;
+            border-radius: 7px;
+
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        button:hover {
+            background: #222735;
+        }
+
+        .run-button {
+            background: #7565ee;
+            border-color: #7565ee;
+        }
+
+        .run-button:hover {
+            background: #6656df;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            color: #8e97a9;
+            font-size: 11px;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+            background: #4bd6a0;
+
+            box-shadow: 0 0 8px #4bd6a0;
+        }
+
+        /* =========================
+       MAIN
+       ========================= */
+
+        .workspace {
+            height: calc(100vh - 60px);
+
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+
+            gap: 12px;
+            padding: 12px;
+        }
+
+        .panel {
+            min-width: 0;
+            min-height: 0;
+
+            display: flex;
+            flex-direction: column;
+
+            background: #12151c;
+            border: 1px solid #292e39;
+            border-radius: 10px;
+
+            overflow: hidden;
+        }
+
+        /* =========================
+       PANEL HEADER
+       ========================= */
+
+        .panel-header {
+            height: 48px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 14px;
+
+            background: #151820;
+            border-bottom: 1px solid #292e39;
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .panel-icon {
+            width: 24px;
+            height: 24px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 6px;
+
+            background: rgba(117, 101, 238, 0.15);
+            color: #a99eff;
+
+            font-size: 11px;
+        }
+
+        .panel-info {
+            color: #747d90;
+            font-size: 10px;
+        }
+
+        /* =========================
+       CODE EDITOR
+       ========================= */
+
+        .editor {
+            flex: 1;
+
+            display: flex;
+
+            min-height: 0;
+
+            background: #0d1016;
+        }
+
+        .line-numbers {
+            width: 45px;
+
+            flex-shrink: 0;
+
+            padding: 15px 9px 15px 0;
+
+            text-align: right;
+
+            color: #505868;
+
+            border-right: 1px solid #222731;
+
+            font-family:
+                "SFMono-Regular",
+                Consolas,
+                "Liberation Mono",
+                monospace;
+
+            font-size: 12px;
+            line-height: 1.7;
+
+            white-space: pre;
+
+            overflow: hidden;
+
+            user-select: none;
+        }
+
+        #code {
+            flex: 1;
+
+            width: 0;
+
+            resize: none;
+            border: none;
+            outline: none;
+
+            padding: 15px;
+
+            background: transparent;
+            color: #dce3f2;
+
+            font-family:
+                "SFMono-Regular",
+                Consolas,
+                "Liberation Mono",
+                monospace;
+
+            font-size: 12px;
+            line-height: 1.7;
+
+            tab-size: 2;
+
+            white-space: pre;
+
+            overflow: auto;
+        }
+
+        #code::selection {
+            background: rgba(117, 101, 238, 0.35);
+        }
+
+        /* =========================
+       EDITOR FOOTER
+       ========================= */
+
+        .panel-footer {
+            height: 34px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 12px;
+
+            color: #70798b;
+
+            border-top: 1px solid #292e39;
+
+            font-size: 10px;
+        }
+
+        /* =========================
+       PREVIEW
+       ========================= */
+
+        .preview-container {
+            flex: 1;
+
+            min-height: 0;
+
+            padding: 12px;
+
+            background: #0d1016;
+        }
+
+        .browser-bar {
+            height: 34px;
+
+            display: flex;
+            align-items: center;
+
+            gap: 6px;
+
+            padding: 0 10px;
+
+            background: #1a1e27;
+
+            border: 1px solid #303642;
+            border-bottom: none;
+
+            border-radius: 7px 7px 0 0;
+        }
+
+        .browser-dot {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #596173;
+        }
+
+        .address {
+            flex: 1;
+
+            margin-left: 6px;
+
+            padding: 3px 8px;
+
+            background: #11141a;
+
+            border-radius: 5px;
+
+            color: #747e91;
+
+            font-size: 10px;
+        }
+
+        .live {
+            color: #4bd6a0;
+
+            font-size: 9px;
+            font-weight: 700;
+        }
+
+        #preview {
+            width: 100%;
+            height: calc(100% - 34px);
+
+            display: block;
+
+            border: 1px solid #303642;
+            border-radius: 0 0 7px 7px;
+
+            background: white;
+        }
+
+        /* =========================
+       RESPONSIVE
+       ========================= */
+
+        @media (max-width: 800px) {
+            body {
+                overflow: auto;
+            }
+
+            .workspace {
+                height: auto;
+                min-height: calc(100vh - 60px);
+
+                grid-template-columns: 1fr;
+            }
+
+            .panel {
+                min-height: 450px;
+            }
+
+            .status {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =========================
+       TOP BAR
+       ========================= -->
+
+    <header class="topbar">
+
+        <div class="brand">
+
+            <div class="logo">
+                B
+            </div>
+
+            <div>
+                <div class="brand-name">
+                    Buildzen Studio
+                </div>
+
+                <div class="brand-subtitle">
+                    Build websites directly in your browser
+                </div>
+            </div>
+
+        </div>
+
+        <div class="topbar-right">
+
+            <div class="status">
+                <span class="status-dot"></span>
+                Live preview
+            </div>
+
+            <button id="resetButton">
+                Reset
+            </button>
+
+            <button class="run-button" id="runButton">
+                Refresh Preview
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================
+       WORKSPACE
+       ========================= -->
+
+    <main class="workspace">
+
+        <!-- =========================
+         CODE PANEL
+         ========================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div class="panel-title">
+
+                    <div class="panel-icon">
+                        &lt;/&gt;
+                    </div>
+
+                    Code
+
+                </div>
+
+                <div class="panel-info" id="lineCount">
+                    1 line
+                </div>
+
+            </div>
+
+
+            <div class="editor">
+
+                <div class="line-numbers" id="lineNumbers">
+                    1
+                </div>
+
+                <textarea id="code" spellcheck="false" autocomplete="off" autocorrect="off"
+                    autocapitalize="off"></textarea>
+
+            </div>
+
+
+            <div class="panel-footer">
+
+                <span>
+                    HTML · CSS · JavaScript
+                </span>
+
+                <span>
+                    Tab = indent
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+         PREVIEW PANEL
+         ========================= -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div class="panel-title">
+
+                    <div class="panel-icon">
+                        ◩
+                    </div>
+
+                    Preview
+
+                </div>
+
+                <div class="live">
+                    ● LIVE
+                </div>
+
+            </div>
+
+
+            <div class="preview-container">
+
+                <div class="browser-bar">
+
+                    <span class="browser-dot"></span>
+                    <span class="browser-dot"></span>
+                    <span class="browser-dot"></span>
+
+                    <div class="address">
+                        buildzen-preview.local
+                    </div>
+
+                </div>
+
+
+                <iframe id="preview" title="Live preview" sandbox="allow-scripts allow-forms allow-modals"></iframe>
+
+            </div>
+
+
+            <div class="panel-footer">
+
+                <span>
+                    Live output
+                </span>
+
+                <span id="previewStatus">
+                    Up to date
+                </span>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script>
+
+        /* =========================
+           STARTER CODE
+           ========================= */
+
+        const starterCode = `<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>My Buildzen Website</title>
+
+  <style>
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      display: grid;
+      place-items: center;
+
+      font-family: system-ui, sans-serif;
+
+      background:
+        linear-gradient(
+          135deg,
+          #f4f1ff,
+          #e8f5ff
+        );
+
+      color: #20243a;
+    }
+
+    .card {
+      width: min(90%, 500px);
+
+      padding: 40px;
+
+      text-align: center;
+
+      background: white;
+
+      border-radius: 20px;
+
+      box-shadow:
+        0 20px 60px #0002;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #697086;
+
+      line-height: 1.7;
+    }
+
+    button {
+      padding: 12px 20px;
+
+      border: none;
+      border-radius: 10px;
+
+      background: #7565ee;
+      color: white;
+
+      font-weight: bold;
+
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #6252dc;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+  <div class="card">
+
+    <h1>
+      Hello from Buildzen!
+    </h1>
+
+    <p>
+      Edit the code on the left and
+      watch this page update instantly.
+    </p>
+
+    <button
+      onclick="alert('Buildzen works!')"
+    >
+      Test Button
+    </button>
+
+  </div>
+
+</body>
+
+</html>`;
+
+
+        /* =========================
+           ELEMENTS
+           ========================= */
+
+        const code =
+            document.getElementById("code");
+
+        const preview =
+            document.getElementById("preview");
+
+        const lineNumbers =
+            document.getElementById("lineNumbers");
+
+        const lineCount =
+            document.getElementById("lineCount");
+
+        const previewStatus =
+            document.getElementById("previewStatus");
+
+
+        /* =========================
+           LINE NUMBERS
+           ========================= */
+
+        function updateLineNumbers() {
+
+            const lines =
+                code.value.split("\n").length;
+
+            let numbers = "";
+
+            for (
+                let i = 1;
+                i <= lines;
+                i++
+            ) {
+                numbers += i;
+
+                if (i < lines) {
+                    numbers += "\n";
+                }
+            }
+
+            lineNumbers.textContent =
+                numbers;
+
+            lineCount.textContent =
+                lines === 1
+                    ? "1 line"
+                    : `${lines} lines`;
+        }
+
+
+        /* =========================
+           LIVE PREVIEW
+           ========================= */
+
+        function updatePreview() {
+
+            previewStatus.textContent =
+                "Updating...";
+
+            preview.srcdoc =
+                code.value;
+
+            setTimeout(() => {
+
+                previewStatus.textContent =
+                    "Up to date";
+
+            }, 100);
+
+        }
+
+
+        /* =========================
+           TYPING
+           ========================= */
+
+        code.addEventListener(
+            "input",
+            () => {
+
+                updateLineNumbers();
+
+                updatePreview();
+
+            }
+        );
+
+
+        /* =========================
+           TAB SUPPORT
+           ========================= */
+
+        code.addEventListener(
+            "keydown",
+            event => {
+
+                if (event.key === "Tab") {
+
+                    event.preventDefault();
+
+                    const start =
+                        code.selectionStart;
+
+                    const end =
+                        code.selectionEnd;
+
+                    code.setRangeText(
+                        "  ",
+                        start,
+                        end,
+                        "end"
+                    );
+
+                    updateLineNumbers();
+                    updatePreview();
+                }
+
+            }
+        );
+
+
+        /* =========================
+           KEEP LINE NUMBERS SCROLLING
+           ========================= */
+
+        code.addEventListener(
+            "scroll",
+            () => {
+
+                lineNumbers.scrollTop =
+                    code.scrollTop;
+
+            }
+        );
+
+
+        /* =========================
+           BUTTONS
+           ========================= */
+
+        document
+            .getElementById("runButton")
+            .addEventListener(
+                "click",
+                updatePreview
+            );
+
+
+        document
+            .getElementById("resetButton")
+            .addEventListener(
+                "click",
+                () => {
+
+                    code.value =
+                        starterCode;
+
+                    updateLineNumbers();
+
+                    updatePreview();
+
+                }
+            );
+
+
+        /* =========================
+           CTRL + ENTER
+           ========================= */
+
+        code.addEventListener(
+            "keydown",
+            event => {
+
+                if (
+                    event.key === "Enter" &&
+                    (event.ctrlKey ||
+                        event.metaKey)
+                ) {
+
+                    event.preventDefault();
+
+                    updatePreview();
+
+                }
+
+            }
+        );
+
+
+        /* =========================
+           INITIALIZE
+           ========================= */
+
+        code.value =
+            starterCode;
+
+        updateLineNumbers();
+
+        updatePreview();
+
+    </script>
+
+</body>
+
+</html>
