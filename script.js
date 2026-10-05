@@ -37,11 +37,9 @@ import { indentWithTab }
    ========================= */
 
 const starterProject = {
-
   html: `<div class="card">
     <h1>Hello, Buildzen!</h1>
     <p>This page is built with separate HTML, CSS and JavaScript files.</p>
-
     <button id="helloBtn">
         Click me
     </button>
@@ -51,46 +49,56 @@ const starterProject = {
     margin: 0;
     min-height: 100vh;
 
-    display: grid;
-    place-items: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #111827;
+    color: #f9fafb;
 
     font-family: Arial, sans-serif;
-    background: #f3f4f6;
 }
 
 .card {
-    width: 360px;
+    width: min(420px, 90vw);
 
-    padding: 30px;
-
-    text-align: center;
-
-    background: white;
+    padding: 32px;
 
     border-radius: 16px;
 
+    background: #1f2937;
+
+    text-align: center;
+
     box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.12);
+        0 20px 50px rgba(0, 0, 0, 0.35);
 }
 
 h1 {
     margin-top: 0;
 }
 
-button {
-    padding: 10px 16px;
+p {
+    color: #9ca3af;
+    line-height: 1.6;
+}
 
-    border: none;
+button {
+    padding: 10px 18px;
+
+    border: 0;
     border-radius: 8px;
 
-    background: #2563eb;
+    background: #4f7cff;
     color: white;
+
+    font-size: 14px;
 
     cursor: pointer;
 }
 
 button:hover {
-    background: #1d4ed8;
+    background: #416be0;
 }`,
 
   js: `console.log("Buildzen preview loaded.");
@@ -99,78 +107,58 @@ const button = document.querySelector("#helloBtn");
 
 button.addEventListener("click", () => {
     console.log("Button clicked!");
-
     alert("Hello from Buildzen!");
 });`
-
 };
 
 
 /* =========================
-   DOM
+   DOM REFERENCES
    ========================= */
 
-const htmlEditorElement =
-  document.getElementById("htmlEditor");
+const htmlEditorElement = document.querySelector("#htmlEditor");
+const cssEditorElement = document.querySelector("#cssEditor");
+const jsEditorElement = document.querySelector("#jsEditor");
 
-const cssEditorElement =
-  document.getElementById("cssEditor");
+const preview = document.querySelector("#preview");
 
-const jsEditorElement =
-  document.getElementById("jsEditor");
+const statusElement = document.querySelector("#status");
 
-const preview =
-  document.getElementById("preview");
+const cursorInfo = document.querySelector("#cursorInfo");
+const fileName = document.querySelector("#fileName");
+const languageInfo = document.querySelector("#languageInfo");
 
-const statusElement =
-  document.getElementById("status");
+const resetBtn = document.querySelector("#resetBtn");
+const refreshBtn = document.querySelector("#refreshBtn");
 
-const cursorInfo =
-  document.getElementById("cursorInfo");
+const tabs = document.querySelectorAll(".tab");
+const fileItems = document.querySelectorAll(".file-item");
 
-const fileName =
-  document.getElementById("fileName");
-
-const languageInfo =
-  document.getElementById("languageInfo");
-
-const resetBtn =
-  document.getElementById("resetBtn");
-
-const refreshBtn =
-  document.getElementById("refreshBtn");
-
-const clearConsoleBtn =
-  document.getElementById("clearConsoleBtn");
-
-const consoleOutput =
-  document.getElementById("consoleOutput");
-
-const consoleCount =
-  document.getElementById("consoleCount");
-
-const tabs =
-  document.querySelectorAll(".tab");
-
-const consoleFilters =
-  document.querySelectorAll(".console-filter");
+const consoleOutput = document.querySelector("#consoleOutput");
+const consoleCount = document.querySelector("#consoleCount");
+const clearConsoleBtn = document.querySelector("#clearConsoleBtn");
+const consoleFilters = document.querySelectorAll(".console-filter");
 
 
 /* =========================
-   CONSOLE STATE
+   STATE
    ========================= */
 
-let consoleMessages = [];
+const STORAGE_KEY = "buildzen-project";
 
+const editors = {};
+
+let activeEditor = "html";
+
+let consoleMessages = [];
 let consoleFilter = "all";
 
 
 /* =========================
-   CONSOLE VALUE FORMATTER
+   CONSOLE
    ========================= */
 
 function formatConsoleValue(value) {
-
   if (value === null) {
     return "null";
   }
@@ -179,9 +167,11 @@ function formatConsoleValue(value) {
     return "undefined";
   }
 
+  if (typeof value === "string") {
+    return value;
+  }
 
   if (
-    typeof value === "string" ||
     typeof value === "number" ||
     typeof value === "boolean" ||
     typeof value === "bigint"
@@ -189,165 +179,89 @@ function formatConsoleValue(value) {
     return String(value);
   }
 
-
-  if (typeof value === "object") {
-
-    try {
-
-      return JSON.stringify(
-        value,
-        null,
-        2
-      );
-
-    } catch {
-
-      return String(value);
-
-    }
-
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
   }
-
-
-  return String(value);
 }
 
 
-/* =========================
-   ADD CONSOLE MESSAGE
-   ========================= */
-
-function addConsoleMessage(
-  type,
-  message
-) {
-
+function addConsoleMessage(type, message) {
   consoleMessages.push({
-
     type,
-
     message,
-
-    time: new Date().toLocaleTimeString(
-      [],
-      {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-      }
-    )
-
+    time: new Date()
   });
 
   renderConsole();
 }
 
 
-/* =========================
-   RENDER CONSOLE
-   ========================= */
-
 function renderConsole() {
+  const filteredMessages =
+    consoleFilter === "all"
+      ? consoleMessages
+      : consoleMessages.filter(
+        message => message.type === consoleFilter
+      );
 
   consoleOutput.innerHTML = "";
 
-
-  const filteredMessages =
-    consoleMessages.filter(message => {
-
-      if (consoleFilter === "all") {
-        return true;
-      }
-
-      return message.type === consoleFilter;
-
-    });
-
-
   if (filteredMessages.length === 0) {
+    const empty = document.createElement("div");
 
-    const empty =
-      document.createElement("div");
-
-    empty.className =
-      "console-empty";
-
+    empty.className = "console-empty";
     empty.textContent =
       consoleMessages.length === 0
-        ? "Console is empty."
+        ? "No console messages."
         : "No messages match this filter.";
 
     consoleOutput.appendChild(empty);
+  } else {
+    for (const entry of filteredMessages) {
+      const row = document.createElement("div");
 
+      row.className = `console-entry ${entry.type}`;
+
+      const time = document.createElement("span");
+      time.className = "console-time";
+
+      time.textContent =
+        entry.time.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        });
+
+      const level = document.createElement("span");
+      level.className = "console-level";
+      level.textContent = entry.type;
+
+      const message = document.createElement("span");
+      message.className = "console-message";
+      message.textContent = entry.message;
+
+      row.append(
+        time,
+        level,
+        message
+      );
+
+      consoleOutput.appendChild(row);
+    }
   }
 
-
-  for (const message of filteredMessages) {
-
-    const entry =
-      document.createElement("div");
-
-    entry.className =
-      `console-entry ${message.type}`;
-
-
-    const time =
-      document.createElement("div");
-
-    time.className =
-      "console-time";
-
-    time.textContent =
-      message.time;
-
-
-    const level =
-      document.createElement("div");
-
-    level.className =
-      "console-level";
-
-    level.textContent =
-      message.type.toUpperCase();
-
-
-    const content =
-      document.createElement("div");
-
-    content.className =
-      "console-message";
-
-    content.textContent =
-      message.message;
-
-
-    entry.appendChild(time);
-    entry.appendChild(level);
-    entry.appendChild(content);
-
-    consoleOutput.appendChild(entry);
-  }
-
-
-  consoleCount.textContent =
-    `(${consoleMessages.length})`;
-
+  consoleCount.textContent = `(${consoleMessages.length})`;
 
   consoleOutput.scrollTop =
     consoleOutput.scrollHeight;
 }
 
 
-/* =========================
-   CLEAR CONSOLE
-   ========================= */
-
 function clearConsole() {
-
   consoleMessages = [];
-
   renderConsole();
-
 }
 
 
@@ -358,17 +272,14 @@ function clearConsole() {
 const consoleBridge = `
 <script>
 (function () {
-
     function serialize(value) {
-
-        if (value === null) {
-            return "null";
-        }
-
         if (value === undefined) {
             return "undefined";
         }
 
+        if (value === null) {
+            return "null";
+        }
 
         if (
             typeof value === "string" ||
@@ -379,125 +290,65 @@ const consoleBridge = `
             return String(value);
         }
 
-
-        if (typeof value === "object") {
-
-            try {
-
-                return JSON.stringify(
-                    value,
-                    null,
-                    2
-                );
-
-            } catch {
-
-                return String(value);
-
-            }
-
+        try {
+            return JSON.stringify(value, null, 2);
+        } catch {
+            return String(value);
         }
-
-
-        return String(value);
     }
 
-
     function send(type, args) {
-
         const message = args
             .map(serialize)
             .join(" ");
 
-
         parent.postMessage({
-
             source: "buildzen-preview",
-
             type,
-
             message
-
         }, "*");
-
     }
 
+    const originalLog = console.log;
+    const originalInfo = console.info;
+    const originalWarn = console.warn;
+    const originalError = console.error;
 
-    const originalLog =
-        console.log;
-
-    const originalInfo =
-        console.info;
-
-    const originalWarn =
-        console.warn;
-
-    const originalError =
-        console.error;
-
-
-    console.log = (...args) => {
-
-        originalLog(...args);
-
+    console.log = function (...args) {
         send("log", args);
-
+        originalLog.apply(console, args);
     };
 
-
-    console.info = (...args) => {
-
-        originalInfo(...args);
-
+    console.info = function (...args) {
         send("info", args);
-
+        originalInfo.apply(console, args);
     };
 
-
-    console.warn = (...args) => {
-
-        originalWarn(...args);
-
+    console.warn = function (...args) {
         send("warn", args);
-
+        originalWarn.apply(console, args);
     };
 
-
-    console.error = (...args) => {
-
-        originalError(...args);
-
+    console.error = function (...args) {
         send("error", args);
-
+        originalError.apply(console, args);
     };
 
-
-    window.addEventListener(
-        "error",
-        event => {
-
-            send("error", [
-                event.message ||
-                "Unknown JavaScript error"
-            ]);
-
-        }
-    );
-
+    window.addEventListener("error", function (event) {
+        send("error", [
+            event.message || "Unknown error"
+        ]);
+    });
 
     window.addEventListener(
         "unhandledrejection",
-        event => {
-
+        function (event) {
             send("error", [
                 "Unhandled promise rejection:",
                 event.reason
             ]);
-
         }
     );
-
-
 })();
 <\/script>
 `;
@@ -507,13 +358,16 @@ const consoleBridge = `
    STATUS
    ========================= */
 
-function setStatus(text) {
-
+function setStatus(text, state = "live") {
   statusElement.innerHTML = `
         <span class="status-dot"></span>
         ${text}
     `;
 
+  if (state === "error") {
+    statusElement.querySelector(".status-dot").style.background =
+      "#f06a6a";
+  }
 }
 
 
@@ -521,109 +375,78 @@ function setStatus(text) {
    EDITOR INFO
    ========================= */
 
-let activeEditorName = "html";
-
-
-function updateEditorInfo(view) {
-
-  const position =
-    view.state.selection.main.head;
+function updateEditorInfo(view, language) {
+  const selection = view.state.selection.main;
 
   const line =
-    view.state.doc.lineAt(position);
+    view.state.doc.lineAt(selection.head);
 
   const column =
-    position - line.from + 1;
-
+    selection.head - line.from + 1;
 
   cursorInfo.textContent =
     `Ln ${line.number}, Col ${column}`;
+
+  languageInfo.textContent =
+    language.toUpperCase();
 }
 
 
 /* =========================
-   LOAD PROJECT
+   PROJECT STORAGE
    ========================= */
 
 function loadProject() {
-
-  const saved =
-    localStorage.getItem(
-      "buildzen-project"
-    );
-
-
-  if (!saved) {
-    return starterProject;
-  }
-
-
   try {
+    const saved =
+      localStorage.getItem(STORAGE_KEY);
+
+    if (!saved) {
+      return starterProject;
+    }
 
     const project =
       JSON.parse(saved);
 
-
     return {
-
       html:
-        project.html ??
-        starterProject.html,
+        typeof project.html === "string"
+          ? project.html
+          : starterProject.html,
 
       css:
-        project.css ??
-        starterProject.css,
+        typeof project.css === "string"
+          ? project.css
+          : starterProject.css,
 
       js:
-        project.js ??
-        starterProject.js
-
+        typeof project.js === "string"
+          ? project.js
+          : starterProject.js
     };
-
   } catch {
-
     return starterProject;
-
   }
-
 }
 
 
-/* =========================
-   SAVE PROJECT
-   ========================= */
-
 function saveProject() {
-
   const project = {
-
-    html:
-      editors.html.state.doc.toString(),
-
-    css:
-      editors.css.state.doc.toString(),
-
-    js:
-      editors.js.state.doc.toString()
-
+    html: editors.html.state.doc.toString(),
+    css: editors.css.state.doc.toString(),
+    js: editors.js.state.doc.toString()
   };
 
-
   localStorage.setItem(
-    "buildzen-project",
+    STORAGE_KEY,
     JSON.stringify(project)
   );
 
-
   setStatus("Saved");
 
-
   setTimeout(() => {
-
     setStatus("Live");
-
-  }, 800);
-
+  }, 900);
 }
 
 
@@ -632,7 +455,6 @@ function saveProject() {
    ========================= */
 
 function updatePreview() {
-
   const htmlCode =
     editors.html.state.doc.toString();
 
@@ -642,14 +464,10 @@ function updatePreview() {
   const jsCode =
     editors.js.state.doc.toString();
 
-
   const srcdoc = `
 <!DOCTYPE html>
-
 <html>
-
 <head>
-
 <meta charset="UTF-8">
 
 <style>
@@ -669,301 +487,224 @@ ${jsCode}
 <\/script>
 
 </body>
-
 </html>
 `;
 
+  consoleMessages = [];
 
-  preview.srcdoc =
-    srcdoc;
+  preview.srcdoc = srcdoc;
 
+  renderConsole();
 
   setStatus("Live");
-
 }
 
 
 /* =========================
-   KEYMAP
+   CODEMIRROR
    ========================= */
 
 const buildzenKeymap = keymap.of([
-
   indentWithTab,
 
   {
     key: "Mod-s",
 
-    run: () => {
-
+    run() {
       saveProject();
-
       return true;
-
     }
-
   },
 
   {
     key: "Mod-Enter",
 
-    run: () => {
-
+    run() {
       updatePreview();
-
       return true;
-
     }
-
   }
-
 ]);
 
 
-/* =========================
-   CREATE EDITOR
-   ========================= */
-
-function createEditor({
+function createEditor(
   parent,
   value,
-  language
-}) {
+  languageExtension,
+  languageName,
+  editorName
+) {
+  const state = EditorState.create({
+    doc: value,
 
-  let languageExtension;
+    extensions: [
+      basicSetup,
 
+      languageExtension,
 
-  if (language === "html") {
+      oneDark,
 
-    languageExtension =
-      html();
+      syntaxHighlighting(
+        classHighlighter
+      ),
 
-  }
+      buildzenKeymap,
 
-
-  if (language === "css") {
-
-    languageExtension =
-      css();
-
-  }
-
-
-  if (language === "javascript") {
-
-    languageExtension =
-      javascript();
-
-  }
-
-
-  return new EditorView({
-
-    state: EditorState.create({
-
-      doc: value,
-
-      extensions: [
-
-        basicSetup,
-
-        languageExtension,
-
-        oneDark,
-
-        syntaxHighlighting(
-          classHighlighter
-        ),
-
-        buildzenKeymap,
-
-
-        EditorView.updateListener.of(
-          update => {
-
+      EditorView.updateListener.of(
+        update => {
+          if (
+            update.selectionSet ||
+            update.docChanged
+          ) {
             if (
-              update.docChanged ||
-              update.selectionSet
+              activeEditor ===
+              editorName
             ) {
-
               updateEditorInfo(
-                update.view
+                update.view,
+                languageName
               );
-
             }
-
-
-            if (
-              update.docChanged
-            ) {
-
-              updatePreview();
-
-              setStatus("Live");
-
-            }
-
           }
-        )
 
-      ]
-
-    }),
-
-    parent
-
+          if (update.docChanged) {
+            setStatus("Editing");
+          }
+        }
+      )
+    ]
   });
 
+  return new EditorView({
+    state,
+    parent
+  });
 }
 
 
 /* =========================
-   CREATE ALL EDITORS
+   CREATE EDITORS
    ========================= */
 
-const project =
-  loadProject();
+const project = loadProject();
 
+editors.html = createEditor(
+  htmlEditorElement,
+  project.html,
+  html(),
+  "HTML",
+  "html"
+);
 
-const editors = {
+editors.css = createEditor(
+  cssEditorElement,
+  project.css,
+  css(),
+  "CSS",
+  "css"
+);
 
-  html: createEditor({
-
-    parent:
-      htmlEditorElement,
-
-    value:
-      project.html,
-
-    language:
-      "html"
-
-  }),
-
-
-  css: createEditor({
-
-    parent:
-      cssEditorElement,
-
-    value:
-      project.css,
-
-    language:
-      "css"
-
-  }),
-
-
-  js: createEditor({
-
-    parent:
-      jsEditorElement,
-
-    value:
-      project.js,
-
-    language:
-      "javascript"
-
-  })
-
-};
+editors.js = createEditor(
+  jsEditorElement,
+  project.js,
+  javascript(),
+  "JavaScript",
+  "js"
+);
 
 
 /* =========================
-   SWITCH EDITOR TAB
+   EDITOR SWITCHING
    ========================= */
 
+const editorDetails = {
+  html: {
+    file: "index.html",
+    language: "HTML"
+  },
+
+  css: {
+    file: "style.css",
+    language: "CSS"
+  },
+
+  js: {
+    file: "script.js",
+    language: "JavaScript"
+  }
+};
+
+
 function switchEditor(name) {
+  if (!editors[name]) {
+    return;
+  }
 
-  activeEditorName =
-    name;
-
+  activeEditor = name;
 
   document
     .querySelectorAll(".editor")
     .forEach(editor => {
-
       editor.classList.remove(
         "active-editor"
       );
-
     });
 
-
-  document
-    .getElementById(
-      `${name}Editor`
-    )
-    .classList.add(
-      "active-editor"
+  const editorElement =
+    document.querySelector(
+      `#${name}Editor`
     );
 
+  if (editorElement) {
+    editorElement.classList.add(
+      "active-editor"
+    );
+  }
+
+
+  /* Tabs */
 
   tabs.forEach(tab => {
-
     tab.classList.toggle(
       "active",
       tab.dataset.editor === name
     );
-
   });
 
 
-  const info = {
+  /* Project tree */
 
-    html: {
+  fileItems.forEach(item => {
+    item.classList.toggle(
+      "active",
+      item.dataset.file === name
+    );
+  });
 
-      file:
-        "index.html",
 
-      language:
-        "HTML"
+  /* File information */
 
-    },
-
-    css: {
-
-      file:
-        "style.css",
-
-      language:
-        "CSS"
-
-    },
-
-    js: {
-
-      file:
-        "script.js",
-
-      language:
-        "JavaScript"
-
-    }
-
-  };
-
+  const details =
+    editorDetails[name];
 
   fileName.textContent =
-    info[name].file;
-
+    details.file;
 
   languageInfo.textContent =
-    info[name].language;
+    details.language;
 
 
-  const editor =
-    editors[name];
+  /* Cursor information */
+
+  updateEditorInfo(
+    editors[name],
+    details.language
+  );
 
 
-  editor.requestMeasure();
+  /* Focus */
 
-  editor.focus();
-
-  updateEditorInfo(editor);
-
+  editors[name].focus();
 }
 
 
@@ -972,18 +713,30 @@ function switchEditor(name) {
    ========================= */
 
 tabs.forEach(tab => {
-
   tab.addEventListener(
     "click",
     () => {
-
       switchEditor(
         tab.dataset.editor
       );
-
     }
   );
+});
 
+
+/* =========================
+   PROJECT TREE EVENTS
+   ========================= */
+
+fileItems.forEach(item => {
+  item.addEventListener(
+    "click",
+    () => {
+      switchEditor(
+        item.dataset.file
+      );
+    }
+  );
 });
 
 
@@ -991,49 +744,32 @@ tabs.forEach(tab => {
    CONSOLE FILTERS
    ========================= */
 
-consoleFilters.forEach(button => {
-
-  button.addEventListener(
+consoleFilters.forEach(filter => {
+  filter.addEventListener(
     "click",
     () => {
 
+      consoleFilter =
+        filter.dataset.filter;
+
       consoleFilters.forEach(
-        other => {
-
-          other.classList.remove(
-            "active"
+        button => {
+          button.classList.toggle(
+            "active",
+            button === filter
           );
-
         }
       );
 
-
-      button.classList.add(
-        "active"
-      );
-
-
-      consoleFilter =
-        button.dataset.filter;
-
-
       renderConsole();
-
     }
   );
-
 });
 
 
 /* =========================
-   BUTTON EVENTS
+   CLEAR CONSOLE
    ========================= */
-
-refreshBtn.addEventListener(
-  "click",
-  updatePreview
-);
-
 
 clearConsoleBtn.addEventListener(
   "click",
@@ -1041,79 +777,72 @@ clearConsoleBtn.addEventListener(
 );
 
 
+/* =========================
+   REFRESH
+   ========================= */
+
+refreshBtn.addEventListener(
+  "click",
+  () => {
+    updatePreview();
+  }
+);
+
+
+/* =========================
+   RESET
+   ========================= */
+
 resetBtn.addEventListener(
   "click",
   () => {
 
-    editors.html.dispatch({
+    const confirmed =
+      confirm(
+        "Reset the project to the default Buildzen starter?"
+      );
 
-      changes: {
-
-        from: 0,
-
-        to:
-          editors.html.state.doc.length,
-
-        insert:
-          starterProject.html
-
-      }
-
-    });
-
-
-    editors.css.dispatch({
-
-      changes: {
-
-        from: 0,
-
-        to:
-          editors.css.state.doc.length,
-
-        insert:
-          starterProject.css
-
-      }
-
-    });
-
-
-    editors.js.dispatch({
-
-      changes: {
-
-        from: 0,
-
-        to:
-          editors.js.state.doc.length,
-
-        insert:
-          starterProject.js
-
-      }
-
-    });
-
+    if (!confirmed) {
+      return;
+    }
 
     localStorage.removeItem(
-      "buildzen-project"
+      STORAGE_KEY
     );
 
+    editors.html.dispatch({
+      changes: {
+        from: 0,
+        to: editors.html.state.doc.length,
+        insert: starterProject.html
+      }
+    });
 
-    clearConsole();
+    editors.css.dispatch({
+      changes: {
+        from: 0,
+        to: editors.css.state.doc.length,
+        insert: starterProject.css
+      }
+    });
+
+    editors.js.dispatch({
+      changes: {
+        from: 0,
+        to: editors.js.state.doc.length,
+        insert: starterProject.js
+      }
+    });
+
+    switchEditor("html");
 
     updatePreview();
 
     setStatus("Reset");
 
-
     setTimeout(() => {
-
       setStatus("Live");
-
-    }, 800);
-
+    }, 900);
   }
 );
 
@@ -1133,26 +862,31 @@ window.addEventListener(
       return;
     }
 
+    const data = event.data;
 
     if (
-      !event.data ||
-      event.data.source !==
+      !data ||
+      data.source !==
       "buildzen-preview"
     ) {
       return;
     }
 
+    if (
+      ![
+        "log",
+        "info",
+        "warn",
+        "error"
+      ].includes(data.type)
+    ) {
+      return;
+    }
 
     addConsoleMessage(
-
-      event.data.type ||
-      "log",
-
-      event.data.message ||
-      ""
-
+      data.type,
+      data.message
     );
-
   }
 );
 
