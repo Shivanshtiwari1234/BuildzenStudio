@@ -1,10 +1,57 @@
 /* =========================================================
    Buildzen Studio
-   Main stylesheet
+   Production UI stylesheet
+   ========================================================= */
+
+:root {
+    color-scheme: dark;
+
+    --background: #11151c;
+    --surface: #151920;
+    --surface-raised: #171b23;
+    --surface-hover: #1d232d;
+    --surface-active: #252d39;
+
+    --border: #242a34;
+    --border-strong: #303846;
+
+    --text: #d8dde7;
+    --text-bright: #f1f3f7;
+    --text-muted: #8f98a8;
+    --text-dim: #687282;
+
+    --accent: #5c9cff;
+    --accent-hover: #72aaff;
+
+    --success: #55c982;
+    --warning: #d6b56c;
+    --danger: #df8585;
+
+    --file-panel-width: 180px;
+    --editor-panel-width: 420px;
+    --console-height: 260px;
+
+    --splitter-size: 5px;
+
+    --radius-sm: 4px;
+    --radius-md: 5px;
+    --radius-lg: 8px;
+
+    --transition-fast:
+        120ms cubic-bezier(0.2, 0.7, 0.2, 1);
+
+    --transition:
+        170ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+
+/* =========================================================
+   Reset
    ========================================================= */
 
 * {
     box-sizing: border-box;
+
     scrollbar-width: thin;
     scrollbar-color: #353d4a transparent;
 }
@@ -19,7 +66,7 @@
 }
 
 *::-webkit-scrollbar-thumb {
-    border-radius: 4px;
+    border-radius: 5px;
     background: #353d4a;
 }
 
@@ -27,40 +74,13 @@
     background: #46505f;
 }
 
-:root {
-    color-scheme: dark;
-
-    --background: #11151c;
-    --surface: #151920;
-    --surface-raised: #171b23;
-    --surface-hover: #202631;
-    --surface-active: #293140;
-
-    --border: #242936;
-    --border-strong: #303744;
-
-    --text: #d8dde7;
-    --text-bright: #f0f2f6;
-    --text-muted: #8f98a8;
-    --text-dim: #687282;
-
-    --accent: #5c9cff;
-    --accent-hover: #6da8ff;
-
-    --success: #55c982;
-    --warning: #d6b56c;
-    --danger: #df8585;
-
-    --radius-sm: 4px;
-    --radius-md: 5px;
-    --radius-lg: 8px;
-}
-
 html,
 body {
     width: 100%;
     height: 100%;
+
     margin: 0;
+    padding: 0;
 }
 
 body {
@@ -79,23 +99,40 @@ body {
         sans-serif;
 
     font-size: 13px;
+
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
 }
 
 button,
 input {
-    font-family: inherit;
+    font: inherit;
 }
 
 button {
     -webkit-tap-highlight-color: transparent;
 }
 
-button:focus-visible,
-input:focus-visible {
+button,
+[role="button"],
+[role="separator"] {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+
+/* =========================================================
+   Keyboard Focus
+   ========================================================= */
+
+:focus-visible {
     outline: 2px solid var(--accent);
-    outline-offset: 1px;
+    outline-offset: 2px;
+}
+
+button:focus:not(:focus-visible),
+[role="separator"]:focus:not(:focus-visible) {
+    outline: none;
 }
 
 
@@ -104,6 +141,9 @@ input:focus-visible {
    ========================================================= */
 
 .topbar {
+    position: relative;
+    z-index: 20;
+
     height: 48px;
 
     display: flex;
@@ -113,12 +153,20 @@ input:focus-visible {
     padding: 0 14px;
 
     border-bottom: 1px solid var(--border);
-    background: var(--surface-raised);
+
+    background:
+        linear-gradient(180deg,
+            #181d25 0%,
+            #161a21 100%);
+
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.015);
 }
 
 .brand {
     display: flex;
     align-items: baseline;
+
     gap: 5px;
 
     user-select: none;
@@ -126,25 +174,66 @@ input:focus-visible {
 
 .brand strong {
     color: var(--text-bright);
+
     font-size: 15px;
     font-weight: 700;
+
+    letter-spacing: -0.01em;
 }
 
 .brand span {
     color: #7f8999;
+
     font-size: 13px;
 }
 
 .topbar-right {
     display: flex;
     align-items: center;
+
     gap: 7px;
 }
 
+.status {
+    display: flex;
+    align-items: center;
 
-/* =========================================================
-   Topbar Buttons
-   ========================================================= */
+    gap: 6px;
+
+    margin-right: 3px;
+
+    color: #9da7b7;
+
+    font-size: 12px;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: var(--success);
+
+    box-shadow:
+        0 0 0 2px rgba(85, 201, 130, 0.08),
+        0 0 8px rgba(85, 201, 130, 0.3);
+
+    animation:
+        status-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+
+    0%,
+    100% {
+        opacity: 0.8;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
 
 .topbar-right button {
     height: 28px;
@@ -162,63 +251,171 @@ input:focus-visible {
     cursor: pointer;
 
     transition:
-        background 0.12s ease,
-        border-color 0.12s ease,
-        color 0.12s ease;
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
 }
 
 .topbar-right button:hover {
-    border-color: #3a4351;
-    background: #293140;
+    border-color: #3c4655;
+
+    background: #252d38;
+
     color: #ffffff;
 }
 
 .topbar-right button:active {
-    background: #303846;
+    transform: translateY(1px);
+    background: #2b3440;
 }
 
 
 /* =========================================================
-   Status
-   ========================================================= */
-
-.status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-
-    margin-right: 4px;
-
-    color: #9da7b7;
-    font-size: 12px;
-}
-
-.status-dot {
-    width: 7px;
-    height: 7px;
-
-    flex: 0 0 7px;
-
-    border-radius: 50%;
-    background: var(--success);
-
-    box-shadow:
-        0 0 7px rgba(85, 201, 130, 0.35);
-}
-
-
-/* =========================================================
-   Main Workspace
+   Workspace
    ========================================================= */
 
 .workspace {
+    position: relative;
+
     width: 100%;
     height: calc(100vh - 48px);
+
+    min-width: 0;
+    min-height: 0;
 
     display: grid;
 
     grid-template-columns:
-        180px minmax(0, 1fr) minmax(0, 1fr);
+        var(--file-panel-width) var(--splitter-size) var(--editor-panel-width) var(--splitter-size) minmax(0, 1fr);
+
+    overflow: hidden;
+
+    background: var(--background);
+}
+
+
+/* =========================================================
+   Resizable Splitters
+   ========================================================= */
+
+.layout-splitter {
+    position: relative;
+
+    z-index: 15;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    background: var(--border);
+
+    cursor: col-resize;
+
+    touch-action: none;
+
+    transition:
+        background var(--transition-fast);
+}
+
+.layout-splitter-vertical {
+    width: var(--splitter-size);
+    height: 100%;
+
+    cursor: col-resize;
+}
+
+.layout-splitter-horizontal {
+    width: 100%;
+    height: var(--splitter-size);
+
+    cursor: row-resize;
+}
+
+.layout-splitter::before {
+    content: "";
+
+    position: absolute;
+
+    z-index: -1;
+
+    opacity: 0;
+
+    transition:
+        opacity var(--transition-fast),
+        background var(--transition-fast);
+}
+
+.layout-splitter-vertical::before {
+    inset: 0 -5px;
+}
+
+.layout-splitter-horizontal::before {
+    inset: -5px 0;
+}
+
+.layout-splitter:hover,
+.layout-splitter:focus-visible,
+.layout-splitter.dragging {
+    background: var(--accent);
+}
+
+.layout-splitter:hover::before,
+.layout-splitter:focus-visible::before,
+.layout-splitter.dragging::before {
+    opacity: 1;
+    background: rgba(92, 156, 255, 0.08);
+}
+
+.layout-splitter-grip {
+    width: 2px;
+    height: 28px;
+
+    border-radius: 2px;
+
+    background: #566071;
+
+    opacity: 0;
+
+    transition:
+        opacity var(--transition-fast),
+        transform var(--transition-fast);
+}
+
+.layout-splitter-horizontal .layout-splitter-grip {
+    width: 28px;
+    height: 2px;
+}
+
+.layout-splitter:hover .layout-splitter-grip,
+.layout-splitter:focus-visible .layout-splitter-grip,
+.layout-splitter.dragging .layout-splitter-grip {
+    opacity: 0.9;
+
+    background: #ffffff;
+}
+
+.layout-splitter:focus-visible {
+    outline-offset: -1px;
+}
+
+
+/* =========================================================
+   Prevent accidental selection while dragging
+   ========================================================= */
+
+body.resizing-columns,
+body.resizing-columns * {
+    cursor: col-resize !important;
+    user-select: none !important;
+}
+
+body.resizing-rows,
+body.resizing-rows * {
+    cursor: row-resize !important;
+    user-select: none !important;
 }
 
 
@@ -235,7 +432,8 @@ input:focus-visible {
 
     overflow: hidden;
 
-    border-right: 1px solid var(--border);
+    border-right: 0;
+
     background: var(--surface);
 }
 
@@ -252,14 +450,20 @@ input:focus-visible {
     border-bottom: 1px solid var(--border);
 
     color: var(--text-muted);
+
     font-size: 11px;
     font-weight: 700;
+
     letter-spacing: 0.08em;
 }
 
 .new-file-btn {
-    width: 24px;
-    height: 24px;
+    width: 25px;
+    height: 25px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     padding: 0;
 
@@ -270,32 +474,33 @@ input:focus-visible {
     color: #aab3c2;
 
     font-size: 18px;
-    line-height: 24px;
+    line-height: 1;
 
     cursor: pointer;
 
     transition:
-        background 0.12s ease,
-        color 0.12s ease;
+        background var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
 }
 
 .new-file-btn:hover {
-    background: #242a35;
+    background: #252c37;
     color: #ffffff;
 }
 
 .new-file-btn:active {
-    background: #2d3541;
+    transform: scale(0.92);
 }
 
 
 /* =========================================================
-   Project File Tree
+   File Tree
    ========================================================= */
 
 .file-tree {
+    min-width: 0;
     min-height: 0;
-    max-height: 45%;
 
     overflow-y: auto;
 
@@ -303,7 +508,10 @@ input:focus-visible {
 }
 
 .file-item {
+    position: relative;
+
     width: 100%;
+    min-width: 0;
     height: 32px;
 
     display: flex;
@@ -320,13 +528,13 @@ input:focus-visible {
     color: #aeb6c4;
 
     text-align: left;
-    font: inherit;
 
     cursor: pointer;
 
     transition:
-        background 0.12s ease,
-        color 0.12s ease;
+        background var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
 }
 
 .file-item:hover {
@@ -334,9 +542,27 @@ input:focus-visible {
     color: #e6eaf0;
 }
 
+.file-item:active {
+    transform: scale(0.985);
+}
+
 .file-item.active {
     background: var(--surface-active);
     color: #ffffff;
+}
+
+.file-item.active::before {
+    content: "";
+
+    position: absolute;
+    left: 0;
+
+    width: 2px;
+    height: 15px;
+
+    border-radius: 2px;
+
+    background: var(--accent);
 }
 
 .file-icon {
@@ -377,7 +603,7 @@ input:focus-visible {
 
 
 /* =========================================================
-   Editor Panel
+   Editor
    ========================================================= */
 
 .editor-panel {
@@ -388,8 +614,6 @@ input:focus-visible {
     flex-direction: column;
 
     background: var(--background);
-
-    border-right: 1px solid var(--border);
 }
 
 .editor-header {
@@ -400,9 +624,12 @@ input:focus-visible {
     align-items: center;
     justify-content: space-between;
 
+    gap: 10px;
+
     padding: 0 10px 0 14px;
 
     border-bottom: 1px solid var(--border);
+
     background: var(--surface-raised);
 }
 
@@ -410,6 +637,7 @@ input:focus-visible {
     min-width: 0;
 
     color: var(--text);
+
     font-size: 12px;
 }
 
@@ -432,7 +660,9 @@ input:focus-visible {
 }
 
 .editor-actions button {
-    padding: 5px 8px;
+    height: 26px;
+
+    padding: 0 8px;
 
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-md);
@@ -445,30 +675,33 @@ input:focus-visible {
     cursor: pointer;
 
     transition:
-        background 0.12s ease,
-        border-color 0.12s ease,
-        color 0.12s ease;
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
 }
 
 .editor-actions button:hover {
-    border-color: #3a4351;
-    background: #293140;
+    border-color: #3b4553;
+    background: #29313d;
     color: #ffffff;
 }
 
 .editor-actions button:active {
-    background: #303846;
+    transform: translateY(1px);
 }
 
 
 /* =========================================================
-   CodeMirror Editor
+   CodeMirror
    ========================================================= */
 
 .editor-container {
     position: relative;
 
     flex: 1;
+
+    min-width: 0;
     min-height: 0;
 
     overflow: hidden;
@@ -498,6 +731,23 @@ input:focus-visible {
     min-height: 100%;
 }
 
+.editor .cm-editor,
+.editor .cm-content,
+.editor .cm-gutters {
+    font-family:
+        "JetBrains Mono",
+        ui-monospace,
+        SFMono-Regular,
+        Consolas,
+        monospace;
+
+    font-size: 13px;
+}
+
+.editor .cm-editor.cm-focused {
+    outline: none;
+}
+
 .editor .cm-gutters {
     border-right: 1px solid var(--border);
 }
@@ -508,20 +758,6 @@ input:focus-visible {
 
 .editor .cm-selectionBackground {
     background: #30415d !important;
-}
-
-.editor .cm-focused {
-    outline: none;
-}
-
-.cm-editor,
-.cm-editor .cm-content,
-.cm-editor .cm-gutters {
-    font-family:
-        "JetBrains Mono",
-        monospace;
-
-    font-size: 13px;
 }
 
 
@@ -541,9 +777,11 @@ input:focus-visible {
     padding: 0 10px;
 
     border-top: 1px solid var(--border);
+
     background: var(--surface-raised);
 
     color: #7f8999;
+
     font-size: 10px;
 }
 
@@ -561,15 +799,29 @@ input:focus-visible {
    ========================================================= */
 
 .right-panel {
+    --console-height: 260px;
+
     min-width: 0;
     min-height: 0;
 
     display: grid;
 
     grid-template-rows:
-        minmax(0, 1.6fr) minmax(180px, 0.8fr);
+        minmax(120px, 1fr) var(--splitter-size) minmax(120px, var(--console-height));
 
     background: var(--background);
+}
+
+.preview-panel {
+    min-width: 0;
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    border-bottom: 0;
 }
 
 
@@ -585,9 +837,12 @@ input:focus-visible {
     align-items: center;
     justify-content: space-between;
 
+    gap: 10px;
+
     padding: 0 12px;
 
     border-bottom: 1px solid var(--border);
+
     background: var(--surface-raised);
 
     color: #aeb6c4;
@@ -603,18 +858,8 @@ input:focus-visible {
 
 
 /* =========================================================
-   Preview
+   Preview Browser Bar
    ========================================================= */
-
-.preview-panel {
-    min-width: 0;
-    min-height: 0;
-
-    display: flex;
-    flex-direction: column;
-
-    border-bottom: 1px solid var(--border);
-}
 
 .browser-bar {
     height: 34px;
@@ -628,6 +873,7 @@ input:focus-visible {
     padding: 0 10px;
 
     border-bottom: 1px solid var(--border);
+
     background: #13171e;
 }
 
@@ -647,6 +893,22 @@ input:focus-visible {
     border-radius: 50%;
 
     background: #454d5a;
+
+    transition:
+        transform var(--transition-fast),
+        background var(--transition-fast);
+}
+
+.browser-dots:hover span:nth-child(1) {
+    background: #687486;
+}
+
+.browser-dots:hover span:nth-child(2) {
+    background: #687486;
+}
+
+.browser-dots:hover span:nth-child(3) {
+    background: #687486;
 }
 
 .browser-address {
@@ -664,9 +926,11 @@ input:focus-visible {
     border-radius: var(--radius-md);
 
     background: #191e26;
+
     color: #6f7989;
 
     font-family:
+        "JetBrains Mono",
         ui-monospace,
         SFMono-Regular,
         Consolas,
@@ -680,17 +944,15 @@ input:focus-visible {
 }
 
 #preview {
-    width: 100%;
-    height: 100%;
-
-    flex: 1;
-    min-height: 0;
-
     display: block;
-
+    width: 100%;
+    height: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 0;
     border: 0;
-
     background: #ffffff;
+    overflow: auto;
 }
 
 .preview-footer {
@@ -701,13 +963,24 @@ input:focus-visible {
     align-items: center;
     justify-content: space-between;
 
+    gap: 10px;
+
     padding: 0 10px;
 
     border-top: 1px solid var(--border);
+
     background: var(--surface-raised);
 
     color: #687282;
+
     font-size: 10px;
+}
+
+.preview-footer span {
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 
@@ -721,6 +994,8 @@ input:focus-visible {
 
     display: flex;
     flex-direction: column;
+
+    overflow: hidden;
 }
 
 .console-header {
@@ -772,14 +1047,15 @@ input:focus-visible {
     color: #7f8999;
 
     font-size: 10px;
+
     white-space: nowrap;
 
     cursor: pointer;
 
     transition:
-        background 0.12s ease,
-        border-color 0.12s ease,
-        color 0.12s ease;
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast);
 }
 
 .console-filter:hover,
@@ -790,12 +1066,16 @@ input:focus-visible {
 
 .console-filter.active {
     border-color: var(--border-strong);
+
     background: #252c37;
+
     color: #dce1e8;
 }
 
 .console-output {
     flex: 1;
+
+    min-width: 0;
     min-height: 0;
 
     overflow: auto;
@@ -805,10 +1085,10 @@ input:focus-visible {
     background: #10141a;
 
     font-family:
+        "JetBrains Mono",
         ui-monospace,
         SFMono-Regular,
         Consolas,
-        "Liberation Mono",
         monospace;
 
     font-size: 11px;
@@ -828,6 +1108,13 @@ input:focus-visible {
 
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+
+    transition:
+        background var(--transition-fast);
+}
+
+.console-entry:hover {
+    background: rgba(255, 255, 255, 0.025);
 }
 
 .console-entry.log {
@@ -880,11 +1167,14 @@ input:focus-visible {
 
     font-size: 11px;
     font-weight: 700;
+
     letter-spacing: 0.08em;
 }
 
 .asset-tree {
+    min-width: 0;
     min-height: 0;
+
     flex: 1;
 
     overflow: auto;
@@ -898,7 +1188,7 @@ input:focus-visible {
 }
 
 .empty-assets {
-    padding: 8px 8px 10px;
+    padding: 8px;
 
     color: var(--text-muted);
 
@@ -907,6 +1197,9 @@ input:focus-visible {
 }
 
 .asset-item {
+    position: relative;
+
+    min-width: 0;
     min-height: 30px;
 
     display: flex;
@@ -919,22 +1212,26 @@ input:focus-visible {
     border-radius: var(--radius-sm);
 
     color: var(--text);
+
     font-size: 12px;
 
+    overflow: hidden;
+
     transition:
-        background 0.12s ease,
-        color 0.12s ease;
+        background var(--transition-fast),
+        color var(--transition-fast);
 }
 
-.asset-item:hover {
-    background: rgba(255, 255, 255, 0.05);
+.asset-item:hover,
+.asset-item:focus-within {
+    background: #202732;
 }
 
 .asset-icon {
-    min-width: 28px;
+    width: 28px;
     height: 20px;
 
-    flex: 0 0 auto;
+    flex: 0 0 28px;
 
     display: flex;
     align-items: center;
@@ -943,10 +1240,14 @@ input:focus-visible {
     border-radius: 3px;
 
     background: rgba(255, 255, 255, 0.06);
+
     color: var(--text-muted);
 
     font-size: 8px;
     font-weight: 700;
+
+    transition:
+        opacity var(--transition-fast);
 }
 
 .asset-name {
@@ -957,76 +1258,114 @@ input:focus-visible {
 
     text-overflow: ellipsis;
     white-space: nowrap;
+
+    transition:
+        opacity var(--transition-fast),
+        transform var(--transition-fast);
 }
 
 .asset-actions {
+    position: absolute;
+    inset: 3px;
+
+    z-index: 2;
+
     display: flex;
     align-items: center;
+    justify-content: flex-end;
 
     gap: 3px;
 
+    padding: 0 3px;
+
+    background:
+        linear-gradient(90deg,
+            rgba(32, 39, 50, 0.94),
+            rgba(32, 39, 50, 0.99));
+
     opacity: 0;
 
+    pointer-events: none;
+
+    transform: translateX(5px);
+
     transition:
-        opacity 0.12s ease;
+        opacity var(--transition-fast),
+        transform var(--transition-fast);
 }
 
 .asset-item:hover .asset-actions,
 .asset-item:focus-within .asset-actions {
     opacity: 1;
+
+    pointer-events: auto;
+
+    transform: translateX(0);
+}
+
+.asset-item:hover .asset-name,
+.asset-item:focus-within .asset-name {
+    opacity: 0;
+    transform: translateX(-5px);
 }
 
 .asset-action {
-    min-width: 24px;
-    height: 22px;
+    min-width: 28px;
+    height: 24px;
 
-    padding: 3px 5px;
+    padding: 0 6px;
 
-    border: 0;
-    border-radius: 3px;
+    border: 1px solid transparent;
+    border-radius: 4px;
 
     background: transparent;
-    color: var(--text-muted);
+
+    color: #8f98a8;
 
     font-size: 9px;
 
     cursor: pointer;
 
     transition:
-        background 0.12s ease,
-        color 0.12s ease;
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
 }
 
 .asset-action:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text);
+    border-color: #3c4655;
+
+    background: #2b3440;
+
+    color: #ffffff;
 }
 
 .asset-action:active {
-    background: rgba(255, 255, 255, 0.12);
+    transform: scale(0.93);
 }
 
 .asset-delete {
-    min-width: 22px;
+    width: 25px;
+    min-width: 25px;
+
+    padding: 0;
 
     font-size: 14px;
-    line-height: 12px;
+    line-height: 1;
 }
 
-.asset-action:focus-visible,
-.new-file-btn:focus-visible,
-.file-item:focus-visible,
-.editor-actions button:focus-visible,
-.topbar-right button:focus-visible,
-.console-filter:focus-visible,
-#clearConsoleBtn:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
+.asset-delete:hover {
+    border-color: rgba(223, 133, 133, 0.25);
+
+    background: rgba(223, 133, 133, 0.1);
+
+    color: #ef9b9b;
 }
 
 
 /* =========================================================
-   Modal System
+   Modal
    ========================================================= */
 
 .modal-overlay {
@@ -1050,8 +1389,8 @@ input:focus-visible {
     visibility: hidden;
 
     transition:
-        opacity 0.16s ease,
-        visibility 0.16s ease;
+        opacity var(--transition),
+        visibility var(--transition);
 }
 
 .modal-overlay.open {
@@ -1064,10 +1403,10 @@ input:focus-visible {
 
     overflow: hidden;
 
-    background: var(--surface-raised);
-
     border: 1px solid var(--border-strong);
     border-radius: 10px;
+
+    background: var(--surface-raised);
 
     box-shadow:
         0 30px 90px rgba(0, 0, 0, 0.55),
@@ -1077,18 +1416,13 @@ input:focus-visible {
         translateY(8px) scale(0.97);
 
     transition:
-        transform 0.16s ease;
+        transform var(--transition);
 }
 
 .modal-overlay.open .modal {
     transform:
         translateY(0) scale(1);
 }
-
-
-/* =========================================================
-   Modal Header
-   ========================================================= */
 
 .modal-header {
     height: 48px;
@@ -1100,6 +1434,7 @@ input:focus-visible {
     padding: 0 12px 0 16px;
 
     border-bottom: 1px solid var(--border);
+
     background: #1a1f28;
 
     color: #e8ebf0;
@@ -1124,15 +1459,15 @@ input:focus-visible {
     background: transparent;
     color: #7f8999;
 
-    font-family: inherit;
     font-size: 20px;
     line-height: 1;
 
     cursor: pointer;
 
     transition:
-        background 0.12s ease,
-        color 0.12s ease;
+        background var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
 }
 
 .modal-close:hover {
@@ -1141,13 +1476,8 @@ input:focus-visible {
 }
 
 .modal-close:active {
-    background: #303744;
+    transform: scale(0.9);
 }
-
-
-/* =========================================================
-   Modal Body
-   ========================================================= */
 
 .modal-body {
     display: flex;
@@ -1203,11 +1533,6 @@ input:focus-visible {
     overflow-wrap: anywhere;
 }
 
-
-/* =========================================================
-   Modal Input
-   ========================================================= */
-
 .modal-input {
     width: 100%;
 
@@ -1225,12 +1550,11 @@ input:focus-visible {
     background: #10141a;
     color: #e8ebf0;
 
-    font-family: inherit;
     font-size: 13px;
 
     transition:
-        border-color 0.12s ease,
-        box-shadow 0.12s ease;
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
 }
 
 .modal-input[hidden] {
@@ -1244,11 +1568,6 @@ input:focus-visible {
         0 0 0 2px rgba(92, 156, 255, 0.13);
 }
 
-
-/* =========================================================
-   Modal Footer
-   ========================================================= */
-
 .modal-footer {
     min-height: 58px;
 
@@ -1261,6 +1580,7 @@ input:focus-visible {
     padding: 10px 14px;
 
     border-top: 1px solid var(--border);
+
     background: var(--surface);
 }
 
@@ -1273,18 +1593,16 @@ input:focus-visible {
     border: 1px solid transparent;
     border-radius: var(--radius-md);
 
-    font-family: inherit;
-
     font-size: 12px;
     font-weight: 500;
 
     cursor: pointer;
 
     transition:
-        background 0.12s ease,
-        border-color 0.12s ease,
-        color 0.12s ease,
-        transform 0.08s ease;
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast);
 }
 
 .modal-btn:active {
@@ -1312,7 +1630,9 @@ input:focus-visible {
 
 .modal-btn-secondary:hover {
     border-color: #3b4350;
+
     background: #293140;
+
     color: #ffffff;
 }
 
@@ -1321,12 +1641,14 @@ input:focus-visible {
     border-color: #c44a4a;
 
     background: #b83c3c;
+
     color: #ffffff;
 }
 
 .modal-btn-danger:hover,
 .modal-btn.danger:hover {
     border-color: #df5a5a;
+
     background: #cc4848;
 }
 
@@ -1351,13 +1673,14 @@ input:focus-visible {
     visibility: visible;
 
     transition:
-        opacity 0.35s ease,
-        visibility 0.35s ease;
+        opacity 350ms ease,
+        visibility 350ms ease;
 }
 
 .loading-screen.hidden {
     opacity: 0;
     visibility: hidden;
+
     pointer-events: none;
 }
 
@@ -1379,7 +1702,13 @@ input:focus-visible {
     border-radius: 50%;
 
     animation:
-        buildzen-spin 0.75s linear infinite;
+        buildzen-spin 750ms linear infinite;
+}
+
+@keyframes buildzen-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .loading-title {
@@ -1387,8 +1716,6 @@ input:focus-visible {
 
     font-size: 15px;
     font-weight: 600;
-
-    letter-spacing: 0.02em;
 }
 
 .loading-status {
@@ -1408,44 +1735,43 @@ input:focus-visible {
     text-align: center;
 }
 
-@keyframes buildzen-spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 
 /* =========================================================
-   Responsive Layout
+   Responsive
    ========================================================= */
 
 @media (max-width: 1100px) {
-    .workspace {
-        grid-template-columns:
-            165px minmax(0, 1fr) minmax(0, 1fr);
+    :root {
+        --file-panel-width: 165px;
+        --editor-panel-width: 360px;
     }
 }
 
 
 @media (max-width: 900px) {
     .workspace {
+        height: calc(100vh - 48px);
+
         grid-template-columns:
-            160px minmax(0, 1fr);
+            var(--file-panel-width) var(--splitter-size) minmax(0, 1fr);
+
+        grid-template-rows:
+            minmax(420px, 1fr) minmax(380px, 0.8fr);
+    }
+
+    #editorPreviewSplitter {
+        display: none;
     }
 
     .right-panel {
         grid-column: 1 / -1;
         grid-row: 2;
 
-        min-height: 420px;
+        min-height: 380px;
     }
 
     .editor-panel {
         min-height: 420px;
-    }
-
-    .workspace {
-        overflow: auto;
     }
 }
 
@@ -1460,27 +1786,87 @@ input:focus-visible {
     }
 
     .workspace {
-        height: calc(100vh - 46px);
+        height: auto;
+        min-height: calc(100vh - 46px);
 
-        grid-template-columns:
-            145px minmax(0, 1fr);
+        display: flex;
+        flex-direction: column;
+
+        overflow: visible;
     }
 
-    .editor-header {
-        padding-left: 10px;
-    }
-
-    .editor-actions button {
-        padding: 4px 6px;
-        font-size: 10px;
-    }
-
-    .editor-footer {
-        gap: 9px;
-    }
-
-    .editor-footer span:nth-child(2) {
+    .layout-splitter {
         display: none;
+    }
+
+    .file-panel {
+        width: 100% !important;
+        height: 150px;
+
+        flex: 0 0 150px;
+
+        border-bottom: 1px solid var(--border);
+    }
+
+    .editor-panel {
+        width: 100% !important;
+        height: 440px;
+
+        flex: 0 0 440px;
+
+        border-bottom: 1px solid var(--border);
+    }
+
+    .right-panel {
+        width: 100% !important;
+
+        height: 560px;
+
+        flex: 0 0 560px;
+    }
+
+    .file-tree {
+        display: flex;
+        align-items: center;
+
+        gap: 4px;
+
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .file-item {
+        width: auto;
+        min-width: 120px;
+
+        flex: 0 0 auto;
+    }
+
+    .asset-section {
+        overflow: hidden;
+    }
+
+    .asset-tree {
+        flex-direction: row;
+
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .asset-item {
+        flex: 0 0 auto;
+
+        max-width: 220px;
+    }
+
+    .asset-actions {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .asset-name {
+        opacity: 1;
+        transform: none;
     }
 
     .console-controls {
@@ -1502,104 +1888,26 @@ input:focus-visible {
         display: none;
     }
 
-    .topbar-right {
-        gap: 4px;
-    }
-
     .status {
         display: none;
     }
 
-    .workspace {
-        display: flex;
-        flex-direction: column;
-
-        height: calc(100vh - 46px);
-    }
-
-    .file-panel {
-        height: 148px;
-
-        flex-shrink: 0;
-
-        border-right: 0;
-        border-bottom: 1px solid var(--border);
-    }
-
-    .file-panel-header {
-        height: 34px;
-        flex-basis: 34px;
-    }
-
-    .file-tree {
-        height: 40px;
-        flex: 0 0 40px;
-
-        display: flex;
-        align-items: center;
-
+    .topbar-right {
         gap: 4px;
-
-        padding: 5px 6px;
-
-        overflow-x: auto;
-        overflow-y: hidden;
     }
 
-    .file-item {
-        width: auto;
-        min-width: 120px;
-        height: 34px;
-    }
-
-    .asset-section {
-        min-height: 0;
-
-        margin-top: 0;
-        padding-top: 0;
-
-        overflow: hidden;
-    }
-
-    .asset-section-header {
-        height: 30px;
-        flex: 0 0 30px;
-    }
-
-    .asset-tree {
-        flex-direction: row;
-        align-items: center;
-
-        overflow-x: auto;
-        overflow-y: hidden;
-
-        padding: 4px 6px;
-    }
-
-    .asset-item {
-        flex: 0 0 auto;
-        max-width: 220px;
-    }
-
-    .asset-actions {
-        opacity: 1;
+    .topbar-right button {
+        padding: 0 8px;
     }
 
     .editor-panel {
-        height: 430px;
-        min-height: 430px;
-
-        flex-shrink: 0;
-
-        border-right: 0;
-        border-bottom: 1px solid var(--border);
+        height: 400px;
+        flex-basis: 400px;
     }
 
     .right-panel {
-        height: 550px;
-        min-height: 550px;
-
-        flex-shrink: 0;
+        height: 520px;
+        flex-basis: 520px;
     }
 
     .editor-footer {
@@ -1607,8 +1915,8 @@ input:focus-visible {
         font-size: 9px;
     }
 
-    #languageInfo {
-        margin-left: auto;
+    .editor-footer span:nth-child(2) {
+        display: none;
     }
 
     .console-controls {
@@ -1617,10 +1925,6 @@ input:focus-visible {
 
     .modal-overlay {
         padding: 12px;
-    }
-
-    .modal {
-        border-radius: var(--radius-lg);
     }
 
     .modal-body {
@@ -1648,8 +1952,25 @@ input:focus-visible {
     *::before,
     *::after {
         scroll-behavior: auto !important;
-        transition-duration: 0.01ms !important;
+
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
+
+        transition-duration: 0.01ms !important;
+    }
+}
+
+
+/* =========================================================
+   Pointer-specific enhancements
+   ========================================================= */
+
+@media (hover: hover) and (pointer: fine) {
+    .asset-item:hover {
+        cursor: default;
+    }
+
+    .layout-splitter:hover {
+        z-index: 20;
     }
 }
