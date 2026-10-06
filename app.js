@@ -16,6 +16,32 @@ import {
     resolveCSSAssetReferences
 } from "./assets.js";
 
+const loadingScreen =
+    document.getElementById("loadingScreen");
+
+const loadingStatus =
+    document.getElementById("loadingStatus");
+
+function setLoadingStatus(text) {
+    if (loadingStatus) {
+        loadingStatus.textContent =
+            text;
+    }
+}
+
+function finishLoading() {
+    if (!loadingScreen) {
+        return;
+    }
+
+    loadingScreen.classList.add(
+        "hidden"
+    );
+
+    setTimeout(() => {
+        loadingScreen.remove();
+    }, 400);
+}
 
 /* =========================================================
    DOM
@@ -1651,8 +1677,19 @@ resetBtn.addEventListener(
    ========================================================= */
 
 async function initializeApp() {
+    setLoadingStatus(
+        "HANDSHAKING..."
+    );
+
+    /*
+     * Load the saved project.
+     */
     const project =
         loadProject();
+
+    setLoadingStatus(
+        "TRANSFERRING DATA..."
+    );
 
     buildzenFiles =
         project.files;
@@ -1664,6 +1701,14 @@ async function initializeApp() {
         project.activeFile ||
         buildzenFiles[0]?.id ||
         null;
+
+
+    /*
+     * Initialize CodeMirror.
+     */
+    setLoadingStatus(
+        "INITIALIZING EDITOR..."
+    );
 
     initializeEditors(
         buildzenFiles
@@ -1677,6 +1722,14 @@ async function initializeApp() {
         );
     }
 
+
+    /*
+     * Load IndexedDB assets.
+     */
+    setLoadingStatus(
+        "LOADING ASSETS..."
+    );
+
     try {
         await renderAssets();
     } catch (error) {
@@ -1686,9 +1739,40 @@ async function initializeApp() {
         );
     }
 
+
+    /*
+     * Build the initial preview.
+     */
+    setLoadingStatus(
+        "BUILDING PREVIEW..."
+    );
+
     await updatePreview();
+
+
+    /*
+     * Everything is ready.
+     */
+    setLoadingStatus(
+        "READY"
+    );
+
+    setTimeout(() => {
+        finishLoading();
+    }, 250);
 }
 
+
+initializeApp().catch(error => {
+    console.error(
+        "Failed to initialize Buildzen:",
+        error
+    );
+
+    setLoadingStatus(
+        "INITIALIZATION FAILED"
+    );
+});
 
 initializeApp().catch(
     error => {

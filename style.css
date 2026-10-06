@@ -1319,3 +1319,82 @@ button {
     font-size: 14px;
     line-height: 12px;
 }
+
+/* =========================================================
+   LOADING SCREEN
+   ========================================================= */
+
+.loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--background, #0f1117);
+
+    opacity: 1;
+    visibility: visible;
+
+    transition:
+        opacity .35s ease,
+        visibility .35s ease;
+}
+
+.loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.loading-spinner {
+    width: 34px;
+    height: 34px;
+
+    border: 3px solid rgba(255, 255, 255, .12);
+    border-top-color: var(--accent, #4f8cff);
+
+    border-radius: 50%;
+
+    animation:
+        buildzen-spin .75s linear infinite;
+}
+
+.loading-title {
+    color: var(--text, #ffffff);
+
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+.loading-status {
+    min-width: 150px;
+
+    color: var(--text-muted, #8b93a7);
+
+    font-family:
+        "JetBrains Mono",
+        monospace;
+
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .12em;
+
+    text-align: center;
+}
+
+@keyframes buildzen-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
