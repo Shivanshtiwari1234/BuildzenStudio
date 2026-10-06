@@ -4,17 +4,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0f1117">
+
     <title>Buildzen Studio</title>
+
     <link rel="stylesheet" href="style.css">
+
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap">
 </head>
 
 <body>
-    <div id="loadingScreen" class="loading-screen">
+
+    <!-- =====================================================
+         Loading Screen
+         ===================================================== -->
+
+    <div id="loadingScreen" class="loading-screen" aria-live="polite" aria-busy="true">
+
         <div class="loading-content">
-            <div class="loading-spinner"></div>
+
+            <div class="loading-spinner" aria-hidden="true"></div>
 
             <div class="loading-title">
                 Buildzen Studio
@@ -23,80 +35,135 @@
             <div id="loadingStatus" class="loading-status">
                 HANDSHAKING...
             </div>
+
         </div>
+
     </div>
 
+
+    <!-- =====================================================
+         Top Bar
+         ===================================================== -->
+
     <header class="topbar">
+
         <div class="brand">
             <strong>Buildzen</strong>
             <span>Studio</span>
         </div>
 
+
         <div class="topbar-right">
-            <span id="status" class="status">
-                <span class="status-dot"></span>
+
+            <span id="status" class="status" aria-label="Buildzen status">
+                <span class="status-dot" aria-hidden="true"></span>
+
                 Live
             </span>
 
-            <button id="resetBtn" type="button">Reset</button>
-            <button id="refreshBtn" type="button">Refresh</button>
+
+            <button id="resetBtn" type="button">
+                Reset
+            </button>
+
+
+            <button id="refreshBtn" type="button">
+                Refresh
+            </button>
+
         </div>
+
     </header>
 
 
+    <!-- =====================================================
+         Main Workspace
+         ===================================================== -->
+
     <main class="workspace">
 
-        <aside class="file-panel">
+
+        <!-- =================================================
+             Project / Assets Sidebar
+             ================================================= -->
+
+        <aside class="file-panel" aria-label="Project files and assets">
+
+
+            <!-- Project -->
 
             <div class="file-panel-header">
+
                 <span>PROJECT</span>
 
-                <button id="newFileBtn" class="new-file-btn" title="New File" aria-label="New File">
+                <button id="newFileBtn" class="new-file-btn" type="button" title="New File" aria-label="New File">
                     +
                 </button>
+
             </div>
 
-            <div id="fileTree" class="file-tree"></div>
 
+            <div id="fileTree" class="file-tree" role="tree" aria-label="Project files"></div>
+
+
+            <!-- Assets -->
 
             <div class="asset-section">
 
                 <div class="asset-section-header">
+
                     <span>ASSETS</span>
 
-                    <button id="uploadAssetBtn" class="new-file-btn" title="Upload Asset" aria-label="Upload Asset"
-                        type="button">
+                    <button id="uploadAssetBtn" class="new-file-btn" type="button" title="Upload Asset"
+                        aria-label="Upload Asset">
                         +
                     </button>
+
                 </div>
 
-                <div id="assetTree" class="asset-tree">
+
+                <div id="assetTree" class="asset-tree" aria-label="Project assets">
+
                     <div class="empty-assets">
                         No assets yet
                     </div>
+
                 </div>
 
-                <input id="assetInput" type="file" multiple hidden>
+
+                <input id="assetInput" type="file" multiple hidden aria-hidden="true">
 
             </div>
+
         </aside>
 
 
-        <section class="editor-panel">
+        <!-- =================================================
+             Editor
+             ================================================= -->
+
+        <section class="editor-panel" aria-label="Code editor">
+
 
             <div class="editor-header">
 
                 <div class="editor-title">
-                    <span id="fileName">index.html</span>
+
+                    <span id="fileName">
+                        index.html
+                    </span>
+
                 </div>
+
 
                 <div class="editor-actions">
 
-                    <button id="renameFileBtn" title="Rename file" type="button">
+                    <button id="renameFileBtn" type="button" title="Rename file">
                         Rename
                     </button>
 
-                    <button id="deleteFileBtn" title="Delete file" type="button">
+
+                    <button id="deleteFileBtn" type="button" title="Delete file">
                         Delete
                     </button>
 
@@ -105,17 +172,22 @@
             </div>
 
 
-            <div id="editorContainer" class="editor-container"></div>
+            <div id="editorContainer" class="editor-container" aria-label="Source code"></div>
 
 
-            <div class="editor-footer">
+            <div class="editor-footer" aria-label="Editor information">
 
                 <span id="cursorInfo">
                     Ln 1, Col 1
                 </span>
 
-                <span>Spaces: 2</span>
-                <span>UTF-8</span>
+                <span>
+                    Spaces: 2
+                </span>
+
+                <span>
+                    UTF-8
+                </span>
 
                 <span id="languageInfo">
                     HTML
@@ -126,23 +198,40 @@
         </section>
 
 
-        <section class="right-panel">
+        <!-- =================================================
+             Preview + Console
+             ================================================= -->
+
+        <section class="right-panel" aria-label="Preview and console">
+
+
+            <!-- Preview -->
 
             <div class="preview-panel">
 
                 <div class="panel-header">
-                    <span>Preview</span>
-                    <span id="previewStatus">Live</span>
+
+                    <span>
+                        Preview
+                    </span>
+
+                    <span id="previewStatus">
+                        Live
+                    </span>
+
                 </div>
 
 
-                <div class="browser-bar">
+                <div class="browser-bar" aria-label="Preview address">
 
-                    <div class="browser-dots">
+                    <div class="browser-dots" aria-hidden="true">
+
                         <span></span>
                         <span></span>
                         <span></span>
+
                     </div>
+
 
                     <div class="browser-address">
                         buildzen://preview
@@ -151,48 +240,70 @@
                 </div>
 
 
-                <iframe id="preview" title="Live preview" sandbox="allow-scripts allow-forms allow-modals"></iframe>
+                <iframe id="preview" title="Buildzen live preview"
+                    sandbox="allow-scripts allow-forms allow-modals"></iframe>
 
 
                 <div class="preview-footer">
-                    <span>Buildzen Preview</span>
-                    <span>Auto-refresh enabled</span>
+
+                    <span>
+                        Buildzen Preview
+                    </span>
+
+                    <span>
+                        Auto-refresh enabled
+                    </span>
+
                 </div>
 
             </div>
 
+
+            <!-- Console -->
 
             <div class="console-panel">
 
                 <div class="panel-header console-header">
 
                     <div class="console-title">
-                        <span>Console</span>
-                        <span id="consoleCount">(0)</span>
+
+                        <span>
+                            Console
+                        </span>
+
+                        <span id="consoleCount">
+                            (0)
+                        </span>
+
                     </div>
 
 
                     <div class="console-controls">
 
-                        <button class="console-filter active" data-filter="all" type="button">
+                        <button class="console-filter active" type="button" data-filter="all">
                             All
                         </button>
 
-                        <button class="console-filter" data-filter="log" type="button">
+
+                        <button class="console-filter" type="button" data-filter="log">
                             Logs
                         </button>
 
-                        <button class="console-filter" data-filter="info" type="button">
+
+                        <button class="console-filter" type="button" data-filter="info">
                             Info
                         </button>
 
-                        <button class="console-filter" data-filter="warn" type="button">
+
+                        <button class="console-filter" type="button" data-filter="warn">
                             Warnings
                         </button>
 
-                        <button class="console-filter" data-filter="error" type="button">
+
+                        <button class="console-filter" type="button" data-filter="error">
                             Errors
                         </button>
+
 
                         <button id="clearConsoleBtn" type="button">
                             Clear
@@ -203,7 +314,7 @@
                 </div>
 
 
-                <div id="consoleOutput" class="console-output"></div>
+                <div id="consoleOutput" class="console-output" aria-live="polite"></div>
 
             </div>
 
@@ -221,13 +332,15 @@
         <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"
             aria-describedby="modalMessage">
 
+
             <div class="modal-header">
 
                 <span id="modalTitle">
                     Buildzen
                 </span>
 
-                <button id="modalCloseBtn" class="modal-close" aria-label="Close" type="button">
+
+                <button id="modalCloseBtn" class="modal-close" type="button" aria-label="Close">
                     ×
                 </button>
 
@@ -260,6 +373,7 @@
                     Cancel
                 </button>
 
+
                 <button id="modalConfirmBtn" class="modal-btn modal-btn-primary" type="button">
                     OK
                 </button>
@@ -270,6 +384,10 @@
 
     </div>
 
+
+    <!-- =====================================================
+         Application
+         ===================================================== -->
 
     <script type="module" src="app.js"></script>
 

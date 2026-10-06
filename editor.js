@@ -31,22 +31,34 @@ import { classHighlighter } from "@lezer/highlight";
 
 
 const editorContainer =
-    document.getElementById("editorContainer");
+    document.getElementById(
+        "editorContainer"
+    );
 
 const cursorInfo =
-    document.getElementById("cursorInfo");
+    document.getElementById(
+        "cursorInfo"
+    );
 
 const fileName =
-    document.getElementById("fileName");
+    document.getElementById(
+        "fileName"
+    );
 
 const languageInfo =
-    document.getElementById("languageInfo");
+    document.getElementById(
+        "languageInfo"
+    );
 
 
 export const editors = {};
 
 let activeEditor = null;
 
+
+/* ---------------------------------
+   Language configuration
+--------------------------------- */
 
 const languageMap = {
     html: {
@@ -83,26 +95,40 @@ function getLanguage(filename) {
             .pop()
             .toLowerCase();
 
-    return languageMap[extension] || {
-        name: "Plain Text",
-        extension: []
-    };
+    return (
+        languageMap[extension] || {
+            name: "Plain Text",
+            extension: []
+        }
+    );
 }
 
 
+/* ---------------------------------
+   Editor information
+--------------------------------- */
+
 function updateEditorInfo(view) {
-    if (!view) return;
+    if (!view || !cursorInfo) {
+        return;
+    }
 
     const position =
         view.state.selection.main.head;
 
     const line =
-        view.state.doc.lineAt(position);
+        view.state.doc.lineAt(
+            position
+        );
 
     cursorInfo.textContent =
         `Ln ${line.number}, Col ${position - line.from + 1}`;
 }
 
+
+/* ---------------------------------
+   Buildzen keybindings
+--------------------------------- */
 
 function buildzenKeymap() {
     return keymap.of([
@@ -113,7 +139,9 @@ function buildzenKeymap() {
 
             run() {
                 window.dispatchEvent(
-                    new CustomEvent("buildzen-save")
+                    new CustomEvent(
+                        "buildzen-save"
+                    )
                 );
 
                 return true;
@@ -125,7 +153,9 @@ function buildzenKeymap() {
 
             run() {
                 window.dispatchEvent(
-                    new CustomEvent("buildzen-refresh")
+                    new CustomEvent(
+                        "buildzen-refresh"
+                    )
                 );
 
                 return true;
@@ -135,18 +165,37 @@ function buildzenKeymap() {
 }
 
 
+/* ---------------------------------
+   Create editor
+--------------------------------- */
+
 function createEditor(file) {
+    if (!editorContainer) {
+        throw new Error(
+            "Buildzen editor container was not found."
+        );
+    }
+
     const container =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
-    container.className = "editor";
-    container.dataset.fileId = file.id;
+    container.className =
+        "editor";
 
-    editorContainer.appendChild(container);
+    container.dataset.fileId =
+        file.id;
+
+    editorContainer.appendChild(
+        container
+    );
 
 
     const language =
-        getLanguage(file.name);
+        getLanguage(
+            file.name
+        );
 
 
     const state =
@@ -155,7 +204,8 @@ function createEditor(file) {
 
             extensions: [
 
-                // Editor UI
+                /* Editor UI */
+
                 lineNumbers(),
 
                 highlightActiveLineGutter(),
@@ -173,19 +223,24 @@ function createEditor(file) {
                 crosshairCursor(),
 
 
-                // Editing
+                /* Editing */
+
                 history(),
 
-                keymap.of(historyKeymap),
+                keymap.of(
+                    historyKeymap
+                ),
 
                 buildzenKeymap(),
 
 
-                // Language
+                /* Language */
+
                 language.extension,
 
 
-                // Theme
+                /* Theme */
+
                 oneDark,
 
                 syntaxHighlighting(
@@ -193,44 +248,47 @@ function createEditor(file) {
                 ),
 
 
-                // Buildzen events
-                EditorView.updateListener.of(update => {
+                /* Buildzen events */
 
-                    if (update.docChanged) {
-
-                        window.dispatchEvent(
-                            new CustomEvent(
-                                "buildzen-edit",
-                                {
-                                    detail: {
-                                        fileId: file.id,
-
-                                        content:
-                                            update.state.doc.toString()
-                                    }
-                                }
-                            )
-                        );
-                    }
-
-
-                    if (
-                        update.selectionSet ||
-                        update.docChanged
-                    ) {
+                EditorView.updateListener.of(
+                    update => {
 
                         if (
-                            activeEditor &&
-                            activeEditor.state ===
-                            update.state
+                            update.docChanged
                         ) {
+                            window.dispatchEvent(
+                                new CustomEvent(
+                                    "buildzen-edit",
+                                    {
+                                        detail: {
+                                            fileId:
+                                                file.id,
 
-                            updateEditorInfo(
-                                activeEditor
+                                            content:
+                                                update.state.doc.toString()
+                                        }
+                                    }
+                                )
                             );
                         }
+
+
+                        if (
+                            update.selectionSet ||
+                            update.docChanged
+                        ) {
+                            if (
+                                activeEditor &&
+                                activeEditor.state ===
+                                update.state
+                            ) {
+                                updateEditorInfo(
+                                    activeEditor
+                                );
+                            }
+                        }
                     }
-                })
+                )
             ]
         });
 
@@ -242,85 +300,133 @@ function createEditor(file) {
         });
 
 
-    editors[file.id] = view;
+    editors[file.id] =
+        view;
 
     return view;
 }
 
 
+/* ---------------------------------
+   Initialize editors
+--------------------------------- */
+
 export function initializeEditors(files) {
+    if (!editorContainer) {
+        return;
+    }
 
-    editorContainer.innerHTML = "";
+    editorContainer.innerHTML =
+        "";
 
-    Object.keys(editors).forEach(id => {
-        delete editors[id];
-    });
+    Object.keys(editors).forEach(
+        id => {
+            delete editors[id];
+        }
+    );
 
-    activeEditor = null;
+    activeEditor =
+        null;
 
+    window.buildzenActiveEditor =
+        null;
 
     for (const file of files) {
         createEditor(file);
     }
 
-
     if (files.length > 0) {
-        switchEditor(files[0].id);
+        switchEditor(
+            files[0].id
+        );
     }
 }
 
+
+/* ---------------------------------
+   Add editor
+--------------------------------- */
 
 export function addEditor(file) {
     return createEditor(file);
 }
 
 
-export function removeEditor(fileId) {
+/* ---------------------------------
+   Remove editor
+--------------------------------- */
 
+export function removeEditor(fileId) {
     const editor =
         editors[fileId];
 
-    if (!editor) return;
-
+    if (!editor) {
+        return;
+    }
 
     const element =
         editor.dom;
 
+    const wasActive =
+        activeEditor === editor;
+
     editor.destroy();
 
-
-    if (element.parentElement) {
+    if (
+        element.parentElement
+    ) {
         element.parentElement.remove();
     }
 
-
     delete editors[fileId];
 
+    if (wasActive) {
+        activeEditor =
+            null;
 
-    if (activeEditor === editor) {
-        activeEditor = null;
+        window.buildzenActiveEditor =
+            null;
     }
 }
 
 
-export function switchEditor(fileId) {
+/* ---------------------------------
+   Switch active editor
+--------------------------------- */
 
+export function switchEditor(fileId) {
     const editor =
         editors[fileId];
 
-    if (!editor) return;
+    if (!editor) {
+        return;
+    }
+
+    activeEditor =
+        editor;
+
+    /*
+     * Expose the active CodeMirror
+     * instance globally so assets.js
+     * and other Buildzen modules can
+     * interact with it.
+     */
+
+    window.buildzenActiveEditor =
+        editor;
 
 
-    activeEditor = editor;
-
-
-    Object.entries(editors).forEach(
+    Object.entries(
+        editors
+    ).forEach(
         ([id, view]) => {
 
             const container =
                 view.dom.parentElement;
 
-            if (!container) return;
+            if (!container) {
+                return;
+            }
 
             container.classList.toggle(
                 "active-editor",
@@ -332,69 +438,113 @@ export function switchEditor(fileId) {
 
     const currentFile =
         window.buildzenFiles?.find(
-            file => file.id === fileId
+            file =>
+                file.id === fileId
         );
 
 
     if (currentFile) {
-
         const language =
-            getLanguage(currentFile.name);
+            getLanguage(
+                currentFile.name
+            );
 
-        fileName.textContent =
-            currentFile.name;
+        if (fileName) {
+            fileName.textContent =
+                currentFile.name;
+        }
 
-        languageInfo.textContent =
-            language.name;
+        if (languageInfo) {
+            languageInfo.textContent =
+                language.name;
+        }
     }
 
 
-    updateEditorInfo(editor);
+    updateEditorInfo(
+        editor
+    );
 
     editor.focus();
 }
 
+
+/* ---------------------------------
+   Active editor getter
+--------------------------------- */
 
 export function getActiveEditor() {
     return activeEditor;
 }
 
 
-export function getEditorContent(fileId) {
+/*
+ * Expose the getter globally.
+ *
+ * This allows modules that cannot
+ * directly import editor.js to get
+ * the active CodeMirror instance.
+ */
 
+window.getBuildzenActiveEditor =
+    getActiveEditor;
+
+
+/* ---------------------------------
+   Get editor content
+--------------------------------- */
+
+export function getEditorContent(
+    fileId
+) {
     const editor =
         editors[fileId];
 
-    if (!editor) return "";
+    if (!editor) {
+        return "";
+    }
 
     return editor.state.doc.toString();
 }
 
 
-export function getAllEditorContent() {
+/* ---------------------------------
+   Get all editor content
+--------------------------------- */
 
+export function getAllEditorContent() {
     const result = {};
 
-    Object.keys(editors).forEach(id => {
-
-        result[id] =
-            editors[id].state.doc.toString();
-    });
+    Object.keys(
+        editors
+    ).forEach(
+        id => {
+            result[id] =
+                editors[id]
+                    .state
+                    .doc
+                    .toString();
+        }
+    );
 
     return result;
 }
 
 
+/* ---------------------------------
+   Set editor content
+--------------------------------- */
+
 export function setEditorContent(
     fileId,
     content
 ) {
-
     const editor =
         editors[fileId];
 
-    if (!editor) return;
-
+    if (!editor) {
+        return;
+    }
 
     editor.dispatch({
         changes: {
@@ -403,7 +553,8 @@ export function setEditorContent(
             to:
                 editor.state.doc.length,
 
-            insert: content
+            insert:
+                content
         }
     });
 }

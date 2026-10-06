@@ -2,7 +2,6 @@ const ASSET_DB_NAME = "buildzen-assets";
 const ASSET_DB_VERSION = 1;
 const ASSET_STORE = "assets";
 
-
 const assetTree =
     document.getElementById("assetTree");
 
@@ -12,38 +11,49 @@ const uploadAssetBtn =
 const assetInput =
     document.getElementById("assetInput");
 
+let activePreviewAssetURLs = new Map();
 
-let activePreviewAssetURLs =
-    new Map();
+let lastActiveEditor = null;
 
 
-/* ================================== */
-/* IndexedDB                           */
-/* ================================== */
+/* ---------------------------------
+   Active editor tracking
+--------------------------------- */
+
+function getBuildzenEditor() {
+    const editor =
+        window.buildzenActiveEditor ||
+        window.getBuildzenActiveEditor?.();
+
+    if (editor) {
+        lastActiveEditor = editor;
+        return editor;
+    }
+
+    return lastActiveEditor;
+}
+
+
+/* ---------------------------------
+   IndexedDB
+--------------------------------- */
 
 function openAssetDatabase() {
-
     return new Promise((resolve, reject) => {
-
         const request =
             indexedDB.open(
                 ASSET_DB_NAME,
                 ASSET_DB_VERSION
             );
 
-
         request.onupgradeneeded = event => {
-
-            const db =
-                event.target.result;
-
+            const db = event.target.result;
 
             if (
                 !db.objectStoreNames.contains(
                     ASSET_STORE
                 )
             ) {
-
                 db.createObjectStore(
                     ASSET_STORE,
                     {
@@ -53,11 +63,15 @@ function openAssetDatabase() {
             }
         };
 
-
         request.onsuccess = () => {
-            resolve(request.result);
-        };
+            const db = request.result;
 
+            db.onversionchange = () => {
+                db.close();
+            };
+
+            resolve(db);
+        };
 
         request.onerror = () => {
             reject(request.error);
@@ -66,113 +80,95 @@ function openAssetDatabase() {
 }
 
 
-/* ================================== */
-/* Save asset                          */
-/* ================================== */
-
 export async function saveAsset(file) {
+    if (!(file instanceof File)) {
+        throw new TypeError(
+            "saveAsset() expects a File object."
+        );
+    }
 
     const db =
         await openAssetDatabase();
 
-
     const asset = {
-        id:
-            crypto.randomUUID(),
-
-        name:
-            file.name,
-
+        id: crypto.randomUUID(),
+        name: file.name,
         type:
-            file.type || "application/octet-stream",
-
-        size:
-            file.size,
-
+            file.type ||
+            "application/octet-stream",
+        size: file.size,
         file,
-
-        createdAt:
-            Date.now()
+        createdAt: Date.now()
     };
 
-
     return new Promise((resolve, reject) => {
-
         const transaction =
             db.transaction(
                 ASSET_STORE,
                 "readwrite"
             );
 
-
         const store =
             transaction.objectStore(
                 ASSET_STORE
             );
 
-
         const request =
             store.put(asset);
-
 
         request.onsuccess = () => {
             resolve(asset);
         };
 
-
         request.onerror = () => {
             reject(request.error);
+        };
+
+        transaction.onabort = () => {
+            reject(
+                transaction.error ||
+                new Error("Asset transaction aborted.")
+            );
         };
     });
 }
 
 
-/* ================================== */
-/* Get all assets                      */
-/* ================================== */
-
 export async function getAllAssets() {
-
     const db =
         await openAssetDatabase();
 
-
     return new Promise((resolve, reject) => {
-
         const transaction =
             db.transaction(
                 ASSET_STORE,
                 "readonly"
             );
 
-
         const store =
             transaction.objectStore(
                 ASSET_STORE
             );
 
-
         const request =
             store.getAll();
 
-
         request.onsuccess = () => {
-
             const assets =
                 request.result || [];
 
-
-            assets.sort(
-                (a, b) =>
-                    a.name.localeCompare(
-                        b.name
-                    )
+            assets.sort((a, b) =>
+                a.name.localeCompare(
+                    b.name,
+                    undefined,
+                    {
+                        sensitivity: "base"
+                    }
+                )
             );
-
 
             resolve(assets);
         };
-
 
         request.onerror = () => {
             reject(request.error);
@@ -181,39 +177,34 @@ export async function getAllAssets() {
 }
 
 
-/* ================================== */
-/* Delete asset                        */
-/* ================================== */
-
 export async function deleteAsset(assetId) {
+    if (!assetId) {
+        throw new Error(
+            "An asset ID is required."
+        );
+    }
 
     const db =
         await openAssetDatabase();
 
-
     return new Promise((resolve, reject) => {
-
         const transaction =
             db.transaction(
                 ASSET_STORE,
                 "readwrite"
             );
 
-
         const store =
             transaction.objectStore(
                 ASSET_STORE
             );
 
-
         const request =
             store.delete(assetId);
-
 
         request.onsuccess = () => {
             resolve();
         };
-
 
         request.onerror = () => {
             reject(request.error);
@@ -222,90 +213,81 @@ export async function deleteAsset(assetId) {
 }
 
 
-/* ================================== */
-/* Asset icons                         */
-/* ================================== */
+/* ---------------------------------
+   Asset helpers
+--------------------------------- */
 
 function getAssetIcon(asset) {
-
     const name =
         asset.name.toLowerCase();
 
-
     if (
-        /\.(png|jpe?g|gif|webp|svg|avif)$/
-            .test(name)
+        /\.(png|jpe?g|gif|webp|svg|avif)$/.test(
+            name
+        )
     ) {
         return "IMG";
     }
 
-
     if (
-        /\.(woff2?|ttf|otf)$/
-            .test(name)
+        /\.(woff2?|ttf|otf)$/.test(
+            name
+        )
     ) {
         return "FONT";
     }
 
-
     if (
-        /\.(mp3|wav|ogg|m4a)$/
-            .test(name)
+        /\.(mp3|wav|ogg|m4a)$/.test(
+            name
+        )
     ) {
         return "AUD";
     }
 
-
     if (
-        /\.(mp4|webm|mov)$/
-            .test(name)
+        /\.(mp4|webm|mov)$/.test(
+            name
+        )
     ) {
         return "VID";
     }
 
-
     if (
-        /\.(json|xml|txt|csv)$/
-            .test(name)
+        /\.(json|xml|txt|csv)$/.test(
+            name
+        )
     ) {
         return "FILE";
     }
-
 
     return "FILE";
 }
 
 
-/* ================================== */
-/* Asset type helpers                  */
-/* ================================== */
-
 function isImageAsset(asset) {
-
-    return /\.(png|jpe?g|gif|webp|svg|avif)$/i
-        .test(asset.name);
+    return /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(
+        asset.name
+    );
 }
 
 
 function isFontAsset(asset) {
-
-    return /\.(woff2?|ttf|otf)$/i
-        .test(asset.name);
+    return /\.(woff2?|ttf|otf)$/i.test(
+        asset.name
+    );
 }
 
 
-/* ================================== */
-/* Insert asset into editor            */
-/* ================================== */
+/* ---------------------------------
+   Insert asset reference
+--------------------------------- */
 
 function insertAssetReference(asset) {
-
     const editor =
-        window.getBuildzenActiveEditor?.();
-
+        getBuildzenEditor();
 
     if (!editor) {
-
         window.bzAlert?.(
             "Open a file in the editor first.",
             "Insert Asset"
@@ -314,27 +296,21 @@ function insertAssetReference(asset) {
         return;
     }
 
-
     const files =
         window.buildzenFiles || [];
-
 
     const editorContainer =
         editor.dom?.parentElement;
 
-
     const fileId =
         editorContainer?.dataset?.fileId;
-
 
     const currentFile =
         files.find(
             file => file.id === fileId
         );
 
-
     if (!currentFile) {
-
         window.bzAlert?.(
             "Could not determine the active file.",
             "Insert Asset"
@@ -343,93 +319,46 @@ function insertAssetReference(asset) {
         return;
     }
 
-
     const extension =
         currentFile.name
             .split(".")
             .pop()
             .toLowerCase();
 
-
     const filename =
         asset.name;
 
-
     let text = "";
-
-
-    /* ------------------------------ */
-    /* HTML                            */
-    /* ------------------------------ */
 
     if (
         extension === "html" ||
         extension === "htm"
     ) {
-
         if (isImageAsset(asset)) {
-
             text =
                 `<img src="${filename}" alt="">`;
-
         } else {
-
             text =
                 filename;
         }
-    }
-
-
-    /* ------------------------------ */
-    /* CSS                             */
-    /* ------------------------------ */
-
-    else if (extension === "css") {
-
-        if (isFontAsset(asset)) {
-
-            text =
-                `url("${filename}")`;
-
-        } else {
-
-            text =
-                `url("${filename}")`;
-        }
-    }
-
-
-    /* ------------------------------ */
-    /* JavaScript                      */
-    /* ------------------------------ */
-
-    else if (
+    } else if (extension === "css") {
+        text =
+            `url("${filename}")`;
+    } else if (
         extension === "js" ||
         extension === "mjs"
     ) {
-
         text =
             `"${filename}"`;
-    }
-
-
-    /* ------------------------------ */
-    /* Plain text / other              */
-    /* ------------------------------ */
-
-    else {
-
+    } else {
         text =
             filename;
     }
 
-
     const position =
         editor.state.selection.main.head;
 
-
     editor.dispatch({
-
         changes: {
             from: position,
             to: position,
@@ -439,50 +368,69 @@ function insertAssetReference(asset) {
         selection: {
             anchor:
                 position + text.length
-        }
-    });
+        },
 
+        scrollIntoView: true
+    });
 
     editor.focus();
 }
 
 
-/* ================================== */
-/* Render assets                       */
-/* ================================== */
+/* ---------------------------------
+   Render assets
+--------------------------------- */
 
 export async function renderAssets() {
-
-    if (!assetTree) return;
-
-
-    /* -------------------------------- */
-    /* Revoke old temporary preview URLs */
-    /* -------------------------------- */
-
-    for (
-        const url
-        of activePreviewAssetURLs.values()
-    ) {
-
-        try {
-            URL.revokeObjectURL(url);
-        } catch { }
+    if (!assetTree) {
+        return;
     }
 
+    for (
+        const url of
+        activePreviewAssetURLs.values()
+    ) {
+        try {
+            URL.revokeObjectURL(url);
+        } catch {
+            // Ignore already-revoked URLs.
+        }
+    }
 
     activePreviewAssetURLs.clear();
 
+    let assets;
 
-    const assets =
-        await getAllAssets();
+    try {
+        assets =
+            await getAllAssets();
+    } catch (error) {
+        console.error(
+            "Failed to load assets:",
+            error
+        );
 
+        assetTree.innerHTML = "";
+
+        const errorElement =
+            document.createElement("div");
+
+        errorElement.className =
+            "empty-assets";
+
+        errorElement.textContent =
+            "Failed to load assets";
+
+        assetTree.appendChild(
+            errorElement
+        );
+
+        return;
+    }
 
     assetTree.innerHTML = "";
 
-
     if (assets.length === 0) {
-
         const empty =
             document.createElement("div");
 
@@ -492,24 +440,19 @@ export async function renderAssets() {
         empty.textContent =
             "No assets yet";
 
-        assetTree.appendChild(empty);
+        assetTree.appendChild(
+            empty
+        );
 
         return;
     }
 
-
     for (const asset of assets) {
-
         const row =
             document.createElement("div");
 
         row.className =
             "asset-item";
-
-
-        /* ---------------------------- */
-        /* Icon                          */
-        /* ---------------------------- */
 
         const icon =
             document.createElement("span");
@@ -519,11 +462,6 @@ export async function renderAssets() {
 
         icon.textContent =
             getAssetIcon(asset);
-
-
-        /* ---------------------------- */
-        /* Name                          */
-        /* ---------------------------- */
 
         const name =
             document.createElement("span");
@@ -537,11 +475,6 @@ export async function renderAssets() {
         name.title =
             asset.name;
 
-
-        /* ---------------------------- */
-        /* Actions                       */
-        /* ---------------------------- */
-
         const actions =
             document.createElement("div");
 
@@ -549,9 +482,7 @@ export async function renderAssets() {
             "asset-actions";
 
 
-        /* ---------------------------- */
-        /* Insert                         */
-        /* ---------------------------- */
+        /* Insert */
 
         const insertButton =
             document.createElement("button");
@@ -569,10 +500,35 @@ export async function renderAssets() {
             `Insert ${asset.name}`;
 
 
+        /*
+         * Prevent the asset button from
+         * stealing focus from CodeMirror.
+         *
+         * This is important because the
+         * CodeMirror selection/cursor is
+         * what determines the insertion point.
+         */
+
+        insertButton.addEventListener(
+            "mousedown",
+            event => {
+                event.preventDefault();
+
+                const editor =
+                    window.buildzenActiveEditor ||
+                    window.getBuildzenActiveEditor?.();
+
+                if (editor) {
+                    lastActiveEditor =
+                        editor;
+                }
+            }
+        );
+
+
         insertButton.addEventListener(
             "click",
             event => {
-
                 event.stopPropagation();
 
                 insertAssetReference(
@@ -582,9 +538,7 @@ export async function renderAssets() {
         );
 
 
-        /* ---------------------------- */
-        /* Copy                           */
-        /* ---------------------------- */
+        /* Copy */
 
         const copyButton =
             document.createElement("button");
@@ -601,56 +555,49 @@ export async function renderAssets() {
         copyButton.title =
             `Copy URL for ${asset.name}`;
 
-
         copyButton.addEventListener(
             "click",
             async event => {
-
                 event.stopPropagation();
 
+                let url = null;
 
                 try {
-
-                    const url =
+                    url =
                         URL.createObjectURL(
                             asset.file
                         );
 
-
-                    await navigator.clipboard
-                        .writeText(url);
-
-
-                    setTimeout(
-                        () => {
-                            try {
-                                URL.revokeObjectURL(
-                                    url
-                                );
-                            } catch { }
-                        },
-                        30000
+                    await navigator.clipboard.writeText(
+                        url
                     );
-
 
                     console.log(
                         `Copied asset URL for ${asset.name}.`
                     );
-
                 } catch (error) {
-
                     console.error(
                         "Failed to copy asset URL:",
                         error
                     );
+                } finally {
+                    if (url) {
+                        setTimeout(() => {
+                            try {
+                                URL.revokeObjectURL(
+                                    url
+                                );
+                            } catch {
+                                // Ignore.
+                            }
+                        }, 30000);
+                    }
                 }
             }
         );
 
 
-        /* ---------------------------- */
-        /* Delete                         */
-        /* ---------------------------- */
+        /* Delete */
 
         const deleteButton =
             document.createElement("button");
@@ -667,43 +614,35 @@ export async function renderAssets() {
         deleteButton.title =
             `Delete ${asset.name}`;
 
-
         deleteButton.addEventListener(
             "click",
             async event => {
-
                 event.stopPropagation();
 
-
                 const confirmed =
-                    await window.bzConfirm(
+                    await window.bzConfirm?.(
                         `Delete "${asset.name}"?`,
                         "Delete Asset",
                         "danger"
                     );
 
-
-                if (!confirmed) return;
-
+                if (!confirmed) {
+                    return;
+                }
 
                 try {
-
                     await deleteAsset(
                         asset.id
                     );
 
-
                     await renderAssets();
-
 
                     window.dispatchEvent(
                         new CustomEvent(
                             "buildzen-assets-changed"
                         )
                     );
-
                 } catch (error) {
-
                     console.error(
                         "Failed to delete asset:",
                         error
@@ -725,80 +664,70 @@ export async function renderAssets() {
             deleteButton
         );
 
+        row.appendChild(
+            icon
+        );
 
-        row.appendChild(icon);
-        row.appendChild(name);
-        row.appendChild(actions);
+        row.appendChild(
+            name
+        );
 
+        row.appendChild(
+            actions
+        );
 
-        assetTree.appendChild(row);
+        assetTree.appendChild(
+            row
+        );
     }
 }
 
 
-/* ================================== */
-/* Upload button                       */
-/* ================================== */
+/* ---------------------------------
+   Upload
+--------------------------------- */
 
 if (uploadAssetBtn) {
-
     uploadAssetBtn.addEventListener(
         "click",
         () => {
-
             assetInput?.click();
         }
     );
 }
 
 
-/* ================================== */
-/* File selection                      */
-/* ================================== */
-
 if (assetInput) {
-
     assetInput.addEventListener(
         "change",
         async () => {
-
             const files =
                 Array.from(
                     assetInput.files || []
                 );
 
-
             if (files.length === 0) {
                 return;
             }
 
-
             try {
-
                 for (const file of files) {
-
                     await saveAsset(file);
                 }
 
-
                 await renderAssets();
-
 
                 window.dispatchEvent(
                     new CustomEvent(
                         "buildzen-assets-changed"
                     )
                 );
-
             } catch (error) {
-
                 console.error(
                     "Failed to save asset:",
                     error
                 );
-
             } finally {
-
                 assetInput.value = "";
             }
         }
@@ -806,30 +735,26 @@ if (assetInput) {
 }
 
 
-/* ================================== */
-/* Create preview Blob URLs            */
-/* ================================== */
+/* ---------------------------------
+   Preview asset URLs
+--------------------------------- */
 
 export async function createAssetURLs() {
-
     const assets =
         await getAllAssets();
-
 
     const urls =
         new Map();
 
-
     for (const asset of assets) {
-
-        if (!asset.file) continue;
-
+        if (!asset.file) {
+            continue;
+        }
 
         const url =
             URL.createObjectURL(
                 asset.file
             );
-
 
         urls.set(
             asset.name,
@@ -837,27 +762,21 @@ export async function createAssetURLs() {
         );
     }
 
-
     return urls;
 }
 
 
-/* ================================== */
-/* Preview URL lifecycle               */
-/* ================================== */
-
 export function revokePreviewAssetURLs() {
-
     for (
-        const url
-        of activePreviewAssetURLs.values()
+        const url of
+        activePreviewAssetURLs.values()
     ) {
-
         try {
             URL.revokeObjectURL(url);
-        } catch { }
+        } catch {
+            // Ignore.
+        }
     }
-
 
     activePreviewAssetURLs.clear();
 }
@@ -866,43 +785,44 @@ export function revokePreviewAssetURLs() {
 export function setActivePreviewAssetURLs(
     urls
 ) {
-
     activePreviewAssetURLs =
-        urls;
+        urls instanceof Map
+            ? urls
+            : new Map();
 }
 
 
 export function revokeAssetURLs(urls) {
+    if (!urls) {
+        return;
+    }
 
-    for (
-        const url
-        of urls.values()
-    ) {
-
+    for (const url of urls.values()) {
         try {
             URL.revokeObjectURL(url);
-        } catch { }
+        } catch {
+            // Ignore.
+        }
     }
 }
 
 
-/* ================================== */
-/* URL helpers                         */
-/* ================================== */
+/* ---------------------------------
+   Asset path helpers
+--------------------------------- */
 
-export function isExternalAssetURL(
-    value
-) {
+export function isExternalAssetURL(value) {
+    if (!value) {
+        return false;
+    }
 
-    return (
-        /^(https?:|data:|blob:|\/\/|#)/i
-            .test(value)
+    return /^(https?:|data:|blob:|\/\/|#)/i.test(
+        value.trim()
     );
 }
 
 
 export function cleanAssetPath(path) {
-
     return path
         .trim()
         .replace(/^['"]|['"]$/g, "")
@@ -911,18 +831,16 @@ export function cleanAssetPath(path) {
 }
 
 
-/* ================================== */
-/* Resolve HTML asset references       */
-/* ================================== */
+/* ---------------------------------
+   HTML asset references
+--------------------------------- */
 
 export function resolveAssetReferences(
     html,
     assetURLs
 ) {
-
     const parser =
         new DOMParser();
-
 
     const document =
         parser.parseFromString(
@@ -930,32 +848,33 @@ export function resolveAssetReferences(
             "text/html"
         );
 
-
     const attributes = [
         "src",
         "href",
         "poster"
     ];
 
-
-    for (const attribute of attributes) {
-
+    for (
+        const attribute of
+        attributes
+    ) {
         const elements =
             document.querySelectorAll(
                 `[${attribute}]`
             );
 
-
-        for (const element of elements) {
-
+        for (
+            const element of
+            elements
+        ) {
             const value =
                 element.getAttribute(
                     attribute
                 );
 
-
-            if (!value) continue;
-
+            if (!value) {
+                continue;
+            }
 
             if (
                 isExternalAssetURL(value)
@@ -963,17 +882,17 @@ export function resolveAssetReferences(
                 continue;
             }
 
-
             const cleanPath =
                 cleanAssetPath(value);
 
-
             const assetURL =
-                assetURLs.get(cleanPath);
+                assetURLs.get(
+                    cleanPath
+                );
 
-
-            if (!assetURL) continue;
-
+            if (!assetURL) {
+                continue;
+            }
 
             element.setAttribute(
                 attribute,
@@ -982,7 +901,6 @@ export function resolveAssetReferences(
         }
     }
 
-
     return (
         "<!DOCTYPE html>\n" +
         document.documentElement.outerHTML
@@ -990,43 +908,38 @@ export function resolveAssetReferences(
 }
 
 
-/* ================================== */
-/* Resolve CSS asset references        */
-/* ================================== */
+/* ---------------------------------
+   CSS asset references
+--------------------------------- */
 
 export function resolveCSSAssetReferences(
     css,
     assetURLs
 ) {
-
     return css.replace(
         /url\(\s*(['"]?)([^'")]+)\1\s*\)/gi,
-
         (
             match,
             quote,
             path
         ) => {
-
             if (
                 isExternalAssetURL(path)
             ) {
                 return match;
             }
 
-
             const cleanPath =
                 cleanAssetPath(path);
 
-
             const assetURL =
-                assetURLs.get(cleanPath);
-
+                assetURLs.get(
+                    cleanPath
+                );
 
             if (!assetURL) {
                 return match;
             }
-
 
             return `url("${assetURL}")`;
         }
