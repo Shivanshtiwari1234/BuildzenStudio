@@ -348,6 +348,12 @@ button {
     background: #30415d !important;
 }
 
+.cm-editor,
+.cm-editor .cm-content,
+.cm-editor .cm-gutters {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+}
 
 /* =========================================================
    Editor footer
@@ -1229,4 +1235,87 @@ button {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.asset-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    min-height: 30px;
+    padding: 5px 8px;
+
+    border-radius: 4px;
+
+    color: var(--text);
+    font-size: 12px;
+}
+
+.asset-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.asset-icon {
+    flex: 0 0 auto;
+
+    min-width: 28px;
+    height: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 3px;
+
+    font-size: 8px;
+    font-weight: 700;
+
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.asset-name {
+    min-width: 0;
+    flex: 1;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.asset-actions {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+
+    opacity: 0;
+    transition: opacity 0.12s ease;
+}
+
+.asset-item:hover .asset-actions {
+    opacity: 1;
+}
+
+.asset-action {
+    border: 0;
+    border-radius: 3px;
+
+    padding: 3px 5px;
+
+    background: transparent;
+    color: var(--text-muted);
+
+    font-size: 9px;
+
+    cursor: pointer;
+}
+
+.asset-action:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+}
+
+.asset-delete {
+    font-size: 14px;
+    line-height: 12px;
 }
