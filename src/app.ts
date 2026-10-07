@@ -6,6 +6,7 @@ import {
     getEditorContent,
     setEditorContent,
     getActiveEditor,
+    getEditorAtCoords,
     createSplitEditor,
     destroySplitEditor
 } from "./editor.ts";
@@ -3063,10 +3064,16 @@ async function runExport(action, button) {
 }
 
 
-async function insertUIBlock(blockId, position = null, markupOverride = null) {
+async function insertUIBlock(
+    blockId,
+    position = null,
+    markupOverride = null,
+    targetFileId = activeFileId,
+    targetView = getActiveEditor()
+) {
 
     const block = UI_BLOCKS.find(item => item.id === blockId);
-    const file = getFile(activeFileId);
+    const file = getFile(targetFileId);
     const extension = file?.name.split(".").pop().toLowerCase();
 
     if (!block) return;
@@ -3080,7 +3087,7 @@ async function insertUIBlock(blockId, position = null, markupOverride = null) {
         return;
     }
 
-    const view = getActiveEditor();
+    const view = targetView;
     if (!view) return;
 
     const source = view.state.doc.toString();
@@ -3111,8 +3118,8 @@ async function insertUIBlock(blockId, position = null, markupOverride = null) {
     });
     view.focus();
 
-    updateFileContent(activeFileId, view.state.doc.toString());
-    scheduleAutoSave(activeFileId);
+    updateFileContent(targetFileId, view.state.doc.toString());
+    scheduleAutoSave(targetFileId);
 }
 
 
@@ -3142,34 +3149,38 @@ blockPalette.addEventListener("dragstart", event => {
 blockPalette.addEventListener("dragend", event => {
     event.target.closest("[data-block]")?.classList.remove("dragging");
     editorContainer.classList.remove("block-drop-active");
+    editorSplitContainer.classList.remove("block-drop-active");
 });
 
-editorContainer.addEventListener("dragover", event => {
-    const types = Array.from(event.dataTransfer?.types || []);
-    if (!types.includes("application/x-buildzen-block")) return;
+for (const dropTarget of [editorContainer, editorSplitContainer]) {
+    dropTarget.addEventListener("dragover", event => {
+        const types = Array.from(event.dataTransfer?.types || []);
+        if (!types.includes("application/x-buildzen-block")) return;
 
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "copy";
-    editorContainer.classList.add("block-drop-active");
-});
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+        dropTarget.classList.add("block-drop-active");
+    });
 
-editorContainer.addEventListener("dragleave", event => {
-    if (!editorContainer.contains(event.relatedTarget)) {
-        editorContainer.classList.remove("block-drop-active");
-    }
-});
+    dropTarget.addEventListener("dragleave", event => {
+        if (!dropTarget.contains(event.relatedTarget)) {
+            dropTarget.classList.remove("block-drop-active");
+        }
+    });
 
-editorContainer.addEventListener("drop", event => {
-    const blockId = event.dataTransfer?.getData("application/x-buildzen-block");
-    if (!blockId) return;
+    dropTarget.addEventListener("drop", event => {
+        const blockId = event.dataTransfer?.getData("application/x-buildzen-block");
+        if (!blockId) return;
 
-    event.preventDefault();
-    editorContainer.classList.remove("block-drop-active");
+        event.preventDefault();
+        dropTarget.classList.remove("block-drop-active");
 
-    const view = getActiveEditor();
-    const position = view?.posAtCoords({ x: event.clientX, y: event.clientY });
-    insertUIBlock(blockId, position ?? null);
-});
+        const view = getEditorAtCoords(event.clientX, event.clientY);
+        const fileId = view?.dom.dataset.fileId || activeFileId;
+        const position = view?.posAtCoords({ x: event.clientX, y: event.clientY });
+        insertUIBlock(blockId, position ?? null, null, fileId, view);
+    });
+}
 
 
 deployBtn?.addEventListener("click", () => {

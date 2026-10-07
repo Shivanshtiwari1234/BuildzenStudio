@@ -657,6 +657,16 @@ export function getActiveEditor() {
     return activeEditor;
 }
 
+export function getEditorAtCoords(x, y) {
+    return [splitEditor, activeEditor].find(view => {
+        if (!view) return false;
+
+        const bounds = view.dom.getBoundingClientRect();
+        return x >= bounds.left && x <= bounds.right &&
+            y >= bounds.top && y <= bounds.bottom;
+    }) || null;
+}
+
 
 /*
  * Expose the getter globally.
