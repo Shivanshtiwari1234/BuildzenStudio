@@ -30,6 +30,12 @@ import { openSearchPanel, searchKeymap } from "@codemirror/search";
 import { html } from "@codemirror/lang-html";
 import { css } from "@codemirror/lang-css";
 import { javascript } from "@codemirror/lang-javascript";
+import { json } from "@codemirror/lang-json";
+import { markdown } from "@codemirror/lang-markdown";
+import { python } from "@codemirror/lang-python";
+import { sql } from "@codemirror/lang-sql";
+import { xml } from "@codemirror/lang-xml";
+import { yaml } from "@codemirror/lang-yaml";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { classHighlighter } from "@lezer/highlight";
 
@@ -90,6 +96,86 @@ const languageMap = {
     mjs: {
         name: "JavaScript",
         extension: javascript()
+    },
+
+    cjs: {
+        name: "JavaScript",
+        extension: javascript()
+    },
+
+    jsx: {
+        name: "JSX",
+        extension: javascript({ jsx: true })
+    },
+
+    ts: {
+        name: "TypeScript",
+        extension: javascript({ typescript: true })
+    },
+
+    mts: {
+        name: "TypeScript",
+        extension: javascript({ typescript: true })
+    },
+
+    cts: {
+        name: "TypeScript",
+        extension: javascript({ typescript: true })
+    },
+
+    tsx: {
+        name: "TypeScript JSX",
+        extension: javascript({ typescript: true, jsx: true })
+    },
+
+    json: {
+        name: "JSON",
+        extension: json()
+    },
+
+    xml: {
+        name: "XML",
+        extension: xml()
+    },
+
+    svg: {
+        name: "XML",
+        extension: xml()
+    },
+
+    md: {
+        name: "Markdown",
+        extension: markdown()
+    },
+
+    markdown: {
+        name: "Markdown",
+        extension: markdown()
+    },
+
+    py: {
+        name: "Python",
+        extension: python()
+    },
+
+    python: {
+        name: "Python",
+        extension: python()
+    },
+
+    yaml: {
+        name: "YAML",
+        extension: yaml()
+    },
+
+    yml: {
+        name: "YAML",
+        extension: yaml()
+    },
+
+    sql: {
+        name: "SQL",
+        extension: sql()
     }
 };
 

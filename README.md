@@ -5,8 +5,8 @@ Buildzen Studio is a lightweight browser-based front-end workspace for creating,
 ## Features
 
 - Live project preview with desktop, tablet, and mobile modes
-- CodeMirror-based editor with syntax highlighting and search
-- Project file tree for HTML, CSS, and JS files
+- CodeMirror-based editor with syntax highlighting for HTML, CSS, JavaScript, TypeScript/JSX, JSON, XML/SVG, Markdown, Python, YAML, and SQL
+- Project file tree for front-end code, data, and documentation files
 - Asset library for images, fonts, and media uploads
 - Reusable content blocks and component insertion
 - Template starter projects for landing pages and product UI
@@ -64,6 +64,7 @@ npm run preview
 ## Notes
 
 - The project is intended as a static, browser-native studio for rapid front-end prototyping.
+- The editor highlights additional source and data formats; live preview execution remains focused on HTML, CSS, and JavaScript.
 - Project data is stored in browser-local storage, and uploaded assets are kept in IndexedDB.
 - The app is designed to be easy to extend with more templates, export actions, or deployment targets.
 
