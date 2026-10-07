@@ -731,12 +731,19 @@ if (assetInput) {
                 return;
             }
 
-            try {
-                let uploadedCount = 0;
+            const results = await Promise.allSettled(
+                files.map(file => saveAsset(file))
+            );
+            const uploadedFiles = files.filter(
+                (_, index) => results[index].status === "fulfilled"
+            );
+            const failedFiles = files.filter(
+                (_, index) => results[index].status === "rejected"
+            );
 
-                for (const file of files) {
-                    await saveAsset(file);
-                    uploadedCount += 1;
+            try {
+                if (uploadedFiles.length === 0) {
+                    throw new Error("No assets were saved.");
                 }
 
                 await renderAssets();
@@ -748,18 +755,20 @@ if (assetInput) {
                 );
 
                 window.bzAlert?.(
-                    `${uploadedCount} asset${uploadedCount === 1 ? "" : "s"} added to the project.`,
-                    "Assets Uploaded",
-                    "success"
+                    failedFiles.length === 0
+                        ? `${uploadedFiles.length} asset${uploadedFiles.length === 1 ? "" : "s"} added to the project.`
+                        : `${uploadedFiles.length} saved; ${failedFiles.length} failed: ${failedFiles.slice(0, 5).map(file => file.name).join(", ")}${failedFiles.length > 5 ? ", …" : ""}`,
+                    failedFiles.length === 0 ? "Assets Uploaded" : "Some Uploads Failed",
+                    failedFiles.length === 0 ? "success" : "warning"
                 );
             } catch (error) {
                 console.error(
-                    "Failed to save asset:",
+                    "Failed to save uploaded assets:",
                     error
                 );
 
                 window.bzAlert?.(
-                    "Some assets could not be saved. Check the console for details.",
+                    `Could not save ${failedFiles.length} asset${failedFiles.length === 1 ? "" : "s"}: ${failedFiles.slice(0, 5).map(file => file.name).join(", ")}${failedFiles.length > 5 ? ", …" : ""}`,
                     "Upload Failed",
                     "danger"
                 );
