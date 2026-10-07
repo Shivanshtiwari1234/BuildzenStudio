@@ -739,10 +739,22 @@ if (assetInput) {
                         "buildzen-assets-changed"
                     )
                 );
+
+                window.bzAlert?.(
+                    `${uploadedCount} asset${uploadedCount === 1 ? "" : "s"} added to the project.`,
+                    "Assets Uploaded",
+                    "success"
+                );
             } catch (error) {
                 console.error(
                     "Failed to save asset:",
                     error
+                );
+
+                window.bzAlert?.(
+                    "Some assets could not be saved. Check the console for details.",
+                    "Upload Failed",
+                    "danger"
                 );
             } finally {
                 assetInput.value = "";
@@ -784,29 +796,14 @@ export async function createAssetURLs() {
 
 
 export function revokePreviewAssetURLs() {
-    for (
-        const url of
-        activePreviewAssetURLs.values()
-    ) {
+    for (const url of activePreviewAssetURLs.values()) {
         try {
             URL.revokeObjectURL(url);
-
-                window.bzAlert?.(
-                    `${uploadedCount} asset${uploadedCount === 1 ? "" : "s"} added to the project.`,
-                    "Assets Uploaded",
-                    "success"
-                );
         } catch {
-            // Ignore.
+            // Ignore already-revoked URLs.
         }
     }
 
-
-                window.bzAlert?.(
-                    "Some assets could not be saved. Check the console for details.",
-                    "Upload Failed",
-                    "danger"
-                );
     activePreviewAssetURLs.clear();
 }
 

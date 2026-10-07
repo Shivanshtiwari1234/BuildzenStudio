@@ -10,7 +10,7 @@ import {
     destroySplitEditor
 } from "./editor.js";
 
-import { renderAssets } from "./assets.js";
+import { getAllAssets, renderAssets } from "./assets.js";
 
 import {
     createPreviewController
@@ -87,6 +87,21 @@ const resetBtn =
 
 const templatesBtn =
     document.getElementById("templatesBtn");
+
+const exportBtn =
+    document.getElementById("exportBtn");
+
+const exportDialog =
+    document.getElementById("exportDialog");
+
+const closeExportDialogBtn =
+    document.getElementById("closeExportDialogBtn");
+
+const exportHTMLBtn =
+    document.getElementById("exportHTMLBtn");
+
+const exportZIPBtn =
+    document.getElementById("exportZIPBtn");
 
 const templateDialog =
     document.getElementById("templateDialog");
@@ -208,6 +223,23 @@ const modalCloseBtn =
 
 const PROJECT_STORAGE_KEY =
     "buildzen-project";
+
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
+
+function getProjectBaseName() {
+    const htmlFile = buildzenFiles.find(file => /\.html?$/i.test(file.name));
+    return (htmlFile?.name || "buildzen-project")
+        .replace(/\.html?$/i, "")
+        .replace(/[^a-z0-9_-]+/gi, "-") || "buildzen-project";
+}
 
 let buildzenFiles = [];
 
@@ -2624,6 +2656,81 @@ function renderTemplatePicker() {
 }
 
 
+async function exportStandaloneHTML() {
+    const html = await previewController.createStandaloneHTML();
+    downloadBlob(
+        new Blob([html], { type: "text/html;charset=utf-8" }),
+        `${getProjectBaseName()}.html`
+    );
+}
+
+
+async function exportProjectZIP() {
+    const { default: JSZip } = await import("jszip");
+    const zip = new JSZip();
+    const assets = await getAllAssets();
+    const assetPaths = new Map();
+    const projectFiles = buildzenFiles.map(file => ({
+        name: file.name,
+        content: getEditorContent(file.id)
+    }));
+
+    for (const asset of assets) {
+        let path = `assets/${asset.name}`;
+        let suffix = 1;
+        while (assetPathsHasValue(assetPaths, path)) {
+            suffix += 1;
+            const extensionIndex = asset.name.lastIndexOf(".");
+            const baseName = extensionIndex > 0 ? asset.name.slice(0, extensionIndex) : asset.name;
+            const extension = extensionIndex > 0 ? asset.name.slice(extensionIndex) : "";
+            path = `assets/${baseName}-${suffix}${extension}`;
+        }
+
+        assetPaths.set(asset.name, path);
+        if (asset.file) {
+            zip.file(path, asset.file);
+        }
+    }
+
+    for (const file of projectFiles) {
+        let content = file.content;
+        for (const [assetName, path] of assetPaths) {
+            content = content.split(assetName).join(path);
+        }
+        zip.file(file.name, content);
+    }
+
+    const blob = await zip.generateAsync({ type: "blob" });
+    downloadBlob(blob, `${getProjectBaseName()}-project.zip`);
+}
+
+
+function assetPathsHasValue(assetPaths, path) {
+    return Array.from(assetPaths.values()).includes(path);
+}
+
+
+async function runExport(action, button) {
+    button.disabled = true;
+    button.classList.add("exporting");
+
+    try {
+        await action();
+        exportDialog.close();
+    } catch (error) {
+        console.error("Project export failed:", error);
+        await bzAlert(
+            "The export could not be created. Check the console for details.",
+            "Export Failed",
+            "danger"
+        );
+    } finally {
+        button.disabled = false;
+        button.classList.remove("exporting");
+    }
+}
+
+
 async function insertUIBlock(blockId, position = null, markupOverride = null) {
 
     const block = UI_BLOCKS.find(item => item.id === blockId);
@@ -2737,6 +2844,11 @@ templatesBtn.addEventListener("click", () => {
     renderTemplatePicker();
     templateDialog.showModal();
 });
+
+exportBtn.addEventListener("click", () => exportDialog.showModal());
+closeExportDialogBtn.addEventListener("click", () => exportDialog.close());
+exportHTMLBtn.addEventListener("click", () => runExport(exportStandaloneHTML, exportHTMLBtn));
+exportZIPBtn.addEventListener("click", () => runExport(exportProjectZIP, exportZIPBtn));
 
 closeTemplateDialogBtn.addEventListener("click", () => {
     templateDialog.close();

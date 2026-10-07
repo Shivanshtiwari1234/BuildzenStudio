@@ -6,7 +6,8 @@ import {
     setActivePreviewAssetURLs,
     revokeAssetURLs,
     resolveAssetReferences,
-    resolveCSSAssetReferences
+    resolveCSSAssetReferences,
+    getAllAssets
 } from "./assets.js";
 
 
@@ -678,6 +679,49 @@ ${safeJS}
     }
 
 
+    async function createStandaloneHTML() {
+
+        const { html, css, js } = collectPreviewCode();
+        const files = getFiles();
+        const assets = await getAllAssets();
+        const assetURLs = new Map();
+
+        for (const asset of assets) {
+            if (!asset.file) continue;
+
+            const dataURL = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error);
+                reader.readAsDataURL(asset.file);
+            });
+
+            assetURLs.set(asset.name, dataURL);
+        }
+
+        let output = resolveAssetReferences(html, assetURLs);
+        output = removeManagedReferences(output, files);
+        const resolvedCSS = resolveCSSAssetReferences(css, assetURLs);
+        const safeJS = js.replace(/<\/script/gi, "<\\/script");
+        const style = `<style>\n${resolvedCSS}\n</style>`;
+        const script = `<script>\n${safeJS}\n<\/script>`;
+
+        if (/<\/head>/i.test(output)) {
+            output = output.replace(/<\/head>/i, `${style}\n</head>`);
+        } else {
+            output = `${style}\n${output}`;
+        }
+
+        if (/<\/body>/i.test(output)) {
+            output = output.replace(/<\/body>/i, `${script}\n</body>`);
+        } else {
+            output += script;
+        }
+
+        return output;
+    }
+
+
     return {
 
         updatePreview,
@@ -686,7 +730,9 @@ ${safeJS}
 
         reloadPreview,
 
-        openPreviewWindow
+        openPreviewWindow,
+
+        createStandaloneHTML
 
     };
 

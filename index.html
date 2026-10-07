@@ -74,6 +74,10 @@
                 Templates
             </button>
 
+            <button id="exportBtn" class="topbar-docs-btn" type="button" aria-haspopup="dialog">
+                Export
+            </button>
+
 
             <button id="refreshBtn" type="button">
                 Refresh
@@ -536,6 +540,32 @@
         </div>
         <p class="template-dialog-note">Starting a template replaces the current project.</p>
         <div id="templateGrid" class="template-grid" aria-label="Project templates"></div>
+    </dialog>
+
+    <dialog id="exportDialog" class="template-dialog export-dialog" aria-labelledby="exportDialogTitle">
+        <div class="template-dialog-header">
+            <div>
+                <p class="template-kicker">TAKE IT WITH YOU</p>
+                <h2 id="exportDialogTitle">Export project</h2>
+            </div>
+            <button id="closeExportDialogBtn" class="modal-close" type="button" aria-label="Close export options">
+                ×
+            </button>
+        </div>
+        <div class="export-options">
+            <button id="exportHTMLBtn" class="export-option" type="button">
+                <span class="export-option-icon">HTML</span>
+                <span><strong>Standalone HTML</strong><small>One file with styles, scripts, and embedded
+                        assets</small></span>
+                <span aria-hidden="true">↓</span>
+            </button>
+            <button id="exportZIPBtn" class="export-option" type="button">
+                <span class="export-option-icon">ZIP</span>
+                <span><strong>Static project bundle</strong><small>Project files and uploaded assets, ready to
+                        host</small></span>
+                <span aria-hidden="true">↓</span>
+            </button>
+        </div>
     </dialog>
 
 
