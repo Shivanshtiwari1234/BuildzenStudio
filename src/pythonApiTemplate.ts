@@ -285,6 +285,51 @@ On Windows PowerShell, activate with \`.venv\\Scripts\\Activate.ps1\` instead. O
 - \`POST /api/notes\` accepts JSON such as \`{\"text\": \"Start here\"}\`.
 
 The frontend is in \`static/\`; the API is in \`main.py\`. The database is created on first run. Add authentication and backups before using this in production.
+
+## Run tests
+
+With the virtual environment active, run \`python -m unittest discover -s tests\`.
+`
+            },
+            {
+                id: "test_api.py",
+                name: "tests/test_api.py",
+                content: `import tempfile
+import unittest
+from pathlib import Path
+
+import main
+from pydantic import ValidationError
+
+
+class NotesApiTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp_dir = tempfile.TemporaryDirectory()
+        main.database_path = Path(self.temp_dir.name) / "test.db"
+        with main.sqlite3.connect(main.database_path) as connection:
+            connection.execute(
+                "CREATE TABLE notes (id TEXT PRIMARY KEY, text TEXT NOT NULL)"
+            )
+
+    def tearDown(self) -> None:
+        self.temp_dir.cleanup()
+
+    def test_note_text_is_trimmed(self) -> None:
+        note = main.NoteCreate(text="  keep this  ")
+        self.assertEqual(note.text, "keep this")
+
+    def test_blank_note_is_rejected(self) -> None:
+        with self.assertRaises(ValidationError):
+            main.NoteCreate(text="   ")
+
+    def test_created_note_is_listed_from_database(self) -> None:
+        saved = main.create_note(main.NoteCreate(text="persisted note"))
+        listed = main.list_notes()["notes"]
+        self.assertIn(saved, listed)
+
+
+if __name__ == "__main__":
+    unittest.main()
 `
             },
             {
