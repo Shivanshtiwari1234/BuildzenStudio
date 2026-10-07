@@ -202,6 +202,7 @@ connect();`
                 id: "main.py",
                 name: "main.py",
                 content: `from pathlib import Path
+from contextlib import closing
 import sqlite3
 from uuid import uuid4
 
@@ -214,7 +215,7 @@ app = FastAPI(title="Fieldnotes API", version="0.1.0")
 database_path = Path(__file__).parent / "data" / "fieldnotes.db"
 database_path.parent.mkdir(parents=True, exist_ok=True)
 
-with sqlite3.connect(database_path) as connection:
+with closing(sqlite3.connect(database_path)) as connection, connection:
     connection.execute(
         "CREATE TABLE IF NOT EXISTS notes (id TEXT PRIMARY KEY, text TEXT NOT NULL)"
     )
@@ -235,7 +236,7 @@ class NoteCreate(BaseModel):
 @app.get("/api/health")
 def health_check() -> dict[str, str]:
     try:
-        with sqlite3.connect(database_path) as connection:
+        with closing(sqlite3.connect(database_path)) as connection:
             connection.execute("SELECT COUNT(*) FROM notes").fetchone()
     except sqlite3.Error as error:
         raise HTTPException(
@@ -252,7 +253,7 @@ def health_check() -> dict[str, str]:
 
 @app.get("/api/notes")
 def list_notes() -> dict[str, list[dict[str, str]]]:
-    with sqlite3.connect(database_path) as connection:
+    with closing(sqlite3.connect(database_path)) as connection:
         connection.row_factory = sqlite3.Row
         rows = connection.execute(
             "SELECT id, text FROM notes ORDER BY rowid DESC"
@@ -263,7 +264,7 @@ def list_notes() -> dict[str, list[dict[str, str]]]:
 @app.post("/api/notes", status_code=status.HTTP_201_CREATED)
 def create_note(note: NoteCreate) -> dict[str, str]:
     saved_note = {"id": str(uuid4()), "text": note.text}
-    with sqlite3.connect(database_path) as connection:
+    with closing(sqlite3.connect(database_path)) as connection, connection:
         connection.execute(
             "INSERT INTO notes (id, text) VALUES (?, ?)",
             (saved_note["id"], saved_note["text"]),
