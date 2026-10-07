@@ -2452,6 +2452,7 @@ window.addEventListener(
     event => {
 
         if (
+            event.source !== preview.contentWindow ||
             !event.data ||
             event.data.source !==
             "buildzen-preview"
