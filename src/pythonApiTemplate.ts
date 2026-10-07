@@ -205,7 +205,7 @@ connect();`
 import sqlite3
 from uuid import uuid4
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
@@ -234,7 +234,20 @@ class NoteCreate(BaseModel):
 
 @app.get("/api/health")
 def health_check() -> dict[str, str]:
-    return {"status": "ok", "message": "Python API connected"}
+    try:
+        with sqlite3.connect(database_path) as connection:
+            connection.execute("SELECT COUNT(*) FROM notes").fetchone()
+    except sqlite3.Error as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Notes database unavailable",
+        ) from error
+
+    return {
+        "status": "ok",
+        "database": "connected",
+        "message": "Python API and database connected",
+    }
 
 
 @app.get("/api/notes")
@@ -341,6 +354,15 @@ class NotesApiTests(unittest.TestCase):
         saved = main.create_note(main.NoteCreate(text="persisted note"))
         listed = main.list_notes()["notes"]
         self.assertIn(saved, listed)
+
+    def test_health_check_confirms_database_connection(self) -> None:
+        self.assertEqual(main.health_check()["database"], "connected")
+
+    def test_health_check_fails_when_database_is_unavailable(self) -> None:
+        main.database_path = Path(self.temp_dir.name)
+        with self.assertRaises(main.HTTPException) as error:
+            main.health_check()
+        self.assertEqual(error.exception.status_code, 503)
 
 
 if __name__ == "__main__":
