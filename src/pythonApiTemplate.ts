@@ -191,7 +191,7 @@ from uuid import uuid4
 
 from fastapi import FastAPI, status
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 app = FastAPI(title="Fieldnotes API", version="0.1.0")
@@ -200,6 +200,14 @@ notes: list[dict[str, str]] = []
 
 class NoteCreate(BaseModel):
     text: str = Field(min_length=1, max_length=240)
+
+    @field_validator("text")
+    @classmethod
+    def trim_text(cls, value: str) -> str:
+        text = value.strip()
+        if not text:
+            raise ValueError("Note text cannot be blank.")
+        return text
 
 
 @app.get("/api/health")
@@ -214,7 +222,7 @@ def list_notes() -> dict[str, list[dict[str, str]]]:
 
 @app.post("/api/notes", status_code=status.HTTP_201_CREATED)
 def create_note(note: NoteCreate) -> dict[str, str]:
-    saved_note = {"id": str(uuid4()), "text": note.text.strip()}
+    saved_note = {"id": str(uuid4()), "text": note.text}
     notes.append(saved_note)
     return saved_note
 
