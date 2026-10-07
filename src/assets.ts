@@ -87,10 +87,9 @@ export async function saveAsset(file) {
         );
     }
 
-    const existingAssets = await getAllAssets();
-    const existingNames = new Set(
-        existingAssets.map(asset => asset.name.toLowerCase())
-    );
+    const db =
+        await openAssetDatabase();
+
     const extensionIndex = file.name.lastIndexOf(".");
     const baseName = extensionIndex > 0
         ? file.name.slice(0, extensionIndex)
@@ -98,27 +97,7 @@ export async function saveAsset(file) {
     const extension = extensionIndex > 0
         ? file.name.slice(extensionIndex)
         : "";
-    let name = file.name;
-    let suffix = 1;
-
-    while (existingNames.has(name.toLowerCase())) {
-        suffix += 1;
-        name = `${baseName}-${suffix}${extension}`;
-    }
-
-    const db =
-        await openAssetDatabase();
-
-    const asset = {
-        id: crypto.randomUUID(),
-        name,
-        type:
-            file.type ||
-            "application/octet-stream",
-        size: file.size,
-        file,
-        createdAt: Date.now()
-    };
+    let asset;
 
     return new Promise((resolve, reject) => {
         const transaction =
@@ -132,15 +111,38 @@ export async function saveAsset(file) {
                 ASSET_STORE
             );
 
-        const request =
-            store.put(asset);
+        const request = store.getAll();
 
         request.onsuccess = () => {
+            const existingNames = new Set(
+                request.result.map(existing => existing.name.toLowerCase())
+            );
+            let name = file.name;
+            let suffix = 1;
+
+            while (existingNames.has(name.toLowerCase())) {
+                suffix += 1;
+                name = `${baseName}-${suffix}${extension}`;
+            }
+
+            asset = {
+                id: crypto.randomUUID(),
+                name,
+                type: file.type || "application/octet-stream",
+                size: file.size,
+                file,
+                createdAt: Date.now()
+            };
+
+            store.add(asset);
+        };
+
+        transaction.oncomplete = () => {
             resolve(asset);
         };
 
-        request.onerror = () => {
-            reject(request.error);
+        transaction.onerror = () => {
+            reject(transaction.error || new Error("Asset transaction failed."));
         };
 
         transaction.onabort = () => {
