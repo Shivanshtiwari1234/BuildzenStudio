@@ -24,6 +24,22 @@ export function createPreviewController({
 
     let previewBuildId = 0;
     let currentPreviewDocument = "";
+    let currentPreviewLoadId = 0;
+
+    preview.addEventListener("load", () => {
+        if (
+            !currentPreviewDocument ||
+            currentPreviewLoadId !== previewBuildId
+        ) {
+            return;
+        }
+
+        status.classList.remove("updating");
+
+        if (previewStatus) {
+            previewStatus.textContent = "Live";
+        }
+    });
 
 
     /* =====================================================
@@ -611,21 +627,9 @@ ${safeJS}
         currentPreviewDocument =
             finalHTML;
 
+        currentPreviewLoadId = buildId;
         preview.srcdoc =
             currentPreviewDocument;
-
-
-        status.classList.remove(
-            "updating"
-        );
-
-
-        if (previewStatus) {
-
-            previewStatus.textContent =
-                "Live";
-
-        }
 
     }
 
@@ -640,6 +644,13 @@ ${safeJS}
             return;
         }
 
+        status.classList.add("updating");
+
+        if (previewStatus) {
+            previewStatus.textContent = "Updating...";
+        }
+
+        currentPreviewLoadId = previewBuildId;
         preview.srcdoc =
             currentPreviewDocument;
 
