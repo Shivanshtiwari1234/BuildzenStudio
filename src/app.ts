@@ -1400,6 +1400,13 @@ function renderFileTree() {
         item.className =
             "file-item";
 
+        item.setAttribute("role", "treeitem");
+        item.setAttribute(
+            "aria-selected",
+            String(file.id === activeFileId)
+        );
+        item.tabIndex = file.id === activeFileId ? 0 : -1;
+
 
         if (file.id === activeFileId) {
 
@@ -1445,6 +1452,37 @@ function renderFileTree() {
 
             }
         );
+
+        item.addEventListener("keydown", event => {
+            const items = Array.from(
+                fileTree.querySelectorAll(".file-item")
+            );
+            const index = items.indexOf(item);
+            let nextIndex = index;
+
+            if (event.key === "ArrowDown") {
+                nextIndex = Math.min(index + 1, items.length - 1);
+            } else if (event.key === "ArrowUp") {
+                nextIndex = Math.max(index - 1, 0);
+            } else if (event.key === "Home") {
+                nextIndex = 0;
+            } else if (event.key === "End") {
+                nextIndex = items.length - 1;
+            } else if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openFile(file.id);
+                fileTree.querySelector(".file-item.active")?.focus();
+                return;
+            } else {
+                return;
+            }
+
+            event.preventDefault();
+            items.forEach((treeItem, itemIndex) => {
+                treeItem.tabIndex = itemIndex === nextIndex ? 0 : -1;
+            });
+            items[nextIndex]?.focus();
+        });
 
 
         fileTree.appendChild(item);
