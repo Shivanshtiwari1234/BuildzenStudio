@@ -284,6 +284,12 @@ button:focus:not(:focus-visible),
     color: #add7ff;
 }
 
+.save-status[data-state="error"] {
+    background: rgba(248, 113, 113, 0.12);
+    border-color: rgba(248, 113, 113, 0.32);
+    color: #fecaca;
+}
+
 .status-dot {
     width: 7px;
     height: 7px;

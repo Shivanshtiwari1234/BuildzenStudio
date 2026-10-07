@@ -1227,12 +1227,16 @@ function saveProject() {
             })
         );
 
+        setSaveStatus("Saved", "saved");
+
     } catch (error) {
 
         console.error(
             "Failed to save project:",
             error
         );
+
+        setSaveStatus("Save failed", "error");
 
     }
 
@@ -2419,7 +2423,6 @@ function scheduleAutoSave(fileId) {
 
             dirtyFiles.clear();
             saveProject();
-            setSaveStatus("Saved", "saved");
 
         }, 350);
 
@@ -2442,7 +2445,6 @@ function saveCurrentProject() {
 
     dirtyFiles.clear();
     saveProject();
-    setSaveStatus("Saved", "saved");
 
 }
 
