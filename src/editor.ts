@@ -449,6 +449,12 @@ function createEditor(file, parent = editorContainer, register = true) {
             parent: container
         });
 
+    view.dom.addEventListener("focusin", () => {
+        activeEditor = view;
+        window.buildzenActiveEditor = view;
+        updateEditorInfo(view);
+    });
+
 
     if (register) {
         editors[file.id] = view;
