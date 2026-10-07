@@ -20,8 +20,12 @@ import {
 } from "@codemirror/commands";
 
 import {
+    bracketMatching,
     syntaxHighlighting
 } from "@codemirror/language";
+
+import { closeBrackets } from "@codemirror/autocomplete";
+import { openSearchPanel, searchKeymap } from "@codemirror/search";
 
 import { html } from "@codemirror/lang-html";
 import { css } from "@codemirror/lang-css";
@@ -54,6 +58,8 @@ const languageInfo =
 export const editors = {};
 
 let activeEditor = null;
+let splitEditor = null;
+let syncingEditors = false;
 
 
 /* ---------------------------------
@@ -134,6 +140,8 @@ function buildzenKeymap() {
     return keymap.of([
         indentWithTab,
 
+        ...searchKeymap,
+
         {
             key: "Mod-s",
 
@@ -143,6 +151,42 @@ function buildzenKeymap() {
                         "buildzen-save"
                     )
                 );
+
+                return true;
+            }
+        },
+
+        {
+            key: "Mod-f",
+
+            run(view) {
+                openSearchPanel(view);
+                return true;
+            }
+        },
+
+        {
+            key: "Shift-Alt-f",
+
+            run(view) {
+                const fileElement =
+                    view.dom.closest(".editor");
+
+                const fileId =
+                    fileElement?.dataset.fileId;
+
+                if (fileId) {
+                    window.dispatchEvent(
+                        new CustomEvent(
+                            "buildzen-format-document",
+                            {
+                                detail: {
+                                    fileId
+                                }
+                            }
+                        )
+                    );
+                }
 
                 return true;
             }
@@ -169,8 +213,8 @@ function buildzenKeymap() {
    Create editor
 --------------------------------- */
 
-function createEditor(file) {
-    if (!editorContainer) {
+function createEditor(file, parent = editorContainer, register = true) {
+    if (!parent) {
         throw new Error(
             "Buildzen editor container was not found."
         );
@@ -187,7 +231,7 @@ function createEditor(file) {
     container.dataset.fileId =
         file.id;
 
-    editorContainer.appendChild(
+    parent.appendChild(
         container
     );
 
@@ -211,6 +255,10 @@ function createEditor(file) {
                 highlightActiveLineGutter(),
 
                 highlightSpecialChars(),
+
+                bracketMatching(),
+
+                closeBrackets(),
 
                 highlightActiveLine(),
 
@@ -256,6 +304,22 @@ function createEditor(file) {
                         if (
                             update.docChanged
                         ) {
+                            const sourceView = update.view;
+                            const peerView = sourceView === splitEditor
+                                ? editors[file.id]
+                                : splitEditor?.dom.dataset.fileId === file.id
+                                    ? splitEditor
+                                    : null;
+
+                            if (peerView && !syncingEditors) {
+                                syncingEditors = true;
+                                try {
+                                    peerView.dispatch({ changes: update.changes });
+                                } finally {
+                                    syncingEditors = false;
+                                }
+                            }
+
                             window.dispatchEvent(
                                 new CustomEvent(
                                     "buildzen-edit",
@@ -300,10 +364,38 @@ function createEditor(file) {
         });
 
 
-    editors[file.id] =
-        view;
+    if (register) {
+        editors[file.id] = view;
+    }
 
     return view;
+}
+
+
+export function destroySplitEditor() {
+    if (!splitEditor) return;
+
+    splitEditor.destroy();
+    splitEditor.dom.parentElement?.remove();
+    splitEditor = null;
+}
+
+
+export function createSplitEditor(fileId, parent) {
+    const file = window.buildzenFiles?.find(item => item.id === fileId);
+    const primary = editors[fileId];
+    if (!file || !primary || !parent) return null;
+
+    destroySplitEditor();
+
+    splitEditor = createEditor({
+        ...file,
+        content: primary.state.doc.toString()
+    }, parent, false);
+
+    splitEditor.dom.dataset.fileId = fileId;
+    splitEditor.dom.parentElement.classList.add("active-editor");
+    return splitEditor;
 }
 
 
@@ -315,6 +407,8 @@ export function initializeEditors(files) {
     if (!editorContainer) {
         return;
     }
+
+    destroySplitEditor();
 
     editorContainer.innerHTML =
         "";
