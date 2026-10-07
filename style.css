@@ -650,6 +650,111 @@ body.resizing-rows * {
     background: var(--accent);
 }
 
+.block-library {
+    flex: 0 0 auto;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.block-library summary {
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 12px;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    list-style: none;
+    cursor: pointer;
+}
+
+.block-library summary::-webkit-details-marker {
+    display: none;
+}
+
+.block-library summary::after {
+    content: "+";
+    color: var(--text-dim);
+    font-size: 15px;
+    font-weight: 400;
+}
+
+.block-library[open] summary::after {
+    content: "−";
+}
+
+.block-library-hint {
+    margin-left: auto;
+    color: var(--text-dim);
+    font-size: 8px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+}
+
+.block-list {
+    max-height: 190px;
+    display: grid;
+    gap: 2px;
+    overflow-y: auto;
+    padding: 0 6px 7px;
+}
+
+.block-item {
+    min-width: 0;
+    min-height: 29px;
+    display: grid;
+    grid-template-columns: 23px 1fr 18px;
+    align-items: center;
+    gap: 7px;
+    padding: 3px 7px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text);
+    font-size: 10px;
+    text-align: left;
+    cursor: grab;
+}
+
+.block-item:hover,
+.block-item:focus-visible {
+    border-color: rgba(138, 169, 255, 0.16);
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.block-item:active,
+.block-item.dragging {
+    cursor: grabbing;
+    opacity: 0.58;
+}
+
+.block-item-icon {
+    width: 22px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(148, 164, 186, 0.14);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.025);
+    color: var(--accent-hover);
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.block-item>span:last-child {
+    color: var(--text-dim);
+    font-size: 14px;
+    text-align: center;
+}
+
+.editor-container.block-drop-active .cm-editor {
+    outline: 2px dashed var(--accent);
+    outline-offset: -4px;
+}
+
 .file-icon {
     width: 24px;
 

@@ -4,7 +4,8 @@ import {
     removeEditor,
     switchEditor,
     getEditorContent,
-    setEditorContent
+    setEditorContent,
+    getActiveEditor
 } from "./editor.js";
 
 import { renderAssets } from "./assets.js";
@@ -96,6 +97,12 @@ const closeTemplateDialogBtn =
 
 const fileTree =
     document.getElementById("fileTree");
+
+const editorContainer =
+    document.getElementById("editorContainer");
+
+const blockPalette =
+    document.getElementById("blockPalette");
 
 const newFileBtn =
     document.getElementById("newFileBtn");
@@ -638,6 +645,57 @@ const PROJECT_TEMPLATES = [
         accent: "#7bc7a2",
         background: "#17211f",
         cards: ["Projects on track", "Tasks completed", "Team momentum"]
+    }
+];
+
+
+const UI_BLOCKS = [
+    {
+        id: "navbar",
+        name: "Navbar",
+        markup: `<nav class="site-nav" aria-label="Main navigation">
+    <a class="site-logo" href="#">Brand</a>
+    <div class="site-nav-links"><a href="#about">About</a><a href="#work">Work</a><a href="#contact">Contact</a></div>
+    <a class="site-nav-cta" href="#contact">Get in touch</a>
+</nav>`
+    },
+    {
+        id: "hero",
+        name: "Hero section",
+        markup: `<section class="hero-section">
+    <p class="hero-eyebrow">A short introduction</p>
+    <h1>Make your next idea matter.</h1>
+    <p class="hero-copy">Add a sentence that explains what you do and who it helps.</p>
+    <a class="hero-button" href="#work">Explore more</a>
+</section>`
+    },
+    {
+        id: "card",
+        name: "Feature card",
+        markup: `<article class="feature-card">
+    <span class="feature-card-icon" aria-hidden="true">✳</span>
+    <h2>A feature worth sharing</h2>
+    <p>Explain the value in a clear, useful sentence.</p>
+</article>`
+    },
+    {
+        id: "pricing",
+        name: "Pricing table",
+        markup: `<section class="pricing-card" aria-labelledby="pricing-title">
+    <p class="pricing-label">Plan name</p>
+    <h2 id="pricing-title">$24 <small>/ month</small></h2>
+    <p>Everything you need to get started.</p>
+    <ul><li>Unlimited projects</li><li>Priority support</li><li>Cancel any time</li></ul>
+    <a href="#signup">Choose this plan</a>
+</section>`
+    },
+    {
+        id: "cta",
+        name: "Call to action",
+        markup: `<section class="cta-section">
+    <div><p class="cta-eyebrow">Ready when you are</p><h2>Let's make something good.</h2></div>
+    <a href="#contact">Start a conversation <span aria-hidden="true">↗</span></a>
+</section>`
     }
 ];
 
@@ -2410,6 +2468,110 @@ function renderTemplatePicker() {
         </button>
     `).join("");
 }
+
+
+async function insertUIBlock(blockId, position = null) {
+
+    const block = UI_BLOCKS.find(item => item.id === blockId);
+    const file = getFile(activeFileId);
+    const extension = file?.name.split(".").pop().toLowerCase();
+
+    if (!block) return;
+
+    if (!file || !["html", "htm"].includes(extension)) {
+        await bzAlert(
+            "Select an HTML file before inserting a layout block.",
+            "HTML File Required",
+            "warning"
+        );
+        return;
+    }
+
+    const view = getActiveEditor();
+    if (!view) return;
+
+    const source = view.state.doc.toString();
+    let insertionPoint = Number.isInteger(position)
+        ? position
+        : view.state.selection.main.head;
+    if (position === null && insertionPoint === 0) {
+        const bodyEnd = source.toLowerCase().lastIndexOf("</body>");
+        if (bodyEnd >= 0) insertionPoint = bodyEnd;
+    } else if (Number.isInteger(position)) {
+        const doctype = source.match(/<!doctype\b[^>]*>/i);
+        const bodyOpen = source.match(/<body\b[^>]*>/i);
+        const insideDoctype = doctype && insertionPoint >= doctype.index &&
+            insertionPoint <= doctype.index + doctype[0].length;
+
+        if (bodyOpen && (insideDoctype || insertionPoint === 0)) {
+            insertionPoint = bodyOpen.index + bodyOpen[0].length;
+        }
+    }
+    const prefix = insertionPoint > 0 && view.state.doc.sliceString(insertionPoint - 1, insertionPoint) !== "\n"
+        ? "\n\n"
+        : "";
+    const insertion = `${prefix}${block.markup}\n`;
+
+    view.dispatch({
+        changes: { from: insertionPoint, insert: insertion },
+        selection: { anchor: insertionPoint + insertion.length }
+    });
+    view.focus();
+
+    updateFileContent(activeFileId, view.state.doc.toString());
+    scheduleAutoSave(activeFileId);
+}
+
+
+blockPalette.addEventListener("click", event => {
+    const item = event.target.closest("[data-block]");
+    if (item) insertUIBlock(item.dataset.block);
+});
+
+blockPalette.addEventListener("dragstart", event => {
+    const item = event.target.closest("[data-block]");
+    if (!item || !event.dataTransfer) return;
+
+    const block = UI_BLOCKS.find(entry => entry.id === item.dataset.block);
+    if (!block) return;
+
+    event.dataTransfer.effectAllowed = "copy";
+    event.dataTransfer.setData("application/x-buildzen-block", block.id);
+    event.dataTransfer.setData("text/html", block.markup);
+    item.classList.add("dragging");
+});
+
+blockPalette.addEventListener("dragend", event => {
+    event.target.closest("[data-block]")?.classList.remove("dragging");
+    editorContainer.classList.remove("block-drop-active");
+});
+
+editorContainer.addEventListener("dragover", event => {
+    const types = Array.from(event.dataTransfer?.types || []);
+    if (!types.includes("application/x-buildzen-block")) return;
+
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    editorContainer.classList.add("block-drop-active");
+});
+
+editorContainer.addEventListener("dragleave", event => {
+    if (!editorContainer.contains(event.relatedTarget)) {
+        editorContainer.classList.remove("block-drop-active");
+    }
+});
+
+editorContainer.addEventListener("drop", event => {
+    const blockId = event.dataTransfer?.getData("application/x-buildzen-block");
+    if (!blockId) return;
+
+    event.preventDefault();
+    editorContainer.classList.remove("block-drop-active");
+
+    const view = getActiveEditor();
+    const position = view?.posAtCoords({ x: event.clientX, y: event.clientY });
+    insertUIBlock(blockId, position ?? null);
+});
 
 
 templatesBtn.addEventListener("click", () => {
