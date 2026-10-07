@@ -342,8 +342,22 @@ function insertAssetReference(asset) {
                 filename;
         }
     } else if (extension === "css") {
-        text =
-            `url("${filename}")`;
+        if (isFontAsset(asset)) {
+            const fontFamily = filename
+                .replace(/\.[^.]+$/, "")
+                .replace(/["\\]/g, "\\$&");
+            const format = /\.woff2?$/i.test(filename)
+                ? "woff2"
+                : /\.ttf$/i.test(filename)
+                    ? "truetype"
+                    : /\.otf$/i.test(filename)
+                        ? "opentype"
+                        : "woff";
+
+            text = `@font-face {\n    font-family: "${fontFamily}";\n    src: url("${filename}") format("${format}");\n    font-style: normal;\n    font-weight: 100 900;\n    font-display: swap;\n}`;
+        } else {
+            text = `url("${filename}")`;
+        }
     } else if (
         extension === "js" ||
         extension === "mjs"
@@ -711,8 +725,11 @@ if (assetInput) {
             }
 
             try {
+                let uploadedCount = 0;
+
                 for (const file of files) {
                     await saveAsset(file);
+                    uploadedCount += 1;
                 }
 
                 await renderAssets();
@@ -773,11 +790,23 @@ export function revokePreviewAssetURLs() {
     ) {
         try {
             URL.revokeObjectURL(url);
+
+                window.bzAlert?.(
+                    `${uploadedCount} asset${uploadedCount === 1 ? "" : "s"} added to the project.`,
+                    "Assets Uploaded",
+                    "success"
+                );
         } catch {
             // Ignore.
         }
     }
 
+
+                window.bzAlert?.(
+                    "Some assets could not be saved. Check the console for details.",
+                    "Upload Failed",
+                    "danger"
+                );
     activePreviewAssetURLs.clear();
 }
 
