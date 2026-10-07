@@ -755,6 +755,125 @@ body.resizing-rows * {
     outline-offset: -4px;
 }
 
+.component-library {
+    flex: 0 0 auto;
+    border-bottom: 1px solid var(--border);
+}
+
+.component-library summary {
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    list-style: none;
+    cursor: pointer;
+}
+
+.component-library summary::-webkit-details-marker {
+    display: none;
+}
+
+.component-library summary::after {
+    content: "+";
+    margin-left: auto;
+    color: var(--text-dim);
+    font-size: 15px;
+    font-weight: 400;
+}
+
+.component-library[open] summary::after {
+    content: "−";
+}
+
+.component-library-hint {
+    margin-left: auto;
+    color: var(--text-dim);
+    font-size: 8px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+}
+
+.component-library[open] .component-library-hint {
+    margin-left: 0;
+}
+
+.component-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    padding: 0 9px 10px;
+}
+
+.component-form > label,
+.component-style-row > label {
+    color: var(--text-muted);
+    font-size: 9px;
+}
+
+.component-form input[type="text"],
+.component-form textarea,
+.component-form select {
+    width: 100%;
+    min-width: 0;
+    padding: 6px 7px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    outline: none;
+    background: #11161e;
+    color: var(--text);
+    font-size: 10px;
+}
+
+.component-form textarea {
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.4;
+}
+
+.component-form input:focus,
+.component-form textarea:focus,
+.component-form select:focus {
+    border-color: var(--accent);
+}
+
+.component-style-row {
+    display: grid;
+    grid-template-columns: auto 30px auto minmax(65px, 1fr);
+    align-items: center;
+    gap: 6px;
+    margin-top: 3px;
+}
+
+.component-style-row input[type="color"] {
+    width: 28px;
+    height: 25px;
+    padding: 2px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    background: #11161e;
+    cursor: pointer;
+}
+
+.component-insert-btn {
+    min-height: 29px;
+    margin-top: 3px;
+    border: 1px solid rgba(90, 166, 255, 0.3);
+    border-radius: 5px;
+    background: rgba(90, 166, 255, 0.12);
+    color: #cfe4ff;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.component-insert-btn:hover {
+    background: rgba(90, 166, 255, 0.2);
+}
+
 .file-icon {
     width: 24px;
 

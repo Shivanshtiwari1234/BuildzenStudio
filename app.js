@@ -104,6 +104,24 @@ const editorContainer =
 const blockPalette =
     document.getElementById("blockPalette");
 
+const componentType =
+    document.getElementById("componentType");
+
+const componentTitle =
+    document.getElementById("componentTitle");
+
+const componentDescription =
+    document.getElementById("componentDescription");
+
+const componentColor =
+    document.getElementById("componentColor");
+
+const componentSpacing =
+    document.getElementById("componentSpacing");
+
+const insertComponentBtn =
+    document.getElementById("insertComponentBtn");
+
 const newFileBtn =
     document.getElementById("newFileBtn");
 
@@ -698,6 +716,59 @@ const UI_BLOCKS = [
 </section>`
     }
 ];
+
+
+function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[character]);
+}
+
+
+function createConfiguredComponent() {
+
+    const block = UI_BLOCKS.find(item => item.id === componentType.value);
+    if (!block) return "";
+
+    const title = escapeHTML(componentTitle.value.trim() || "Section heading");
+    const description = escapeHTML(componentDescription.value.trim());
+    const accent = /^#[0-9a-f]{6}$/i.test(componentColor.value)
+        ? componentColor.value
+        : "#5aa6ff";
+    const spacing = [16, 28, 44].includes(Number(componentSpacing.value))
+        ? Number(componentSpacing.value)
+        : 28;
+    let styledBlock = block.markup;
+
+    if (block.id === "navbar") {
+        styledBlock = styledBlock.replace(/Brand/g, title);
+    } else if (block.id === "hero") {
+        styledBlock = styledBlock
+            .replace("A short introduction", title)
+            .replace("Make your next idea matter.", title)
+            .replace("Add a sentence that explains what you do and who it helps.", description);
+    } else if (block.id === "card") {
+        styledBlock = styledBlock
+            .replace("A feature worth sharing", title)
+            .replace("Explain the value in a clear, useful sentence.", description);
+    } else if (block.id === "pricing") {
+        styledBlock = styledBlock
+            .replace("Plan name", title)
+            .replace("Everything you need to get started.", description);
+    } else if (block.id === "cta") {
+        styledBlock = styledBlock
+            .replace("Ready when you are", title)
+            .replace("Let's make something good.", title)
+            .replace("Start a conversation", description || "Get started");
+    }
+
+    const wrapperStyle = `--component-accent: ${accent}; --component-spacing: ${spacing}px; padding: ${spacing}px; border: 1px solid color-mix(in srgb, ${accent} 35%, transparent); border-radius: 8px;`;
+    return `<div class="buildzen-component buildzen-component-${block.id}" data-buildzen-component="${block.id}" style="${wrapperStyle}">\n${styledBlock}\n</div>`;
+}
 
 
 function createTemplateProject(templateId) {
@@ -2470,7 +2541,7 @@ function renderTemplatePicker() {
 }
 
 
-async function insertUIBlock(blockId, position = null) {
+async function insertUIBlock(blockId, position = null, markupOverride = null) {
 
     const block = UI_BLOCKS.find(item => item.id === blockId);
     const file = getFile(activeFileId);
@@ -2510,7 +2581,7 @@ async function insertUIBlock(blockId, position = null) {
     const prefix = insertionPoint > 0 && view.state.doc.sliceString(insertionPoint - 1, insertionPoint) !== "\n"
         ? "\n\n"
         : "";
-    const insertion = `${prefix}${block.markup}\n`;
+    const insertion = `${prefix}${markupOverride || block.markup}\n`;
 
     view.dispatch({
         changes: { from: insertionPoint, insert: insertion },
@@ -2526,6 +2597,11 @@ async function insertUIBlock(blockId, position = null) {
 blockPalette.addEventListener("click", event => {
     const item = event.target.closest("[data-block]");
     if (item) insertUIBlock(item.dataset.block);
+});
+
+
+insertComponentBtn.addEventListener("click", () => {
+    insertUIBlock(componentType.value, null, createConfiguredComponent());
 });
 
 blockPalette.addEventListener("dragstart", event => {

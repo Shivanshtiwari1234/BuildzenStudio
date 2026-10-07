@@ -144,6 +144,38 @@
                 </div>
             </details>
 
+            <details class="component-library">
+                <summary>
+                    <span>COMPONENTS</span>
+                    <span class="component-library-hint">EDIT PROPS</span>
+                </summary>
+                <div class="component-form">
+                    <label for="componentType">Section</label>
+                    <select id="componentType">
+                        <option value="navbar">Navbar</option>
+                        <option value="hero">Hero section</option>
+                        <option value="card">Feature card</option>
+                        <option value="pricing">Pricing table</option>
+                        <option value="cta">Call to action</option>
+                    </select>
+                    <label for="componentTitle">Heading / label</label>
+                    <input id="componentTitle" type="text" value="A section worth sharing" maxlength="90">
+                    <label for="componentDescription">Supporting text</label>
+                    <textarea id="componentDescription" rows="2" maxlength="180">Add a short description for this section.</textarea>
+                    <div class="component-style-row">
+                        <label for="componentColor">Accent</label>
+                        <input id="componentColor" type="color" value="#5aa6ff" aria-label="Component accent color">
+                        <label for="componentSpacing">Spacing</label>
+                        <select id="componentSpacing">
+                            <option value="16">Compact</option>
+                            <option value="28" selected>Comfortable</option>
+                            <option value="44">Relaxed</option>
+                        </select>
+                    </div>
+                    <button id="insertComponentBtn" class="component-insert-btn" type="button">Insert component</button>
+                </div>
+            </details>
+
             <!-- Assets -->
 
             <div class="asset-section">
