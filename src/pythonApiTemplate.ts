@@ -36,6 +36,7 @@ export function createPythonApiProject() {
                 <button type="submit">Add note <span aria-hidden="true">+</span></button>
             </form>
             <p id="feedback" class="feedback" role="status" aria-live="polite">Checking the API...</p>
+            <button id="api-retry" class="retry-button" type="button" hidden>Retry connection</button>
             <ul id="notes-list" class="notes-list" aria-label="Saved notes"></ul>
         </section>
         <footer><span>Python API starter</span><span>FastAPI · one process · one origin</span></footer>
@@ -82,6 +83,9 @@ h2 { margin: 0; font-family: Georgia, serif; font-size: 30px; font-weight: 400; 
 .note-form button:disabled { opacity: .55; cursor: wait; }
 .feedback { min-height: 20px; margin: 12px 0; color: #687167; font-size: 12px; }
 .feedback[data-state="error"] { color: #a73f30; }
+.retry-button { margin: 0 0 16px; padding: 8px 11px; border: 1px solid #26372e50; border-radius: 3px; background: transparent; color: #26372e; font: inherit; font-size: 12px; cursor: pointer; }
+.retry-button:focus-visible { outline: 2px solid #d65b3d; outline-offset: 2px; }
+.retry-button:disabled { opacity: .55; cursor: wait; }
 .notes-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .notes-list li { padding: 14px 15px; border: 1px solid #20272018; border-radius: 3px; background: #fbfaf6; overflow-wrap: anywhere; }
 .empty { padding: 22px 0; color: #778075; font-family: Georgia, serif; font-size: 17px; }
@@ -101,6 +105,7 @@ const noteInput = document.querySelector("#note-text");
 const noteList = document.querySelector("#notes-list");
 const noteCount = document.querySelector("#note-count");
 const feedback = document.querySelector("#feedback");
+const retryButton = document.querySelector("#api-retry");
 const submitButton = noteForm.querySelector("button");
 
 function showFeedback(message, state = "") {
@@ -135,6 +140,11 @@ async function loadNotes() {
 }
 
 async function connect() {
+    retryButton.disabled = true;
+    retryButton.hidden = true;
+    connection.dataset.state = "offline";
+    healthLabel.textContent = "Connecting to API";
+
     try {
         const response = await fetch("/api/health");
         if (!response.ok) throw new Error("API health check failed.");
@@ -143,14 +153,19 @@ async function connect() {
         connection.dataset.state = "online";
         healthLabel.textContent = health.message;
         await loadNotes();
-        showFeedback("Connected. Notes live in the API process memory.");
+        showFeedback("Connected. Notes persist in SQLite.");
     } catch {
         connection.dataset.state = "offline";
         healthLabel.textContent = "API not connected";
         showFeedback("Start the Python API with the commands in README.md to enable notes.", "error");
         renderNotes([]);
+        retryButton.hidden = false;
+    } finally {
+        retryButton.disabled = false;
     }
 }
+
+retryButton.addEventListener("click", connect);
 
 noteForm.addEventListener("submit", async event => {
     event.preventDefault();
