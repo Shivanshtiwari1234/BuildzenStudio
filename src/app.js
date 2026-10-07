@@ -88,6 +88,57 @@ const resetBtn =
 const templatesBtn =
     document.getElementById("templatesBtn");
 
+const deployBtn =
+    document.getElementById("deployBtn");
+
+const deployDialog =
+    document.getElementById("deployDialog");
+
+const closeDeployDialogBtn =
+    document.getElementById("closeDeployDialogBtn");
+
+const deployForm =
+    document.getElementById("deployForm");
+
+const deployProviderSelect =
+    document.getElementById("deployProviderSelect");
+
+const deployCustomDomain =
+    document.getElementById("deployCustomDomain");
+
+const deploySiteName =
+    document.getElementById("deploySiteName");
+
+const deployBuildCommand =
+    document.getElementById("deployBuildCommand");
+
+const deployOutputDir =
+    document.getElementById("deployOutputDir");
+
+const deployOptimizeAssets =
+    document.getElementById("deployOptimizeAssets");
+
+const deployMinifyAssets =
+    document.getElementById("deployMinifyAssets");
+
+const deployCacheAssets =
+    document.getElementById("deployCacheAssets");
+
+const deploySitemap =
+    document.getElementById("deploySitemap");
+
+const deployCdn =
+    document.getElementById("deployCdn");
+
+const deploySummary =
+    document.getElementById("deploySummary");
+
+const deployPackageBtn =
+    document.getElementById("deployPackageBtn");
+
+const deploySaveBtn =
+    document.getElementById("deploySaveBtn");
+
 const exportBtn =
     document.getElementById("exportBtn");
 
@@ -223,6 +274,9 @@ const modalCloseBtn =
 
 const PROJECT_STORAGE_KEY =
     "buildzen-project";
+
+const DEPLOYMENT_STORAGE_KEY =
+    "buildzen-deployment";
 
 function downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
@@ -2665,6 +2719,222 @@ async function exportStandaloneHTML() {
 }
 
 
+function normalizeDeploymentSettings(settings = {}) {
+    const safeSettings = settings && typeof settings === "object" ? settings : {};
+    const provider = ["netlify", "vercel", "cloudflare", "github-pages"].includes(safeSettings.provider)
+        ? safeSettings.provider
+        : "netlify";
+
+    return {
+        provider,
+        customDomain: typeof safeSettings.customDomain === "string" ? safeSettings.customDomain.trim() : "",
+        websiteName: typeof safeSettings.websiteName === "string" && safeSettings.websiteName.trim()
+            ? safeSettings.websiteName.trim()
+            : getProjectBaseName(),
+        buildCommand: typeof safeSettings.buildCommand === "string" && safeSettings.buildCommand.trim()
+            ? safeSettings.buildCommand.trim()
+            : "npm run build",
+        outputDir: typeof safeSettings.outputDir === "string" && safeSettings.outputDir.trim()
+            ? safeSettings.outputDir.trim()
+            : "dist",
+        optimizeAssets: safeSettings.optimizeAssets !== false,
+        minifyAssets: safeSettings.minifyAssets !== false,
+        cacheAssets: safeSettings.cacheAssets !== false,
+        generateSitemap: safeSettings.generateSitemap !== false,
+        enableCDN: safeSettings.enableCDN !== false
+    };
+}
+
+
+function getDeploymentSettings() {
+    try {
+        const raw = localStorage.getItem(DEPLOYMENT_STORAGE_KEY);
+        if (!raw) {
+            return normalizeDeploymentSettings({});
+        }
+        return normalizeDeploymentSettings(JSON.parse(raw));
+    } catch (error) {
+        console.error("Failed to load deployment settings:", error);
+        return normalizeDeploymentSettings({});
+    }
+}
+
+
+function saveDeploymentSettings(settings = null) {
+    const nextSettings = normalizeDeploymentSettings(settings || readDeploymentForm());
+    try {
+        localStorage.setItem(DEPLOYMENT_STORAGE_KEY, JSON.stringify(nextSettings));
+    } catch (error) {
+        console.error("Failed to save deployment settings:", error);
+    }
+    return nextSettings;
+}
+
+
+function readDeploymentForm() {
+    return {
+        provider: deployProviderSelect?.value || "netlify",
+        customDomain: deployCustomDomain?.value.trim() || "",
+        websiteName: deploySiteName?.value.trim() || getProjectBaseName(),
+        buildCommand: deployBuildCommand?.value.trim() || "npm run build",
+        outputDir: deployOutputDir?.value.trim() || "dist",
+        optimizeAssets: Boolean(deployOptimizeAssets?.checked),
+        minifyAssets: Boolean(deployMinifyAssets?.checked),
+        cacheAssets: Boolean(deployCacheAssets?.checked),
+        generateSitemap: Boolean(deploySitemap?.checked),
+        enableCDN: Boolean(deployCdn?.checked)
+    };
+}
+
+
+function updateDeploymentSummary(settings = getDeploymentSettings()) {
+    if (!deploySummary) {
+        return;
+    }
+
+    const providerLabel = {
+        netlify: "Netlify",
+        vercel: "Vercel",
+        cloudflare: "Cloudflare Pages",
+        "github-pages": "GitHub Pages"
+    }[settings.provider] || "Static hosting";
+
+    const domain = settings.customDomain ? settings.customDomain : "No custom domain";
+    const output = settings.outputDir || "dist";
+
+    deploySummary.textContent = `${providerLabel} • ${output} • ${domain}`;
+}
+
+
+function syncDeploymentForm() {
+    const settings = getDeploymentSettings();
+
+    if (deployProviderSelect) deployProviderSelect.value = settings.provider;
+    if (deployCustomDomain) deployCustomDomain.value = settings.customDomain;
+    if (deploySiteName) deploySiteName.value = settings.websiteName;
+    if (deployBuildCommand) deployBuildCommand.value = settings.buildCommand;
+    if (deployOutputDir) deployOutputDir.value = settings.outputDir;
+    if (deployOptimizeAssets) deployOptimizeAssets.checked = settings.optimizeAssets;
+    if (deployMinifyAssets) deployMinifyAssets.checked = settings.minifyAssets;
+    if (deployCacheAssets) deployCacheAssets.checked = settings.cacheAssets;
+    if (deploySitemap) deploySitemap.checked = settings.generateSitemap;
+    if (deployCdn) deployCdn.checked = settings.enableCDN;
+
+    updateDeploymentSummary(settings);
+}
+
+
+function buildDeploymentFiles(settings = getDeploymentSettings()) {
+    const normalized = normalizeDeploymentSettings(settings);
+    const provider = normalized.provider;
+    const siteName = normalized.websiteName || getProjectBaseName();
+    const customDomain = normalized.customDomain ? `customDomain: "${normalized.customDomain}"` : "customDomain: null";
+    const productionHeaders = normalized.cacheAssets ? "  Cache-Control = \"public, max-age=31536000, immutable\"\n" : "";
+
+    const netlifyConfig = `[build]
+  command = "${normalized.buildCommand}"
+  publish = "${normalized.outputDir}"
+
+[build.environment]
+  NODE_ENV = "production"
+
+${productionHeaders ? `[[headers]]\n  for = "/*"\n  [headers.values]\n${productionHeaders}` : ""}
+
+# Ready for ${provider} hosting
+# Custom domain: ${normalized.customDomain || "not configured yet"}
+`;
+
+    const vercelConfig = JSON.stringify({
+        "$schema": "https://openapi.vercel.sh/vercel.json",
+        "cleanUrls": true,
+        "trailingSlash": false,
+        "redirects": normalized.customDomain ? [{
+            "source": "/:path*",
+            "has": [{ "type": "host", "value": normalized.customDomain }],
+            "destination": "https://${normalized.customDomain}/:path*",
+            "permanent": true
+        }] : [],
+        "buildCommand": normalized.buildCommand,
+        "outputDirectory": normalized.outputDir,
+        "framework": null,
+        "installCommand": "npm install"
+    }, null, 2);
+
+    const cloudflareConfig = JSON.stringify({
+        name: siteName,
+        compatibility_date: new Date().toISOString().slice(0, 10),
+        build: {
+            command: normalized.buildCommand,
+            output_dir: normalized.outputDir
+        },
+        custom_domain: normalized.customDomain || null,
+        optimization: {
+            image_optimization: normalized.optimizeAssets,
+            minify_assets: normalized.minifyAssets,
+            cache_assets: normalized.cacheAssets,
+            cdn_enabled: normalized.enableCDN
+        }
+    }, null, 2);
+
+    const deployReadme = `# ${siteName} deployment guide
+
+Provider: ${provider}
+Custom domain: ${normalized.customDomain || "Not configured yet"}
+Output directory: ${normalized.outputDir}
+Build command: ${normalized.buildCommand}
+
+Production optimization:
+- Optimize assets: ${normalized.optimizeAssets ? "enabled" : "disabled"}
+- Minify assets: ${normalized.minifyAssets ? "enabled" : "disabled"}
+- Cache static assets: ${normalized.cacheAssets ? "enabled" : "disabled"}
+- Generate sitemap: ${normalized.generateSitemap ? "enabled" : "disabled"}
+- CDN: ${normalized.enableCDN ? "enabled" : "disabled"}
+
+1. Upload the generated static bundle.
+2. Point the DNS records for ${normalized.customDomain || "your custom domain"} to the host.
+3. Publish the project. 
+`;
+
+    return {
+        "deployment-manifest.json": JSON.stringify({
+            provider,
+            siteName,
+            customDomain: normalized.customDomain || null,
+            buildCommand: normalized.buildCommand,
+            outputDir: normalized.outputDir,
+            optimization: {
+                optimizeAssets: normalized.optimizeAssets,
+                minifyAssets: normalized.minifyAssets,
+                cacheAssets: normalized.cacheAssets,
+                generateSitemap: normalized.generateSitemap,
+                enableCDN: normalized.enableCDN
+            },
+            generatedAt: new Date().toISOString()
+        }, null, 2),
+        "netlify.toml": netlifyConfig,
+        "vercel.json": vercelConfig,
+        "cloudflare-pages.json": cloudflareConfig,
+        "DEPLOY.md": deployReadme
+    };
+}
+
+
+async function prepareDeploymentPackage(settings = null) {
+    const normalized = normalizeDeploymentSettings(settings || readDeploymentForm());
+    const { default: JSZip } = await import("jszip");
+    const zip = new JSZip();
+    const deploymentFiles = buildDeploymentFiles(normalized);
+
+    for (const [fileName, content] of Object.entries(deploymentFiles)) {
+        zip.file(`deployment/${fileName}`, content);
+    }
+
+    const blob = await zip.generateAsync({ type: "blob" });
+    downloadBlob(blob, `${getProjectBaseName()}-deployment.zip`);
+    return normalized;
+}
+
+
 async function exportProjectZIP() {
     const { default: JSZip } = await import("jszip");
     const zip = new JSZip();
@@ -2690,6 +2960,11 @@ async function exportProjectZIP() {
         if (asset.file) {
             zip.file(path, asset.file);
         }
+    }
+
+    const deploymentFiles = buildDeploymentFiles(getDeploymentSettings());
+    for (const [fileName, content] of Object.entries(deploymentFiles)) {
+        zip.file(`deployment/${fileName}`, content);
     }
 
     for (const file of projectFiles) {
@@ -2839,6 +3114,55 @@ editorContainer.addEventListener("drop", event => {
     insertUIBlock(blockId, position ?? null);
 });
 
+
+deployBtn?.addEventListener("click", () => {
+    syncDeploymentForm();
+    deployDialog?.showModal();
+});
+
+closeDeployDialogBtn?.addEventListener("click", () => {
+    deployDialog?.close();
+});
+
+deployForm?.addEventListener("input", () => {
+    const settings = readDeploymentForm();
+    saveDeploymentSettings(settings);
+    updateDeploymentSummary(settings);
+});
+
+deployForm?.addEventListener("change", () => {
+    const settings = readDeploymentForm();
+    saveDeploymentSettings(settings);
+    updateDeploymentSummary(settings);
+});
+
+deploySaveBtn?.addEventListener("click", () => {
+    const settings = saveDeploymentSettings();
+    updateDeploymentSummary(settings);
+    deployDialog?.close();
+    bzAlert("Deployment settings saved.", "Deployment ready", "success");
+});
+
+deployPackageBtn?.addEventListener("click", async () => {
+    const settings = saveDeploymentSettings();
+    updateDeploymentSummary(settings);
+    try {
+        await prepareDeploymentPackage(settings);
+        deployDialog?.close();
+        await bzAlert(
+            `A production deployment package for ${settings.provider} is ready to upload.`,
+            "Deployment package created",
+            "success"
+        );
+    } catch (error) {
+        console.error("Deployment package failed:", error);
+        await bzAlert(
+            "The deployment package could not be generated. Check the console for details.",
+            "Deployment failed",
+            "danger"
+        );
+    }
+});
 
 templatesBtn.addEventListener("click", () => {
     renderTemplatePicker();
@@ -3002,6 +3326,8 @@ async function initializeApp() {
     /*
      * Build the initial preview.
      */
+
+    syncDeploymentForm();
 
     setLoadingStatus(
         "BUILDING PREVIEW..."
