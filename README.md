@@ -10,6 +10,7 @@ Buildzen Studio is a lightweight browser-based front-end workspace for creating,
 - Asset library for images, fonts, and media uploads
 - Reusable content blocks and component insertion
 - Template starter projects for landing pages and product UI
+- Python API starter with a FastAPI backend and virtual-environment setup
 - Export to standalone HTML or a ZIP project bundle
 - Deployment settings for static hosting providers
 - Local project persistence using browser storage

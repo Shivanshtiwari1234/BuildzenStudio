@@ -16,6 +16,7 @@ import { getAllAssets, renderAssets } from "./assets.ts";
 import {
     createPreviewController
 } from "./preview.ts";
+import { createPythonApiProject } from "./pythonApiTemplate.ts";
 
 
 const loadingScreen =
@@ -768,6 +769,21 @@ const PROJECT_TEMPLATES = [
         accent: "#7bc7a2",
         background: "#17211f",
         cards: ["Projects on track", "Tasks completed", "Team momentum"]
+    },
+    {
+        id: "python-api",
+        name: "Python API",
+        category: "Full-stack",
+        description: "A working FastAPI service connected to an interactive website.",
+        brand: "Fieldnotes",
+        badge: "PYTHON API STARTER",
+        headline: "A full-stack project, ready to grow.",
+        copy: "A small website connected to a local Python API.",
+        action: "Add a note",
+        sectionTitle: "Your workspace",
+        accent: "#d65b3d",
+        background: "#f3f1e9",
+        cards: ["FastAPI service", "Local virtual environment", "Editable frontend"]
     }
 ];
 
@@ -884,6 +900,10 @@ function createTemplateProject(templateId) {
 
     if (!template) {
         return createDefaultProject();
+    }
+
+    if (template.id === "python-api") {
+        return createPythonApiProject();
     }
 
     const cards = template.cards.map((title, index) => `
