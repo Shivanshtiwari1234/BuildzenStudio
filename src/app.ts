@@ -3019,7 +3019,7 @@ async function exportProjectZIP() {
     const assets = await getAllAssets();
     const assetPaths = new Map();
     const projectFiles = buildzenFiles.map(file => ({
-        name: file.name,
+        name: getSafeProjectZipPath(file.name),
         content: getEditorContent(file.id)
     }));
 
@@ -3055,6 +3055,28 @@ async function exportProjectZIP() {
 
     const blob = await zip.generateAsync({ type: "blob" });
     downloadBlob(blob, `${getProjectBaseName()}-project.zip`);
+}
+
+
+function getSafeProjectZipPath(name) {
+    const path = String(name).replace(/\\/g, "/");
+    const segments = path.split("/");
+
+    if (
+        !path ||
+        path.startsWith("/") ||
+        /^[a-z]:/i.test(path) ||
+        segments.some(segment =>
+            !segment ||
+            segment === "." ||
+            segment === ".." ||
+            /[\u0000-\u001f]/.test(segment)
+        )
+    ) {
+        throw new Error(`Unsafe project file path: ${name}`);
+    }
+
+    return segments.join("/");
 }
 
 
