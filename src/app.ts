@@ -2378,6 +2378,16 @@ function renderConsole() {
             row.title =
                 `${entry.location.file || "Unknown file"}${entry.location.line ? `:${entry.location.line}` : ""}`;
             row.style.cursor = "pointer";
+
+            if (entry.location.file) {
+                row.setAttribute("role", "button");
+                row.tabIndex = 0;
+                row.setAttribute(
+                    "aria-label",
+                    `Open ${entry.location.file} at line ${entry.location.line || 1}`
+                );
+            }
+
             row.addEventListener("click", () => {
                 if (!entry.location.file) {
                     return;
@@ -2425,6 +2435,13 @@ function renderConsole() {
                 });
 
                 editor.focus();
+            });
+
+            row.addEventListener("keydown", event => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    row.click();
+                }
             });
         }
 
