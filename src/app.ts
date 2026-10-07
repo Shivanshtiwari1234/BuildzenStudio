@@ -311,6 +311,7 @@ window.buildzenFiles =
    ========================================================= */
 
 let modalResolver = null;
+let modalPreviousFocus = null;
 
 
 function closeModal(value = null) {
@@ -322,6 +323,9 @@ function closeModal(value = null) {
         "true"
     );
 
+    const previousFocus = modalPreviousFocus;
+    modalPreviousFocus = null;
+
     if (modalResolver) {
 
         const resolve =
@@ -332,6 +336,8 @@ function closeModal(value = null) {
         resolve(value);
 
     }
+
+    previousFocus?.focus({ preventScroll: true });
 
 }
 
@@ -348,6 +354,7 @@ function showModal({
 
     return new Promise(resolve => {
 
+        modalPreviousFocus = document.activeElement;
         modalResolver = resolve;
 
         modalTitle.textContent =
@@ -560,6 +567,24 @@ document.addEventListener(
 
             closeModal(null);
 
+        }
+
+        if (event.key === "Tab") {
+            const focusable = Array.from(
+                modal.querySelectorAll("button:not([disabled]), input:not([disabled])")
+            ).filter(element => getComputedStyle(element).display !== "none");
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+
+            if (!first) return;
+
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
         }
 
         if (
