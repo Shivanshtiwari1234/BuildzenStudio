@@ -2153,6 +2153,7 @@ async function updatePreview() {
    CONSOLE
    ========================================================= */
 
+const MAX_CONSOLE_ENTRIES = 500;
 let consoleEntries = [];
 
 let activeConsoleFilter =
@@ -2230,6 +2231,13 @@ function addConsoleEntry(
             new Date()
 
     });
+
+    if (consoleEntries.length > MAX_CONSOLE_ENTRIES) {
+        consoleEntries.splice(
+            0,
+            consoleEntries.length - MAX_CONSOLE_ENTRIES
+        );
+    }
 
 
     renderConsole();
