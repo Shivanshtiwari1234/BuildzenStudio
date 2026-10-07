@@ -87,12 +87,31 @@ export async function saveAsset(file) {
         );
     }
 
+    const existingAssets = await getAllAssets();
+    const existingNames = new Set(
+        existingAssets.map(asset => asset.name.toLowerCase())
+    );
+    const extensionIndex = file.name.lastIndexOf(".");
+    const baseName = extensionIndex > 0
+        ? file.name.slice(0, extensionIndex)
+        : file.name;
+    const extension = extensionIndex > 0
+        ? file.name.slice(extensionIndex)
+        : "";
+    let name = file.name;
+    let suffix = 1;
+
+    while (existingNames.has(name.toLowerCase())) {
+        suffix += 1;
+        name = `${baseName}-${suffix}${extension}`;
+    }
+
     const db =
         await openAssetDatabase();
 
     const asset = {
         id: crypto.randomUUID(),
-        name: file.name,
+        name,
         type:
             file.type ||
             "application/octet-stream",
