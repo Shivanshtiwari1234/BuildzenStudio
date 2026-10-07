@@ -187,6 +187,7 @@ connect();`
                 id: "main.py",
                 name: "main.py",
                 content: `from pathlib import Path
+import sqlite3
 from uuid import uuid4
 
 from fastapi import FastAPI, status
@@ -195,7 +196,13 @@ from pydantic import BaseModel, Field, field_validator
 
 
 app = FastAPI(title="Fieldnotes API", version="0.1.0")
-notes: list[dict[str, str]] = []
+database_path = Path(__file__).parent / "data" / "fieldnotes.db"
+database_path.parent.mkdir(parents=True, exist_ok=True)
+
+with sqlite3.connect(database_path) as connection:
+    connection.execute(
+        "CREATE TABLE IF NOT EXISTS notes (id TEXT PRIMARY KEY, text TEXT NOT NULL)"
+    )
 
 
 class NoteCreate(BaseModel):
@@ -217,13 +224,22 @@ def health_check() -> dict[str, str]:
 
 @app.get("/api/notes")
 def list_notes() -> dict[str, list[dict[str, str]]]:
-    return {"notes": notes}
+    with sqlite3.connect(database_path) as connection:
+        connection.row_factory = sqlite3.Row
+        rows = connection.execute(
+            "SELECT id, text FROM notes ORDER BY rowid DESC"
+        ).fetchall()
+    return {"notes": [dict(row) for row in rows]}
 
 
 @app.post("/api/notes", status_code=status.HTTP_201_CREATED)
 def create_note(note: NoteCreate) -> dict[str, str]:
     saved_note = {"id": str(uuid4()), "text": note.text}
-    notes.append(saved_note)
+    with sqlite3.connect(database_path) as connection:
+        connection.execute(
+            "INSERT INTO notes (id, text) VALUES (?, ?)",
+            (saved_note["id"], saved_note["text"]),
+        )
     return saved_note
 
 
@@ -243,7 +259,7 @@ uvicorn[standard]>=0.34,<1.0
                 name: "README.md",
                 content: `# Fieldnotes: Python API starter
 
-A small full-stack website with a static frontend and a FastAPI backend served from the same origin. The API stores notes in process memory, so they reset when the server restarts.
+A small full-stack website with a static frontend and a FastAPI backend served from the same origin. Notes are stored in a local SQLite database at \`data/fieldnotes.db\` and survive API restarts.
 
 ## Requirements
 
@@ -265,20 +281,16 @@ On Windows PowerShell, activate with \`.venv\\Scripts\\Activate.ps1\` instead. O
 ## API
 
 - \`GET /api/health\` checks the service.
-- \`GET /api/notes\` lists notes held in memory.
+- \`GET /api/notes\` lists notes stored in SQLite.
 - \`POST /api/notes\` accepts JSON such as \`{\"text\": \"Start here\"}\`.
 
-The frontend is in \`static/\`; the API is in \`main.py\`. Add a database and authentication before using this in production.
+The frontend is in \`static/\`; the API is in \`main.py\`. The database is created on first run. Add authentication and backups before using this in production.
 `
             },
             {
                 id: ".gitignore",
                 name: ".gitignore",
-                content: `.venv/
-__pycache__/
-*.py[cod]
-.env
-`
+                content: `.venv/\n__pycache__/\n*.py[cod]\n.env\ndata/*.db\n`
             }
         ],
         activeFile: "index.html"
