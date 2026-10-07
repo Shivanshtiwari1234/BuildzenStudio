@@ -298,6 +298,11 @@ function isFontAsset(asset) {
 }
 
 
+function encodeAssetPath(name) {
+    return encodeURIComponent(name);
+}
+
+
 /* ---------------------------------
    Insert asset reference
 --------------------------------- */
@@ -355,7 +360,7 @@ function insertAssetReference(asset) {
     ) {
         if (isImageAsset(asset)) {
             text =
-                `<img src="${filename}" alt="">`;
+                `<img src="${encodeAssetPath(filename)}" alt="">`;
         } else {
             text =
                 filename;
@@ -373,9 +378,9 @@ function insertAssetReference(asset) {
                         ? "opentype"
                         : "woff";
 
-            text = `@font-face {\n    font-family: "${fontFamily}";\n    src: url("${filename}") format("${format}");\n    font-style: normal;\n    font-weight: 100 900;\n    font-display: swap;\n}`;
+            text = `@font-face {\n    font-family: "${fontFamily}";\n    src: url("${encodeAssetPath(filename)}") format("${format}");\n    font-style: normal;\n    font-weight: 100 900;\n    font-display: swap;\n}`;
         } else {
-            text = `url("${filename}")`;
+            text = `url("${encodeAssetPath(filename)}")`;
         }
     } else if (
         extension === "js" ||
@@ -849,11 +854,17 @@ export function isExternalAssetURL(value) {
 
 
 export function cleanAssetPath(path) {
-    return path
+    const cleanPath = path
         .trim()
         .replace(/^['"]|['"]$/g, "")
         .replace(/^\.\/+/, "")
         .replace(/^assets\/+/i, "");
+
+    try {
+        return decodeURIComponent(cleanPath);
+    } catch {
+        return cleanPath;
+    }
 }
 
 
