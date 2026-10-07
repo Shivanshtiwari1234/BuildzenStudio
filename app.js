@@ -58,6 +58,12 @@ const previewViewport =
 const previewDeviceButtons =
     document.querySelectorAll(".device-mode-btn");
 
+const previewWidthInput =
+    document.getElementById("previewWidthInput");
+
+const previewZoomSelect =
+    document.getElementById("previewZoomSelect");
+
 const previewReloadBtn =
     document.getElementById("previewReloadBtn");
 
@@ -1738,6 +1744,27 @@ function setPreviewMode(mode) {
 
     if (previewViewport) {
         previewViewport.dataset.mode = mode;
+
+        if (mode === "custom") {
+            previewViewport.style.setProperty(
+                "--preview-width",
+                `${previewWidthInput.value}px`
+            );
+        } else {
+            previewViewport.style.removeProperty("--preview-width");
+        }
+    }
+
+    if (previewWidthInput && mode !== "custom") {
+        const presetWidths = {
+            tablet: 768,
+            mobile: 390
+        };
+
+        previewWidthInput.value = String(
+            presetWidths[mode] ||
+            Math.max(320, Math.round(previewViewport?.clientWidth || 1280))
+        );
     }
 
     previewDeviceButtons.forEach((button) => {
@@ -1759,6 +1786,34 @@ previewDeviceButtons.forEach((button) => {
         setPreviewMode(button.dataset.device);
     });
 
+});
+
+
+function applyCustomPreviewWidth() {
+
+    if (!previewWidthInput || !previewViewport) return;
+
+    const requestedWidth = Number(previewWidthInput.value);
+    if (!Number.isFinite(requestedWidth) || !previewWidthInput.value) return;
+
+    const width = Math.min(1920, Math.max(320, Math.round(requestedWidth)));
+    previewWidthInput.value = String(width);
+    setPreviewMode("custom");
+}
+
+
+previewWidthInput?.addEventListener("input", () => {
+    if (previewWidthInput.value.length >= 3) {
+        applyCustomPreviewWidth();
+    }
+});
+
+previewWidthInput?.addEventListener("change", applyCustomPreviewWidth);
+
+previewZoomSelect?.addEventListener("change", () => {
+    if (preview) {
+        preview.style.zoom = `${previewZoomSelect.value}%`;
+    }
 });
 
 
