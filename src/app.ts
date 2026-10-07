@@ -3395,6 +3395,7 @@ resetBtn.addEventListener(
             return;
         }
 
+        window.buildzenLayout?.reset();
 
         await applyProject(createDefaultProject());
 

@@ -620,31 +620,6 @@ if (workspace && filePanel && editorPanel && rightPanel) {
 
     resizeObserver.observe(workspace);
 
-    /*
-     * If the existing Reset button is used, also reset the
-     * workspace layout. This doesn't interfere with the
-     * application's project reset logic.
-     */
-    const resetButton =
-        document.getElementById("resetBtn");
-
-    if (resetButton) {
-        resetButton.addEventListener(
-            "click",
-            () => {
-                setTimeout(() => {
-                    /*
-                     * The application may display its own
-                     * confirmation dialog. Reset the layout
-                     * after the click without replacing that
-                     * behavior.
-                     */
-                    resetLayout();
-                }, 0);
-            }
-        );
-    }
-
     applyLayout();
 
     window.buildzenLayout = {
