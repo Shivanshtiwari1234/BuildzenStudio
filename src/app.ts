@@ -312,6 +312,7 @@ window.buildzenFiles =
 
 let modalResolver = null;
 let modalPreviousFocus = null;
+let modalQueue = Promise.resolve();
 
 
 function closeModal(value = null) {
@@ -342,17 +343,18 @@ function closeModal(value = null) {
 }
 
 
-function showModal({
-    title = "Buildzen",
-    message = "",
-    type = "info",
-    input = false,
-    defaultValue = "",
-    confirmText = "OK",
-    cancelText = "Cancel"
-} = {}) {
+function showModal(options = {}) {
+    const request = modalQueue.then(() => new Promise(resolve => {
 
-    return new Promise(resolve => {
+        const {
+            title = "Buildzen",
+            message = "",
+            type = "info",
+            input = false,
+            defaultValue = "",
+            confirmText = "OK",
+            cancelText = "Cancel"
+        } = options;
 
         modalPreviousFocus = document.activeElement;
         modalResolver = resolve;
@@ -425,7 +427,14 @@ function showModal({
 
         }
 
-    });
+    }));
+
+    modalQueue = request.then(
+        () => undefined,
+        () => undefined
+    );
+
+    return request;
 
 }
 
