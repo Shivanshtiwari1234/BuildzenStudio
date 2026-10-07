@@ -5,7 +5,9 @@ import {
     switchEditor,
     getEditorContent,
     setEditorContent,
-    getActiveEditor
+    getActiveEditor,
+    createSplitEditor,
+    destroySplitEditor
 } from "./editor.js";
 
 import { renderAssets } from "./assets.js";
@@ -104,6 +106,21 @@ const editorContainer =
 const blockPalette =
     document.getElementById("blockPalette");
 
+const editorPanel =
+    document.querySelector(".editor-panel");
+
+const editorSplitContainer =
+    document.getElementById("editorSplitContainer");
+
+const splitEditorBtn =
+    document.getElementById("splitEditorBtn");
+
+const splitFileSelect =
+    document.getElementById("splitFileSelect");
+
+const closeSplitEditorBtn =
+    document.getElementById("closeSplitEditorBtn");
+
 const componentType =
     document.getElementById("componentType");
 
@@ -195,6 +212,7 @@ const PROJECT_STORAGE_KEY =
 let buildzenFiles = [];
 
 let activeFileId = null;
+let splitFileId = null;
 
 window.buildzenFiles =
     buildzenFiles;
@@ -1137,6 +1155,7 @@ function saveProject() {
 
 async function applyProject(project) {
 
+    closeSplitView();
     buildzenFiles = project.files;
     window.buildzenFiles = buildzenFiles;
     activeFileId = project.activeFile || buildzenFiles[0]?.id || null;
@@ -1357,12 +1376,64 @@ function openFile(fileId) {
     activeFileId =
         fileId;
 
+    if (splitFileId === fileId) {
+        closeSplitView();
+    }
+
     switchEditor(fileId);
 
     renderFileTree();
 
     saveProject();
 
+}
+
+
+function renderSplitFileOptions() {
+    if (!splitFileSelect) return;
+
+    splitFileSelect.replaceChildren();
+
+    buildzenFiles.forEach(file => {
+        const option = document.createElement("option");
+        option.value = file.id;
+        option.textContent = file.name;
+        splitFileSelect.appendChild(option);
+    });
+
+    if (splitFileId && getFile(splitFileId)) {
+        splitFileSelect.value = splitFileId;
+    }
+}
+
+
+function openSplitView(fileId) {
+    if (!fileId || !getFile(fileId)) return;
+
+    splitFileId = fileId;
+    renderSplitFileOptions();
+    editorSplitContainer.hidden = false;
+    editorPanel.classList.add("split-active");
+    splitEditorBtn.hidden = true;
+    splitFileSelect.hidden = false;
+    closeSplitEditorBtn.hidden = false;
+    createSplitEditor(fileId, editorSplitContainer);
+}
+
+
+function closeSplitView() {
+    destroySplitEditor();
+    splitFileId = null;
+
+    if (editorSplitContainer) {
+        editorSplitContainer.hidden = true;
+        editorSplitContainer.innerHTML = "";
+    }
+
+    editorPanel?.classList.remove("split-active");
+    if (splitEditorBtn) splitEditorBtn.hidden = false;
+    if (splitFileSelect) splitFileSelect.hidden = true;
+    if (closeSplitEditorBtn) closeSplitEditorBtn.hidden = true;
 }
 
 
@@ -2481,6 +2552,18 @@ newFileBtn.addEventListener(
     "click",
     createFile
 );
+
+
+splitEditorBtn.addEventListener("click", () => {
+    const otherFile = buildzenFiles.find(file => file.id !== activeFileId);
+    openSplitView(otherFile?.id || activeFileId);
+});
+
+splitFileSelect.addEventListener("change", () => {
+    openSplitView(splitFileSelect.value);
+});
+
+closeSplitEditorBtn.addEventListener("click", closeSplitView);
 
 
 renameFileBtn.addEventListener(

@@ -161,7 +161,8 @@
                     <label for="componentTitle">Heading / label</label>
                     <input id="componentTitle" type="text" value="A section worth sharing" maxlength="90">
                     <label for="componentDescription">Supporting text</label>
-                    <textarea id="componentDescription" rows="2" maxlength="180">Add a short description for this section.</textarea>
+                    <textarea id="componentDescription" rows="2"
+                        maxlength="180">Add a short description for this section.</textarea>
                     <div class="component-style-row">
                         <label for="componentColor">Accent</label>
                         <input id="componentColor" type="color" value="#5aa6ff" aria-label="Component accent color">
@@ -228,6 +229,18 @@
 
                 <div class="editor-actions">
 
+                    <button id="splitEditorBtn" type="button" title="Open a second editor pane">
+                        Split
+                    </button>
+
+                    <select id="splitFileSelect" class="split-file-select" aria-label="File in split editor" hidden>
+                    </select>
+
+                    <button id="closeSplitEditorBtn" class="close-split-btn" type="button" title="Close split editor"
+                        aria-label="Close split editor" hidden>
+                        ×
+                    </button>
+
                     <button id="renameFileBtn" type="button" title="Rename file">
                         Rename
                     </button>
@@ -242,7 +255,11 @@
             </div>
 
 
-            <div id="editorContainer" class="editor-container" aria-label="Source code"></div>
+            <div class="editor-workspace">
+                <div id="editorContainer" class="editor-container" aria-label="Source code"></div>
+                <div id="editorSplitContainer" class="editor-container split-editor-container"
+                    aria-label="Split source editor" hidden></div>
+            </div>
 
 
             <div class="editor-footer" aria-label="Editor information">

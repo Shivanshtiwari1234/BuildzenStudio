@@ -809,8 +809,8 @@ body.resizing-rows * {
     padding: 0 9px 10px;
 }
 
-.component-form > label,
-.component-style-row > label {
+.component-form>label,
+.component-style-row>label {
     color: var(--text-muted);
     font-size: 9px;
 }
@@ -1009,10 +1009,35 @@ body.resizing-rows * {
     transform: translateY(1px);
 }
 
+.split-file-select {
+    width: min(130px, 24vw);
+    height: 26px;
+    padding: 0 7px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: #171d26;
+    color: var(--text);
+    font-size: 10px;
+}
+
+.close-split-btn {
+    width: 26px;
+    padding: 0 !important;
+    font-size: 17px !important;
+}
+
 
 /* =========================================================
    CodeMirror
    ========================================================= */
+
+.editor-workspace {
+    min-width: 0;
+    min-height: 0;
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
 
 .editor-container {
     position: relative;
@@ -1023,6 +1048,14 @@ body.resizing-rows * {
     min-height: 0;
 
     overflow: hidden;
+}
+
+.editor-panel.split-active .editor-container {
+    flex: 1 1 50%;
+}
+
+.editor-panel.split-active #editorContainer {
+    border-right: 1px solid var(--border-strong);
 }
 
 .editor {
@@ -2714,6 +2747,19 @@ body.docs-shell {
         flex: 0 0 150px;
 
         border-bottom: 1px solid var(--border);
+    }
+
+    .editor-panel.split-active .editor-workspace {
+        flex-direction: column;
+    }
+
+    .editor-panel.split-active .editor-container {
+        min-height: 50%;
+    }
+
+    .editor-panel.split-active #editorContainer {
+        border-right: 0;
+        border-bottom: 1px solid var(--border-strong);
     }
 
     .editor-panel {

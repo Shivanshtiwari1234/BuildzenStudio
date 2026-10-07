@@ -58,6 +58,8 @@ const languageInfo =
 export const editors = {};
 
 let activeEditor = null;
+let splitEditor = null;
+let syncingEditors = false;
 
 
 /* ---------------------------------
@@ -211,8 +213,8 @@ function buildzenKeymap() {
    Create editor
 --------------------------------- */
 
-function createEditor(file) {
-    if (!editorContainer) {
+function createEditor(file, parent = editorContainer, register = true) {
+    if (!parent) {
         throw new Error(
             "Buildzen editor container was not found."
         );
@@ -229,7 +231,7 @@ function createEditor(file) {
     container.dataset.fileId =
         file.id;
 
-    editorContainer.appendChild(
+    parent.appendChild(
         container
     );
 
@@ -302,6 +304,22 @@ function createEditor(file) {
                         if (
                             update.docChanged
                         ) {
+                            const sourceView = update.view;
+                            const peerView = sourceView === splitEditor
+                                ? editors[file.id]
+                                : splitEditor?.dom.dataset.fileId === file.id
+                                    ? splitEditor
+                                    : null;
+
+                            if (peerView && !syncingEditors) {
+                                syncingEditors = true;
+                                try {
+                                    peerView.dispatch({ changes: update.changes });
+                                } finally {
+                                    syncingEditors = false;
+                                }
+                            }
+
                             window.dispatchEvent(
                                 new CustomEvent(
                                     "buildzen-edit",
@@ -346,10 +364,38 @@ function createEditor(file) {
         });
 
 
-    editors[file.id] =
-        view;
+    if (register) {
+        editors[file.id] = view;
+    }
 
     return view;
+}
+
+
+export function destroySplitEditor() {
+    if (!splitEditor) return;
+
+    splitEditor.destroy();
+    splitEditor.dom.parentElement?.remove();
+    splitEditor = null;
+}
+
+
+export function createSplitEditor(fileId, parent) {
+    const file = window.buildzenFiles?.find(item => item.id === fileId);
+    const primary = editors[fileId];
+    if (!file || !primary || !parent) return null;
+
+    destroySplitEditor();
+
+    splitEditor = createEditor({
+        ...file,
+        content: primary.state.doc.toString()
+    }, parent, false);
+
+    splitEditor.dom.dataset.fileId = fileId;
+    splitEditor.dom.parentElement.classList.add("active-editor");
+    return splitEditor;
 }
 
 
@@ -361,6 +407,8 @@ export function initializeEditors(files) {
     if (!editorContainer) {
         return;
     }
+
+    destroySplitEditor();
 
     editorContainer.innerHTML =
         "";
