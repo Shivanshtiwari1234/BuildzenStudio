@@ -587,7 +587,7 @@ export function switchEditor(fileId) {
 
     /*
      * Expose the active CodeMirror
-     * instance globally so assets.js
+    * instance globally so assets.ts
      * and other Buildzen modules can
      * interact with it.
      */
@@ -662,7 +662,7 @@ export function getActiveEditor() {
  * Expose the getter globally.
  *
  * This allows modules that cannot
- * directly import editor.js to get
+ * directly import editor.ts to get
  * the active CodeMirror instance.
  */
 

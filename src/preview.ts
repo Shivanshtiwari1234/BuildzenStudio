@@ -1,4 +1,4 @@
-import { getEditorContent } from "./editor.js";
+import { getEditorContent } from "./editor.ts";
 
 import {
     createAssetURLs,
@@ -8,7 +8,7 @@ import {
     resolveAssetReferences,
     resolveCSSAssetReferences,
     getAllAssets
-} from "./assets.js";
+} from "./assets.ts";
 
 
 /* =========================================================

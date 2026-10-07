@@ -8,13 +8,13 @@ import {
     getActiveEditor,
     createSplitEditor,
     destroySplitEditor
-} from "./editor.js";
+} from "./editor.ts";
 
-import { getAllAssets, renderAssets } from "./assets.js";
+import { getAllAssets, renderAssets } from "./assets.ts";
 
 import {
     createPreviewController
-} from "./preview.js";
+} from "./preview.ts";
 
 
 const loadingScreen =
@@ -475,7 +475,7 @@ function bzPrompt(
 
 
 /*
- * assets.js uses these functions when
+ * assets.ts uses these functions when
  * deleting assets.
  */
 
@@ -2892,7 +2892,7 @@ Production optimization:
 
 1. Upload the generated static bundle.
 2. Point the DNS records for ${normalized.customDomain || "your custom domain"} to the host.
-3. Publish the project. 
+3. Publish the project.
 `;
 
     return {
