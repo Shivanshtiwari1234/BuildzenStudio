@@ -70,6 +70,10 @@
                 Reset
             </button>
 
+            <button id="templatesBtn" class="topbar-docs-btn" type="button" aria-haspopup="dialog">
+                Templates
+            </button>
+
 
             <button id="refreshBtn" type="button">
                 Refresh
@@ -423,6 +427,21 @@
         </div>
 
     </div>
+
+
+    <dialog id="templateDialog" class="template-dialog" aria-labelledby="templateDialogTitle">
+        <div class="template-dialog-header">
+            <div>
+                <p class="template-kicker">NEW PROJECT</p>
+                <h2 id="templateDialogTitle">Choose a starting point</h2>
+            </div>
+            <button id="closeTemplateDialogBtn" class="modal-close" type="button" aria-label="Close templates">
+                ×
+            </button>
+        </div>
+        <p class="template-dialog-note">Starting a template replaces the current project.</p>
+        <div id="templateGrid" class="template-grid" aria-label="Project templates"></div>
+    </dialog>
 
 
     <!-- =====================================================

@@ -1888,6 +1888,195 @@ body.resizing-rows * {
     background: #cc4848;
 }
 
+.template-dialog {
+    width: min(760px, calc(100vw - 32px));
+    max-width: none;
+    max-height: min(760px, calc(100vh - 32px));
+    overflow: auto;
+    padding: 22px;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    background: linear-gradient(145deg, #1d2430, #151a22 70%);
+    color: var(--text);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.62);
+}
+
+.template-dialog::backdrop {
+    background: rgba(5, 8, 12, 0.74);
+    backdrop-filter: blur(8px);
+}
+
+.template-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.template-kicker {
+    margin: 0 0 7px;
+    color: var(--accent-hover);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+}
+
+.template-dialog h2 {
+    margin: 0;
+    color: var(--text-bright);
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.template-dialog-note {
+    margin: 9px 0 18px;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.template-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.template-option {
+    position: relative;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr) 16px;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.018);
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+}
+
+.template-option:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--template-accent) 52%, var(--border-strong));
+    background: rgba(255, 255, 255, 0.045);
+}
+
+.template-thumbnail {
+    position: relative;
+    height: 67px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--template-ground);
+}
+
+.template-thumbnail-window {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 10px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding-left: 5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.14);
+}
+
+.template-thumbnail-window i {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--template-accent);
+}
+
+.template-thumbnail-art {
+    position: absolute;
+    top: 22px;
+    right: 9px;
+    width: 27px;
+    height: 32px;
+    border-radius: 18px 18px 5px 5px;
+    background: var(--template-accent);
+    opacity: 0.8;
+}
+
+.template-thumbnail-lines {
+    position: absolute;
+    left: 8px;
+    top: 26px;
+    width: 35px;
+    height: 3px;
+    background: var(--template-accent);
+    box-shadow: 0 7px 0 rgba(255, 255, 255, 0.33), 0 14px 0 rgba(255, 255, 255, 0.2);
+}
+
+.template-option-copy,
+.template-option-heading {
+    min-width: 0;
+    display: flex;
+}
+
+.template-option-copy {
+    flex-direction: column;
+    gap: 6px;
+}
+
+.template-option-heading {
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.template-option-heading strong {
+    overflow: hidden;
+    color: var(--text-bright);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.template-option-heading small {
+    flex: 0 0 auto;
+    color: var(--text-dim);
+    font-size: 9px;
+}
+
+.template-option-description {
+    color: var(--text-muted);
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+.template-option-arrow {
+    align-self: start;
+    color: var(--template-accent);
+    font-size: 13px;
+}
+
+@media (max-width: 560px) {
+    .template-dialog {
+        width: calc(100vw - 20px);
+        max-height: calc(100vh - 20px);
+        padding: 16px;
+    }
+
+    .template-grid {
+        grid-template-columns: 1fr;
+        gap: 7px;
+    }
+
+    .template-option {
+        grid-template-columns: 82px minmax(0, 1fr) 14px;
+        gap: 10px;
+        padding: 8px;
+    }
+
+    .template-thumbnail {
+        height: 58px;
+    }
+}
+
 
 /* =========================================================
    Documentation Page
