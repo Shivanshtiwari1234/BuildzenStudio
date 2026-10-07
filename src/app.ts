@@ -2295,8 +2295,16 @@ function renderConsole() {
                     return;
                 }
 
+                const requestedLine =
+                    Number(entry.location.line);
+
                 const lineNumber =
-                    Math.max(1, Number(entry.location.line || 1));
+                    Number.isFinite(requestedLine)
+                        ? Math.min(
+                            editor.state.doc.lines,
+                            Math.max(1, requestedLine)
+                        )
+                        : 1;
 
                 const line =
                     editor.state.doc.line(lineNumber);
