@@ -3046,15 +3046,76 @@ async function exportProjectZIP() {
     }
 
     for (const file of projectFiles) {
-        let content = file.content;
-        for (const [assetName, path] of assetPaths) {
-            content = content.split(assetName).join(path);
-        }
+        const content = rewriteAssetReferencesForExport(
+            file.content,
+            file.name,
+            assetPaths
+        );
         zip.file(file.name, content);
     }
 
     const blob = await zip.generateAsync({ type: "blob" });
     downloadBlob(blob, `${getProjectBaseName()}-project.zip`);
+}
+
+
+function rewriteAssetReferencesForExport(content, fileName, assetPaths) {
+    const extension = fileName.split(".").pop().toLowerCase();
+
+    const rewriteCSS = css => css.replace(
+        /url\(\s*(['"]?)([^'"\)]+)\1\s*\)/gi,
+        (match, quote, value) => {
+            const assetName = decodeAssetPath(value);
+            const path = assetPaths.get(assetName);
+            return path ? `url("${path}")` : match;
+        }
+    );
+
+    if (extension === "css") {
+        return rewriteCSS(content);
+    }
+
+    if (!(["html", "htm", "svg"].includes(extension))) {
+        return content;
+    }
+
+    const document = new DOMParser().parseFromString(content, "text/html");
+
+    for (const element of document.querySelectorAll("[src], [href], [poster]")) {
+        for (const attribute of ["src", "href", "poster"]) {
+            const value = element.getAttribute(attribute);
+            if (!value) continue;
+
+            const path = assetPaths.get(decodeAssetPath(value));
+            if (path) element.setAttribute(attribute, path);
+        }
+
+        const inlineStyle = element.getAttribute("style");
+        if (inlineStyle) {
+            element.setAttribute("style", rewriteCSS(inlineStyle));
+        }
+    }
+
+    for (const styleElement of document.querySelectorAll("style")) {
+        styleElement.textContent = rewriteCSS(styleElement.textContent);
+    }
+
+    return "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+}
+
+
+function decodeAssetPath(value) {
+    const path = value
+        .trim()
+        .replace(/^['"]|['"]$/g, "")
+        .replace(/^\.\/+/, "")
+        .replace(/^assets\/+/, "");
+
+    try {
+        return decodeURIComponent(path);
+    } catch {
+        return path;
+    }
 }
 
 
