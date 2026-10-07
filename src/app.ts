@@ -2080,7 +2080,10 @@ const previewController =
         previewStatus,
 
         getFiles:
-            () => buildzenFiles
+            () => buildzenFiles,
+
+        getActiveFileId:
+            () => activeFileId
 
     });
 

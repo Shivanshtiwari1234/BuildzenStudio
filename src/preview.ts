@@ -19,7 +19,8 @@ export function createPreviewController({
     preview,
     status,
     previewStatus,
-    getFiles
+    getFiles,
+    getActiveFileId
 }) {
 
     let previewBuildId = 0;
@@ -50,7 +51,7 @@ export function createPreviewController({
 
         const files = getFiles();
 
-        const htmlFile = files.find(file => {
+        const isHTMLFile = file => {
 
             const extension = file.name
                 .split(".")
@@ -62,7 +63,16 @@ export function createPreviewController({
                 extension === "htm"
             );
 
-        });
+        };
+
+        const activeHTMLFile = files.find(
+            file =>
+                file.id === getActiveFileId() &&
+                isHTMLFile(file)
+        );
+
+        const htmlFile =
+            activeHTMLFile || files.find(isHTMLFile);
 
 
         let html = "";
