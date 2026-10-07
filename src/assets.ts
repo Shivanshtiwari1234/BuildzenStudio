@@ -586,45 +586,26 @@ export async function renderAssets() {
             "Copy";
 
         copyButton.title =
-            `Copy URL for ${asset.name}`;
+            `Copy project path for ${asset.name}`;
 
         copyButton.addEventListener(
             "click",
             async event => {
                 event.stopPropagation();
 
-                let url = null;
-
                 try {
-                    url =
-                        URL.createObjectURL(
-                            asset.file
-                        );
-
                     await navigator.clipboard.writeText(
-                        url
+                        asset.name
                     );
 
                     console.log(
-                        `Copied asset URL for ${asset.name}.`
+                        `Copied project path for ${asset.name}.`
                     );
                 } catch (error) {
                     console.error(
-                        "Failed to copy asset URL:",
+                        "Failed to copy asset path:",
                         error
                     );
-                } finally {
-                    if (url) {
-                        setTimeout(() => {
-                            try {
-                                URL.revokeObjectURL(
-                                    url
-                                );
-                            } catch {
-                                // Ignore.
-                            }
-                        }, 30000);
-                    }
                 }
             }
         );
