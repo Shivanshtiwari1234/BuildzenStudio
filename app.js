@@ -3,7 +3,8 @@ import {
     addEditor,
     removeEditor,
     switchEditor,
-    getEditorContent
+    getEditorContent,
+    setEditorContent
 } from "./editor.js";
 
 import { renderAssets } from "./assets.js";
@@ -51,6 +52,21 @@ function finishLoading() {
 const preview =
     document.getElementById("preview");
 
+const previewViewport =
+    document.getElementById("previewViewport");
+
+const previewDeviceButtons =
+    document.querySelectorAll(".device-mode-btn");
+
+const previewReloadBtn =
+    document.getElementById("previewReloadBtn");
+
+const previewOpenBtn =
+    document.getElementById("previewOpenBtn");
+
+const previewFullscreenBtn =
+    document.getElementById("previewFullscreenBtn");
+
 const status =
     document.getElementById("status");
 
@@ -74,6 +90,12 @@ const deleteFileBtn =
 
 const previewStatus =
     document.getElementById("previewStatus");
+
+const docsBtn =
+    document.getElementById("docsBtn");
+
+const saveStatus =
+    document.getElementById("saveStatus");
 
 const consoleOutput =
     document.getElementById("consoleOutput");
@@ -931,9 +953,157 @@ function updateFileContent(
     file.content =
         content;
 
-    saveProject();
-
     updatePreview();
+
+}
+
+
+function formatDocument(name, content) {
+
+    const extension =
+        name.split(".").pop().toLowerCase();
+
+    const source =
+        typeof content === "string"
+            ? content
+            : "";
+
+    if (extension === "html") {
+
+        const lines =
+            source
+                .replace(/>\s*</g, ">\n<")
+                .split(/\n/);
+
+        let indentLevel = 0;
+        const formatted = [];
+
+        for (const line of lines) {
+            const trimmed = line.trim();
+
+            if (!trimmed) {
+                continue;
+            }
+
+            const isClosingTag =
+                /^<\//.test(trimmed);
+
+            const isSelfClosing =
+                /\/>$/.test(trimmed) ||
+                /<\w+[^>]*\/>$/.test(trimmed);
+
+            if (isClosingTag) {
+                indentLevel = Math.max(0, indentLevel - 1);
+            }
+
+            formatted.push(
+                `${"  ".repeat(indentLevel)}${trimmed}`
+            );
+
+            if (
+                !isClosingTag &&
+                !isSelfClosing &&
+                !trimmed.startsWith("<!--") &&
+                !trimmed.endsWith("/>") &&
+                !trimmed.endsWith("-->")
+            ) {
+                const openingTags =
+                    (trimmed.match(/<\w+\b/g) || []).length;
+                const closingTags =
+                    (trimmed.match(/<\/\w+/g) || []).length;
+
+                if (openingTags > closingTags) {
+                    indentLevel += 1;
+                }
+            }
+        }
+
+        return formatted.join("\n");
+    }
+
+
+    if (extension === "css") {
+
+        const lines =
+            source.split(/\n/);
+
+        let indentLevel = 0;
+        const formatted = [];
+
+        for (const line of lines) {
+            const trimmed = line.trim();
+
+            if (!trimmed) {
+                continue;
+            }
+
+            const closing =
+                trimmed.startsWith("}");
+
+            if (closing) {
+                indentLevel = Math.max(0, indentLevel - 1);
+            }
+
+            formatted.push(
+                `${"  ".repeat(indentLevel)}${trimmed}`
+            );
+
+            if (
+                trimmed.includes("{") &&
+                !trimmed.endsWith("}")
+            ) {
+                indentLevel += 1;
+            }
+        }
+
+        return formatted.join("\n");
+    }
+
+
+    if (
+        extension === "js" ||
+        extension === "mjs"
+    ) {
+
+        const lines =
+            source
+                .split(/\n/)
+                .map(line => line.trimEnd());
+
+        let indentLevel = 0;
+        const formatted = [];
+
+        for (const rawLine of lines) {
+            const trimmed = rawLine.trim();
+
+            if (!trimmed) {
+                continue;
+            }
+
+            const isClosing =
+                /^(\}|\)|\])$/.test(trimmed);
+
+            if (isClosing) {
+                indentLevel = Math.max(0, indentLevel - 1);
+            }
+
+            formatted.push(
+                `${"  ".repeat(indentLevel)}${trimmed}`
+            );
+
+            if (
+                /[\{(\[]$/.test(trimmed) &&
+                !trimmed.endsWith("};") &&
+                !trimmed.endsWith("})") &&
+                !trimmed.endsWith("])")) {
+                indentLevel += 1;
+            }
+        }
+
+        return formatted.join("\n");
+    }
+
+    return source;
 
 }
 
@@ -952,7 +1122,11 @@ async function createFile() {
         );
 
 
-    if (name === null) {
+    if (
+        name === null ||
+        name === undefined ||
+        typeof name !== "string"
+    ) {
         return;
     }
 
@@ -1060,7 +1234,11 @@ async function renameCurrentFile() {
         );
 
 
-    if (newName === null) {
+    if (
+        newName === null ||
+        newName === undefined ||
+        typeof newName !== "string"
+    ) {
         return;
     }
 
@@ -1258,6 +1436,77 @@ const previewController =
 
     });
 
+let activePreviewMode = "desktop";
+
+
+function setPreviewMode(mode) {
+
+    activePreviewMode = mode;
+
+    if (previewViewport) {
+        previewViewport.dataset.mode = mode;
+    }
+
+    previewDeviceButtons.forEach((button) => {
+
+        const isActive =
+            button.dataset.device === mode;
+
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-pressed", String(isActive));
+
+    });
+
+}
+
+
+previewDeviceButtons.forEach((button) => {
+
+    button.addEventListener("click", () => {
+        setPreviewMode(button.dataset.device);
+    });
+
+});
+
+
+if (previewReloadBtn) {
+    previewReloadBtn.addEventListener("click", () => {
+        previewController.reloadPreview();
+    });
+}
+
+
+if (previewOpenBtn) {
+    previewOpenBtn.addEventListener("click", () => {
+        previewController.openPreviewWindow();
+    });
+}
+
+
+if (previewFullscreenBtn) {
+    previewFullscreenBtn.addEventListener("click", async () => {
+
+        try {
+
+            if (document.fullscreenElement) {
+                await document.exitFullscreen();
+                return;
+            }
+
+            if (previewViewport) {
+                await previewViewport.requestFullscreen();
+            }
+
+        } catch (error) {
+            console.warn("Fullscreen preview is unavailable:", error);
+        }
+
+    });
+}
+
+
+setPreviewMode(activePreviewMode);
+
 
 async function updatePreview() {
 
@@ -1274,6 +1523,21 @@ let consoleEntries = [];
 
 let activeConsoleFilter =
     "all";
+
+let dirtyFiles = new Set();
+let autoSaveTimer = null;
+
+
+function setSaveStatus(text, state = "saved") {
+
+    if (!saveStatus) {
+        return;
+    }
+
+    saveStatus.textContent = text;
+    saveStatus.dataset.state = state;
+
+}
 
 
 function formatConsoleValue(value) {
@@ -1316,7 +1580,8 @@ function formatConsoleValue(value) {
 
 function addConsoleEntry(
     type,
-    args
+    args,
+    location = null
 ) {
 
     consoleEntries.push({
@@ -1324,6 +1589,8 @@ function addConsoleEntry(
         type,
 
         args,
+
+        location,
 
         time:
             new Date()
@@ -1364,6 +1631,52 @@ function renderConsole() {
 
         row.className =
             `console-entry console-${entry.type}`;
+
+        if (entry.location) {
+            row.title =
+                `${entry.location.file || "Unknown file"}${entry.location.line ? `:${entry.location.line}` : ""}`;
+            row.style.cursor = "pointer";
+            row.addEventListener("click", () => {
+                if (!entry.location.file) {
+                    return;
+                }
+
+                const file =
+                    buildzenFiles.find(
+                        candidate =>
+                            candidate.name.toLowerCase() ===
+                            entry.location.file.toLowerCase()
+                    );
+
+                if (!file) {
+                    return;
+                }
+
+                openFile(file.id);
+
+                const editor =
+                    editors[file.id];
+
+                if (!editor) {
+                    return;
+                }
+
+                const lineNumber =
+                    Math.max(1, Number(entry.location.line || 1));
+
+                const line =
+                    editor.state.doc.line(lineNumber);
+
+                editor.dispatch({
+                    selection: {
+                        anchor: line.from,
+                        head: line.from
+                    }
+                });
+
+                editor.focus();
+            });
+        }
 
 
         const time =
@@ -1424,6 +1737,66 @@ function renderConsole() {
 }
 
 
+function scheduleAutoSave(fileId) {
+
+    if (fileId) {
+        dirtyFiles.add(fileId);
+    }
+
+    setSaveStatus("Saving...", "saving");
+
+    clearTimeout(autoSaveTimer);
+
+    autoSaveTimer =
+        setTimeout(() => {
+
+            if (dirtyFiles.size === 0) {
+                setSaveStatus("Saved", "saved");
+                return;
+            }
+
+            dirtyFiles.forEach(id => {
+                const file =
+                    getFile(id);
+
+                if (!file) {
+                    return;
+                }
+
+                file.content =
+                    getEditorContent(id);
+            });
+
+            dirtyFiles.clear();
+            saveProject();
+            setSaveStatus("Saved", "saved");
+
+        }, 350);
+
+}
+
+
+function saveCurrentProject() {
+
+    dirtyFiles.forEach(id => {
+        const file =
+            getFile(id);
+
+        if (!file) {
+            return;
+        }
+
+        file.content =
+            getEditorContent(id);
+    });
+
+    dirtyFiles.clear();
+    saveProject();
+    setSaveStatus("Saved", "saved");
+
+}
+
+
 window.addEventListener(
     "message",
     event => {
@@ -1439,6 +1812,9 @@ window.addEventListener(
         }
 
 
+        const location =
+            event.data.location || null;
+
         addConsoleEntry(
             event.data.type ||
             "log",
@@ -1449,7 +1825,9 @@ window.addEventListener(
                 ? event.data.args
                 : [
                     event.data.args
-                ]
+                ],
+
+            location
         );
 
     }
@@ -1529,6 +1907,8 @@ window.addEventListener(
             content
         );
 
+        scheduleAutoSave(fileId);
+
     }
 );
 
@@ -1551,31 +1931,53 @@ window.addEventListener(
             return;
         }
 
+        saveCurrentProject();
+
+        console.log(
+            `Saved ${activeFileId}.`
+        );
+
+    }
+);
+
+window.addEventListener(
+    "beforeunload",
+    event => {
+        if (dirtyFiles.size > 0) {
+            event.preventDefault();
+            event.returnValue = "";
+        }
+    }
+);
+
+window.addEventListener(
+    "buildzen-format-document",
+    event => {
+        const {
+            fileId
+        } = event.detail || {};
+
+        if (!fileId) {
+            return;
+        }
 
         const file =
-            getFile(
-                activeFileId
-            );
-
+            getFile(fileId);
 
         if (!file) {
             return;
         }
 
+        const formatted =
+            formatDocument(file.name, file.content);
 
-        file.content =
-            getEditorContent(
-                activeFileId
-            );
+        if (formatted === file.content) {
+            return;
+        }
 
-
-        saveProject();
-
-
-        console.log(
-            `Saved ${file.name}.`
-        );
-
+        setEditorContent(fileId, formatted);
+        updateFileContent(fileId, formatted);
+        scheduleAutoSave(fileId);
     }
 );
 
@@ -1624,6 +2026,22 @@ refreshBtn.addEventListener(
 
     }
 );
+
+
+if (docsBtn) {
+    docsBtn.addEventListener(
+        "click",
+        () => {
+
+            window.open(
+                "./docs.html",
+                "_blank",
+                "noopener,noreferrer"
+            );
+
+        }
+    );
+}
 
 
 /* =========================================================

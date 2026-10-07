@@ -61,6 +61,10 @@
                 Live
             </span>
 
+            <span id="saveStatus" class="save-status" aria-live="polite" data-state="saved">
+                Saved
+            </span>
+
 
             <button id="resetBtn" type="button">
                 Reset
@@ -69,6 +73,10 @@
 
             <button id="refreshBtn" type="button">
                 Refresh
+            </button>
+
+            <button id="docsBtn" type="button" class="topbar-docs-btn" aria-label="Open documentation">
+                Docs
             </button>
 
         </div>
@@ -222,7 +230,7 @@
                 </div>
 
 
-                <div class="browser-bar" aria-label="Preview address">
+                <div class="browser-bar" aria-label="Preview controls">
 
                     <div class="browser-dots" aria-hidden="true">
 
@@ -232,16 +240,48 @@
 
                     </div>
 
+                    <div class="browser-controls" aria-label="Device preview modes">
+
+                        <div class="device-mode-group" role="group" aria-label="Preview device mode">
+                            <button class="device-mode-btn active" type="button" data-device="desktop"
+                                aria-pressed="true">
+                                Desktop
+                            </button>
+                            <button class="device-mode-btn" type="button" data-device="tablet" aria-pressed="false">
+                                Tablet
+                            </button>
+                            <button class="device-mode-btn" type="button" data-device="mobile" aria-pressed="false">
+                                Mobile
+                            </button>
+                        </div>
+
+                    </div>
 
                     <div class="browser-address">
                         buildzen://preview
                     </div>
 
+                    <div class="browser-actions" aria-label="Preview actions">
+                        <button id="previewReloadBtn" class="browser-action-btn" type="button" title="Reload preview">
+                            Reload
+                        </button>
+                        <button id="previewOpenBtn" class="browser-action-btn" type="button"
+                            title="Open preview in new window">
+                            Open
+                        </button>
+                        <button id="previewFullscreenBtn" class="browser-action-btn" type="button"
+                            title="Toggle fullscreen preview">
+                            Fullscreen
+                        </button>
+                    </div>
+
                 </div>
 
 
-                <iframe id="preview" title="Buildzen live preview" scrolling="auto"
-                    sandbox="allow-scripts allow-forms allow-modals allow-same-origin"></iframe>
+                <div id="previewViewport" class="preview-viewport" data-mode="desktop" aria-label="Preview viewport">
+                    <iframe id="preview" title="Buildzen live preview" scrolling="auto"
+                        sandbox="allow-scripts allow-forms allow-modals allow-same-origin"></iframe>
+                </div>
 
 
                 <div class="preview-footer">

@@ -22,6 +22,7 @@ export function createPreviewController({
 }) {
 
     let previewBuildId = 0;
+    let currentPreviewDocument = "";
 
 
     /* =====================================================
@@ -114,7 +115,7 @@ export function createPreviewController({
 <script>
 (function () {
 
-    function send(type, args) {
+    function send(type, args, location) {
 
         try {
 
@@ -122,7 +123,8 @@ export function createPreviewController({
                 {
                     source: "buildzen-preview",
                     type: type,
-                    args: args
+                    args: args,
+                    location: location || null
                 },
                 "*"
             );
@@ -216,7 +218,16 @@ export function createPreviewController({
                 [
                     event.message ||
                     "Unknown error"
-                ]
+                ],
+                {
+                    file:
+                        event.filename ||
+                        "unknown",
+                    line:
+                        event.lineno || null,
+                    column:
+                        event.colno || null
+                }
             );
 
         }
@@ -227,11 +238,18 @@ export function createPreviewController({
         "unhandledrejection",
         function (event) {
 
+            const reason = event.reason;
+
             send(
                 "error",
                 [
-                    String(event.reason)
-                ]
+                    String(reason)
+                ],
+                {
+                    file: "unhandledrejection",
+                    line: null,
+                    column: null
+                }
             );
 
         }
@@ -587,8 +605,11 @@ ${safeJS}
            Load iframe
            ------------------------------------------------- */
 
-        preview.srcdoc =
+        currentPreviewDocument =
             finalHTML;
+
+        preview.srcdoc =
+            currentPreviewDocument;
 
 
         status.classList.remove(
@@ -610,11 +631,62 @@ ${safeJS}
        PUBLIC API
        ===================================================== */
 
+    function reloadPreview() {
+
+        if (!currentPreviewDocument) {
+            return;
+        }
+
+        preview.srcdoc =
+            currentPreviewDocument;
+
+    }
+
+
+    function openPreviewWindow() {
+
+        if (!currentPreviewDocument) {
+            return;
+        }
+
+        const previewBlob =
+            new Blob(
+                [currentPreviewDocument],
+                {
+                    type: "text/html"
+                }
+            );
+
+        const previewUrl =
+            URL.createObjectURL(previewBlob);
+
+        const popup =
+            window.open(
+                previewUrl,
+                "_blank",
+                "noopener,noreferrer"
+            );
+
+        if (popup) {
+            popup.focus();
+        }
+
+        setTimeout(() => {
+            URL.revokeObjectURL(previewUrl);
+        }, 10000);
+
+    }
+
+
     return {
 
         updatePreview,
 
-        collectPreviewCode
+        collectPreviewCode,
+
+        reloadPreview,
+
+        openPreviewWindow
 
     };
 

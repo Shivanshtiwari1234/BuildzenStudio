@@ -20,8 +20,12 @@ import {
 } from "@codemirror/commands";
 
 import {
+    bracketMatching,
     syntaxHighlighting
 } from "@codemirror/language";
+
+import { closeBrackets } from "@codemirror/autocomplete";
+import { openSearchPanel, searchKeymap } from "@codemirror/search";
 
 import { html } from "@codemirror/lang-html";
 import { css } from "@codemirror/lang-css";
@@ -134,6 +138,8 @@ function buildzenKeymap() {
     return keymap.of([
         indentWithTab,
 
+        ...searchKeymap,
+
         {
             key: "Mod-s",
 
@@ -143,6 +149,42 @@ function buildzenKeymap() {
                         "buildzen-save"
                     )
                 );
+
+                return true;
+            }
+        },
+
+        {
+            key: "Mod-f",
+
+            run(view) {
+                openSearchPanel(view);
+                return true;
+            }
+        },
+
+        {
+            key: "Shift-Alt-f",
+
+            run(view) {
+                const fileElement =
+                    view.dom.closest(".editor");
+
+                const fileId =
+                    fileElement?.dataset.fileId;
+
+                if (fileId) {
+                    window.dispatchEvent(
+                        new CustomEvent(
+                            "buildzen-format-document",
+                            {
+                                detail: {
+                                    fileId
+                                }
+                            }
+                        )
+                    );
+                }
 
                 return true;
             }
@@ -211,6 +253,10 @@ function createEditor(file) {
                 highlightActiveLineGutter(),
 
                 highlightSpecialChars(),
+
+                bracketMatching(),
+
+                closeBrackets(),
 
                 highlightActiveLine(),
 
