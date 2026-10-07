@@ -82,7 +82,8 @@ export function createPreviewController({
 
             if (
                 extension === "js" ||
-                extension === "mjs"
+                extension === "mjs" ||
+                extension === "cjs"
             ) {
 
                 js +=
@@ -325,7 +326,8 @@ export function createPreviewController({
 
             if (
                 extension === "js" ||
-                extension === "mjs"
+                extension === "mjs" ||
+                extension === "cjs"
             ) {
 
                 const pattern =
