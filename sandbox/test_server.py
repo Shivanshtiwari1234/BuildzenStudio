@@ -168,6 +168,29 @@ class SandboxInputTests(unittest.TestCase):
         filtered = server.strip_hop_by_hop_headers(headers)
         self.assertEqual(filtered, {"Content-Type": "text/html"})
 
+    def test_liveness_and_control_auth_contract(self):
+        async def check_api():
+            transport = server.httpx.ASGITransport(app=server.app)
+            async with server.httpx.AsyncClient(
+                transport=transport,
+                base_url="http://sandbox.test",
+            ) as session:
+                health = await session.get("/healthz")
+                self.assertEqual(health.status_code, 200)
+                self.assertEqual(health.json(), {"status": "ok"})
+
+                anonymous_status = await session.get("/api/sandboxes/me")
+                self.assertEqual(anonymous_status.status_code, 401)
+
+                missing_action = await session.post(
+                    "/api/sandboxes",
+                    headers={"X-Authenticated-User": "test-user"},
+                    json={"command": "start-fastapi", "files": []},
+                )
+                self.assertEqual(missing_action.status_code, 403)
+
+        asyncio.run(check_api())
+
     def test_stopped_expired_and_malformed_containers_are_cleanup_candidates(self):
         class FakeContainer:
             def __init__(self, status, labels):

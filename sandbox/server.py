@@ -210,6 +210,11 @@ def start_cleanup_loop():
     threading.Thread(target=cleanup_loop, daemon=True).start()
 
 
+@app.get("/healthz")
+def liveness():
+    return {"status": "ok"}
+
+
 def validate_and_write_files(sandbox_id: str, files: list[ProjectFile]) -> Path:
     root = STATE_DIR / sandbox_id
     total_bytes = 0

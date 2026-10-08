@@ -61,6 +61,7 @@ Replace the example names and auth endpoint with the deployment's actual values,
 
 ## Fixed API actions
 
+- `GET /healthz` provides an unauthenticated, non-sensitive liveness check for the control service.
 - `GET /api/sandboxes/me` returns the signed-in user's active sandbox.
 - `POST /api/sandboxes` accepts only `{"command":"start-fastapi","files":[...]}`.
 - `DELETE /api/sandboxes/{id}` stops only a sandbox owned by the signed-in user.
