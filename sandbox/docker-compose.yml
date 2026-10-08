@@ -1,0 +1,18 @@
+services:
+  sandbox-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: buildzen-sandbox-api:1
+    network_mode: host
+    user: "${SANDBOX_SERVICE_UID:-1000}:${DOCKER_SOCKET_GID:?Set DOCKER_SOCKET_GID}"
+    environment:
+      SANDBOX_STATE_DIR: ${SANDBOX_HOST_STATE_DIR:?Set SANDBOX_HOST_STATE_DIR}
+      SANDBOX_PREVIEW_DOMAIN: ${SANDBOX_PREVIEW_DOMAIN:?Set SANDBOX_PREVIEW_DOMAIN}
+      SANDBOX_PREVIEW_SCHEME: https
+      SANDBOX_USER_HEADER: X-Authenticated-User
+      SANDBOX_IMAGE: buildzen-python-api:1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${SANDBOX_HOST_STATE_DIR}:${SANDBOX_HOST_STATE_DIR}
+    restart: unless-stopped

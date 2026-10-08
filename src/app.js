@@ -16,6 +16,7 @@ import { getAllAssets, renderAssets } from "./assets.ts";
 import {
     createPreviewController
 } from "./preview.ts";
+import { createSandboxController } from "./sandbox.js";
 import { createPythonApiProject } from "./pythonApiTemplate.ts";
 
 
@@ -233,6 +234,18 @@ const consoleCount =
 
 const clearConsoleBtn =
     document.getElementById("clearConsoleBtn");
+
+const sandboxStartBtn =
+    document.getElementById("sandboxStartBtn");
+
+const sandboxStopBtn =
+    document.getElementById("sandboxStopBtn");
+
+const sandboxOpenLink =
+    document.getElementById("sandboxOpenLink");
+
+const sandboxStatus =
+    document.getElementById("sandboxStatus");
 
 const consoleFilters =
     document.querySelectorAll(".console-filter");
@@ -2106,20 +2119,28 @@ async function deleteCurrentFile() {
 
 const previewController =
     createPreviewController({
-
         preview,
-
         status,
-
         previewStatus,
-
-        getFiles:
-            () => buildzenFiles,
-
-        getActiveFileId:
-            () => activeFileId
-
+        getFiles: () => buildzenFiles,
+        getActiveFileId: () => activeFileId
     });
+
+const sandboxController =
+    createSandboxController({
+        onStatus(text) {
+            if (sandboxStatus) sandboxStatus.textContent = text;
+        },
+        onSandbox(sandbox) {
+            if (!sandboxOpenLink) return;
+            sandboxOpenLink.hidden = !sandbox?.previewUrl;
+            if (sandbox?.previewUrl) sandboxOpenLink.href = sandbox.previewUrl;
+            if (sandboxStartBtn) sandboxStartBtn.disabled = Boolean(sandbox);
+            if (sandboxStopBtn) sandboxStopBtn.disabled = !sandbox;
+        }
+    });
+
+void sandboxController.refresh();
 
 let activePreviewMode = "desktop";
 
@@ -2647,6 +2668,46 @@ clearConsoleBtn.addEventListener(
 
     }
 );
+
+sandboxStartBtn?.addEventListener("click", async () => {
+    if (!buildzenFiles.some(file => file.name === "main.py")) {
+        if (sandboxStatus) sandboxStatus.textContent = "This action needs a top-level main.py";
+        return;
+    }
+
+    sandboxStartBtn.disabled = true;
+    if (sandboxStopBtn) sandboxStopBtn.disabled = true;
+    let started = false;
+
+    try {
+        const files = buildzenFiles.map(file => ({
+            name: file.name,
+            content: getEditorContent(file.id)
+        }));
+        await sandboxController.start(files);
+        started = true;
+        if (sandboxStopBtn) sandboxStopBtn.disabled = false;
+    } catch (error) {
+        if (sandboxStatus) sandboxStatus.textContent = error.message || "Sandbox failed";
+        console.error("Sandbox start failed:", error);
+    } finally {
+        sandboxStartBtn.disabled = started;
+    }
+});
+
+sandboxStopBtn?.addEventListener("click", async () => {
+    sandboxStopBtn.disabled = true;
+    let stopped = false;
+    try {
+        await sandboxController.stop();
+        stopped = true;
+    } catch (error) {
+        if (sandboxStatus) sandboxStatus.textContent = error.message || "Stop failed";
+        console.error("Sandbox stop failed:", error);
+    } finally {
+        sandboxStopBtn.disabled = stopped;
+    }
+});
 
 
 /* =========================================================
@@ -3499,10 +3560,6 @@ async function initializeApp() {
         buildzenFiles[0]?.id ||
         null;
 
-
-    /*
-     * Initialize CodeMirror.
-     */
 
     setLoadingStatus(
         "INITIALIZING EDITOR..."

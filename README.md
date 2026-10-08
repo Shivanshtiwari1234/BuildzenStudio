@@ -11,6 +11,7 @@ Buildzen Studio is a lightweight browser-based front-end workspace for creating,
 - Reusable content blocks and component insertion
 - Template starter projects for landing pages and product UI
 - Python API starter with a FastAPI backend and virtual-environment setup
+- Fixed-action Python API sandbox for authenticated, isolated previews (requires the separately deployed Docker service)
 - Export to standalone HTML or a ZIP project bundle
 - Deployment settings for static hosting providers
 - Local project persistence using browser storage
@@ -20,7 +21,7 @@ Buildzen Studio is a lightweight browser-based front-end workspace for creating,
 - `index.html` — app shell and UI layout
 - `docs.html` — in-app documentation page
 - `src/` — main application source files
-  - `app.ts` — app state, modals, project management, export/deploy flows
+  - `app.js` — app state, modals, project management, export/deploy flows
   - `editor.ts` — editor setup and keybindings
   - `assets.ts` — asset database and upload handling
   - `preview.ts` — preview iframe rendering and console bridge
@@ -66,6 +67,7 @@ npm run preview
 
 - The project is intended as a static, browser-native studio for rapid front-end prototyping.
 - The editor highlights additional source and data formats; live preview execution remains focused on HTML, CSS, and JavaScript.
+- The Run API action uses the separately deployed, authenticated sandbox service described in `sandbox/README.md`; without it, the studio remains browser-only.
 - Project data is stored in browser-local storage, and uploaded assets are kept in IndexedDB.
 - The app is designed to be easy to extend with more templates, export actions, or deployment targets.
 

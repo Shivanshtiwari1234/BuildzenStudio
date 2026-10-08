@@ -427,6 +427,20 @@
 
                     <div class="console-controls">
 
+                        <span id="sandboxStatus" class="sandbox-status">API stopped</span>
+
+                        <button id="sandboxStartBtn" class="sandbox-action" type="button">
+                            Run API
+                        </button>
+
+                        <a id="sandboxOpenLink" class="sandbox-action" target="_blank" rel="noopener noreferrer" hidden>
+                            Open API
+                        </a>
+
+                        <button id="sandboxStopBtn" class="sandbox-action" type="button" disabled>
+                            Stop
+                        </button>
+
                         <button class="console-filter active" type="button" data-filter="all">
                             All
                         </button>
@@ -577,7 +591,7 @@
          Application
          ===================================================== -->
 
-    <script type="module" src="/src/app.ts"></script>
+    <script type="module" src="/src/app.js"></script>
     <script type="module" src="/src/layout.ts"></script>
 
 </body>
