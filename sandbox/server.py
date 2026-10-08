@@ -31,6 +31,8 @@ MAX_PROJECT_BYTES = 2 * 1024 * 1024
 MAX_PROJECT_REQUEST_BYTES = 3 * 1024 * 1024
 MAX_PREVIEW_REQUEST_BYTES = 1024 * 1024
 MAX_RESPONSE_BYTES = 16 * 1024 * 1024
+MAX_CONCURRENT_PREVIEWS = 48
+PREVIEW_SLOT_WAIT_SECONDS = 0.1
 MANAGED_LABEL = "io.buildzen.managed"
 OWNER_LABEL = "io.buildzen.owner"
 ID_LABEL = "io.buildzen.id"
@@ -52,6 +54,7 @@ app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 launch_times = {}
 sandbox_lock = asyncio.Lock()
 docker_state_lock = threading.RLock()
+preview_slots = asyncio.Semaphore(MAX_CONCURRENT_PREVIEWS)
 
 
 class ProjectFile(BaseModel):
@@ -108,6 +111,13 @@ def health_response_is_ready(response) -> bool:
     except (ValueError, AttributeError):
         return False
     return isinstance(payload, dict) and payload.get("status") == "ok"
+
+
+async def acquire_preview_slot():
+    try:
+        await asyncio.wait_for(preview_slots.acquire(), timeout=PREVIEW_SLOT_WAIT_SECONDS)
+    except asyncio.TimeoutError as error:
+        raise HTTPException(status_code=503, detail="Preview capacity is busy") from error
 
 
 def get_managed_containers(all_containers=True):
@@ -403,12 +413,21 @@ async def proxy_preview(path: str, request: Request):
     if container.status != "running":
         raise HTTPException(status_code=410, detail="Sandbox is stopped")
 
-    body = await read_limited_body(request, MAX_PREVIEW_REQUEST_BYTES)
     container.reload()
     networks = container.attrs["NetworkSettings"]["Networks"]
     address = next(iter(networks.values())).get("IPAddress")
     if not address:
         raise HTTPException(status_code=502, detail="Sandbox is unreachable")
+
+    await acquire_preview_slot()
+    try:
+        return await relay_preview_request(path, request, host, address)
+    finally:
+        preview_slots.release()
+
+
+async def relay_preview_request(path: str, request: Request, host: str, address: str):
+    body = await read_limited_body(request, MAX_PREVIEW_REQUEST_BYTES)
 
     headers = {
         key: value

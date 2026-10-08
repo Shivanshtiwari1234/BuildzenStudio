@@ -2,6 +2,7 @@ import os
 import stat
 import tempfile
 import unittest
+import asyncio
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -143,6 +144,19 @@ class SandboxInputTests(unittest.TestCase):
         self.assertFalse(server.health_response_is_ready(FakeResponse(404, {"status": "ok"})))
         self.assertFalse(server.health_response_is_ready(FakeResponse(200, {"detail": "missing"})))
         self.assertFalse(server.health_response_is_ready(FakeResponse(200, ValueError("bad json"))))
+
+    def test_preview_capacity_fails_fast_when_all_slots_are_busy(self):
+        async def check_capacity():
+            previous_slots = server.preview_slots
+            server.preview_slots = asyncio.Semaphore(0)
+            try:
+                with self.assertRaises(HTTPException) as error:
+                    await server.acquire_preview_slot()
+                self.assertEqual(error.exception.status_code, 503)
+            finally:
+                server.preview_slots = previous_slots
+
+        asyncio.run(check_capacity())
 
     def test_stopped_expired_and_malformed_containers_are_cleanup_candidates(self):
         class FakeContainer:
