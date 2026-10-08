@@ -53,6 +53,17 @@ class SandboxInputTests(unittest.TestCase):
                     server.owner_for(request_for(identity))
                 self.assertEqual(error.exception.status_code, 401)
 
+    def test_payload_schema_rejects_extra_and_coerced_fields(self):
+        valid_file = {"name": "main.py", "content": "app = None"}
+        with self.assertRaises(ValidationError):
+            server.StartRequest.model_validate({
+                "command": "start-fastapi",
+                "files": [valid_file],
+                "shell": "python main.py",
+            })
+        with self.assertRaises(ValidationError):
+            server.ProjectFile.model_validate({"name": 42, "content": "app = None"})
+
     def test_rejects_parent_path_traversal(self):
         files = [
             server.ProjectFile(name="main.py", content="app = None"),

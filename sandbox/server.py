@@ -15,7 +15,7 @@ import httpx
 from docker.errors import DockerException, NotFound
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import Response
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 
 STATE_DIR = Path(os.environ.get("SANDBOX_STATE_DIR", "/var/lib/buildzen-sandboxes"))
@@ -54,11 +54,15 @@ sandbox_lock = asyncio.Lock()
 
 
 class ProjectFile(BaseModel):
-    name: str
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    name: str = Field(min_length=1, max_length=240)
     content: str
 
 
 class StartRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
     command: Literal["start-fastapi"]
     files: list[ProjectFile] = Field(min_length=1, max_length=MAX_FILES)
 
