@@ -158,6 +158,16 @@ class SandboxInputTests(unittest.TestCase):
 
         asyncio.run(check_capacity())
 
+    def test_proxy_removes_connection_nominated_headers(self):
+        headers = {
+            "Connection": "keep-alive, X-Private-Hop",
+            "Keep-Alive": "timeout=5",
+            "X-Private-Hop": "internal",
+            "Content-Type": "text/html",
+        }
+        filtered = server.strip_hop_by_hop_headers(headers)
+        self.assertEqual(filtered, {"Content-Type": "text/html"})
+
     def test_stopped_expired_and_malformed_containers_are_cleanup_candidates(self):
         class FakeContainer:
             def __init__(self, status, labels):

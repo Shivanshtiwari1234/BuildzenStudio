@@ -120,6 +120,20 @@ async def acquire_preview_slot():
         raise HTTPException(status_code=503, detail="Preview capacity is busy") from error
 
 
+def strip_hop_by_hop_headers(headers, additionally_excluded=()):
+    connection_value = next(
+        (value for key, value in headers.items() if key.lower() == "connection"),
+        "",
+    )
+    connection_tokens = {
+        token.strip().lower()
+        for token in connection_value.split(",")
+        if token.strip()
+    }
+    excluded = HOP_HEADERS | connection_tokens | {name.lower() for name in additionally_excluded}
+    return {key: value for key, value in headers.items() if key.lower() not in excluded}
+
+
 def get_managed_containers(all_containers=True):
     return client.containers.list(
         all=all_containers,
@@ -429,15 +443,13 @@ async def proxy_preview(path: str, request: Request):
 async def relay_preview_request(path: str, request: Request, host: str, address: str):
     body = await read_limited_body(request, MAX_PREVIEW_REQUEST_BYTES)
 
-    headers = {
-        key: value
-        for key, value in request.headers.items()
-        if key.lower() not in HOP_HEADERS
-        and key.lower() not in {
+    headers = strip_hop_by_hop_headers(
+        request.headers,
+        {
             "cookie", "authorization", "content-length", "forwarded",
             "x-forwarded-for", "x-forwarded-host", "x-forwarded-proto",
-        }
-    }
+        },
+    )
     headers["host"] = host
     headers["x-forwarded-host"] = host
     headers["x-forwarded-proto"] = PREVIEW_SCHEME
@@ -457,11 +469,10 @@ async def relay_preview_request(path: str, request: Request, host: str, address:
                     if size > MAX_RESPONSE_BYTES:
                         raise HTTPException(status_code=502, detail="Sandbox response exceeds the 16 MB limit")
                     chunks.append(chunk)
-                response_headers = {
-                    key: value
-                    for key, value in upstream.headers.items()
-                    if key.lower() not in HOP_HEADERS and key.lower() not in {"content-length", "content-encoding"}
-                }
+                response_headers = strip_hop_by_hop_headers(
+                    upstream.headers,
+                    {"content-length", "content-encoding"},
+                )
                 return Response(
                     content=b"".join(chunks),
                     status_code=upstream.status_code,
