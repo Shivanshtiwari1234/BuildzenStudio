@@ -3,6 +3,7 @@ import stat
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 os.environ.setdefault("SANDBOX_PREVIEW_DOMAIN", "preview.test")
@@ -161,6 +162,25 @@ class SandboxInputTests(unittest.TestCase):
         self.assertFalse(server.container_needs_cleanup(
             FakeContainer("running", {server.EXPIRY_LABEL: "101"}), 100,
         ))
+
+    def test_stop_helper_only_removes_owned_sandbox(self):
+        sandbox_id = "421c94b0-547e-4cd7-a27f-fdb2250390b2"
+
+        class FakeContainer:
+            labels = {server.OWNER_LABEL: "owner-hash"}
+
+        container = FakeContainer()
+        containers = SimpleNamespace(get=lambda name: container)
+        docker_client = SimpleNamespace(containers=containers)
+        with patch.object(server, "client", docker_client), \
+                patch.object(server, "cleanup_container") as cleanup:
+            with self.assertRaises(HTTPException) as error:
+                server.stop_owned_sandbox(sandbox_id, "other-owner")
+            self.assertEqual(error.exception.status_code, 404)
+            cleanup.assert_not_called()
+
+            server.stop_owned_sandbox(sandbox_id, "owner-hash")
+            cleanup.assert_called_once_with(container)
 
 
 if __name__ == "__main__":

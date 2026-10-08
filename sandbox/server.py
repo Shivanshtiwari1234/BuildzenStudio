@@ -51,6 +51,7 @@ client = docker.from_env()
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 launch_times = {}
 sandbox_lock = asyncio.Lock()
+docker_state_lock = threading.RLock()
 
 
 class ProjectFile(BaseModel):
@@ -154,10 +155,11 @@ def cleanup_partial_start(sandbox_id, network=None, container=None):
 
 
 def cleanup_expired():
-    now = int(time.time())
-    for container in get_managed_containers():
-        if container_needs_cleanup(container, now):
-            cleanup_container(container)
+    with docker_state_lock:
+        now = int(time.time())
+        for container in get_managed_containers():
+            if container_needs_cleanup(container, now):
+                cleanup_container(container)
 
 
 def container_needs_cleanup(container, now: int) -> bool:
@@ -226,6 +228,11 @@ def validate_and_write_files(sandbox_id: str, files: list[ProjectFile]) -> Path:
 
 
 def start_container(owner: str, payload: StartRequest):
+    with docker_state_lock:
+        return _start_container(owner, payload)
+
+
+def _start_container(owner: str, payload: StartRequest):
     sandbox_id = None
     network = None
     container = None
@@ -353,10 +360,12 @@ async def create_sandbox(request: Request):
         return {"sandbox": await asyncio.to_thread(start_container, owner, payload)}
 
 
-@app.delete("/api/sandboxes/{sandbox_id}")
-def stop_sandbox(sandbox_id: str, request: Request):
-    require_action(request)
-    owner = owner_for(request)
+def stop_owned_sandbox(sandbox_id: str, owner: str):
+    with docker_state_lock:
+        return _stop_owned_sandbox(sandbox_id, owner)
+
+
+def _stop_owned_sandbox(sandbox_id: str, owner: str):
     try:
         uuid.UUID(sandbox_id)
         container = client.containers.get(f"buildzen-{sandbox_id}")
@@ -366,6 +375,14 @@ def stop_sandbox(sandbox_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Sandbox not found")
     cleanup_container(container)
     return {"sandbox": None}
+
+
+@app.delete("/api/sandboxes/{sandbox_id}")
+async def stop_sandbox(sandbox_id: str, request: Request):
+    require_action(request)
+    owner = owner_for(request)
+    async with sandbox_lock:
+        return await asyncio.to_thread(stop_owned_sandbox, sandbox_id, owner)
 
 
 @app.api_route(
