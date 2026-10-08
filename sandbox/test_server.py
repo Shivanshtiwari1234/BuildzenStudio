@@ -143,6 +143,25 @@ class SandboxInputTests(unittest.TestCase):
         self.assertFalse(server.health_response_is_ready(FakeResponse(200, {"detail": "missing"})))
         self.assertFalse(server.health_response_is_ready(FakeResponse(200, ValueError("bad json"))))
 
+    def test_stopped_expired_and_malformed_containers_are_cleanup_candidates(self):
+        class FakeContainer:
+            def __init__(self, status, labels):
+                self.status = status
+                self.labels = labels
+
+        self.assertTrue(server.container_needs_cleanup(
+            FakeContainer("exited", {server.EXPIRY_LABEL: "9999999999"}), 100,
+        ))
+        self.assertTrue(server.container_needs_cleanup(
+            FakeContainer("running", {server.EXPIRY_LABEL: "invalid"}), 100,
+        ))
+        self.assertTrue(server.container_needs_cleanup(
+            FakeContainer("running", {server.EXPIRY_LABEL: "99"}), 100,
+        ))
+        self.assertFalse(server.container_needs_cleanup(
+            FakeContainer("running", {server.EXPIRY_LABEL: "101"}), 100,
+        ))
+
 
 if __name__ == "__main__":
     unittest.main()

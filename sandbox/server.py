@@ -156,9 +156,18 @@ def cleanup_partial_start(sandbox_id, network=None, container=None):
 def cleanup_expired():
     now = int(time.time())
     for container in get_managed_containers():
-        expiry = int((container.labels or {}).get(EXPIRY_LABEL, "0"))
-        if expiry <= now or container.status != "running":
+        if container_needs_cleanup(container, now):
             cleanup_container(container)
+
+
+def container_needs_cleanup(container, now: int) -> bool:
+    if container.status != "running":
+        return True
+    try:
+        expires_at = int((container.labels or {}).get(EXPIRY_LABEL, "0"))
+    except (TypeError, ValueError):
+        return True
+    return expires_at <= now
 
 
 def cleanup_loop():
