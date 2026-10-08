@@ -181,7 +181,12 @@ def validate_and_write_files(sandbox_id: str, files: list[ProjectFile]) -> Path:
         for project_file in files:
             target = root.joinpath(*PurePosixPath(project_file.name).parts)
             target.parent.mkdir(parents=True, exist_ok=True)
+            parent = target.parent
+            while parent != root:
+                parent.chmod(0o755)
+                parent = parent.parent
             target.write_text(project_file.content, encoding="utf-8")
+            target.chmod(0o644)
         (root / "data").mkdir(exist_ok=True)
     except Exception:
         shutil.rmtree(root, ignore_errors=True)

@@ -91,6 +91,8 @@ class SandboxInputTests(unittest.TestCase):
             ],
         )
         self.assertEqual(stat.S_IMODE(root.stat().st_mode), 0o755)
+        self.assertEqual(stat.S_IMODE((root / "static").stat().st_mode), 0o755)
+        self.assertEqual(stat.S_IMODE((root / "static/index.html").stat().st_mode), 0o644)
         self.assertEqual((root / "main.py").read_text(encoding="utf-8"), "app = None")
 
 
