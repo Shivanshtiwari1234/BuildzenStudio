@@ -20,5 +20,8 @@ export default defineConfig({
                 }
             }
         }
+    },
+    server: {
+        allowedHosts: ["buildzen-studio.loca.lt"]
     }
 });
