@@ -11,6 +11,7 @@ os.environ.setdefault("SANDBOX_STATE_DIR", test_state_dir.name)
 
 from fastapi import HTTPException
 from pydantic import ValidationError
+from starlette.requests import Request
 
 with patch("docker.from_env") as docker_from_env:
     docker_from_env.return_value = object()
@@ -39,6 +40,18 @@ class SandboxInputTests(unittest.TestCase):
                 "command": "python main.py",
                 "files": [{"name": "main.py", "content": "app = None"}],
             })
+
+    def test_identity_rejects_ambiguous_and_control_values(self):
+        def request_for(identity):
+            headers = [] if identity is None else [(b"x-authenticated-user", identity.encode())]
+            return Request({"type": "http", "headers": headers})
+
+        self.assertEqual(len(server.owner_for(request_for("user@example.test"))), 64)
+        for identity in (None, "user-a,user-b", "user\nforged"):
+            with self.subTest(identity=identity):
+                with self.assertRaises(HTTPException) as error:
+                    server.owner_for(request_for(identity))
+                self.assertEqual(error.exception.status_code, 401)
 
     def test_rejects_parent_path_traversal(self):
         files = [

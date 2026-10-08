@@ -65,7 +65,12 @@ class StartRequest(BaseModel):
 
 def owner_for(request: Request) -> str:
     user = request.headers.get(USER_HEADER, "").strip()
-    if not user or len(user) > 256 or "\n" in user:
+    if (
+        not user
+        or len(user) > 256
+        or "," in user
+        or any(ord(character) < 32 or ord(character) == 127 for character in user)
+    ):
         raise HTTPException(status_code=401, detail="Sign in to use the sandbox")
     return hashlib.sha256(user.encode("utf-8")).hexdigest()
 
