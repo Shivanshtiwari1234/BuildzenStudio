@@ -99,6 +99,16 @@ def preview_url(sandbox_id: str) -> str:
     return f"{PREVIEW_SCHEME}://{sandbox_id}.{PREVIEW_DOMAIN}/"
 
 
+def health_response_is_ready(response) -> bool:
+    if response.status_code != 200:
+        return False
+    try:
+        payload = response.json()
+    except (ValueError, AttributeError):
+        return False
+    return isinstance(payload, dict) and payload.get("status") == "ok"
+
+
 def get_managed_containers(all_containers=True):
     return client.containers.list(
         all=all_containers,
@@ -285,7 +295,7 @@ def start_container(owner: str, payload: StartRequest):
         while time.monotonic() < deadline:
             try:
                 health = httpx.get(f"http://{address}:8000/api/health", timeout=0.5)
-                if health.status_code < 500:
+                if health_response_is_ready(health):
                     return {
                         "id": sandbox_id,
                         "previewUrl": preview_url(sandbox_id),

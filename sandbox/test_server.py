@@ -127,6 +127,22 @@ class SandboxInputTests(unittest.TestCase):
         self.assertTrue(container.removed)
         self.assertFalse(staged.exists())
 
+    def test_health_probe_requires_healthy_json_response(self):
+        class FakeResponse:
+            def __init__(self, status_code, payload):
+                self.status_code = status_code
+                self.payload = payload
+
+            def json(self):
+                if isinstance(self.payload, Exception):
+                    raise self.payload
+                return self.payload
+
+        self.assertTrue(server.health_response_is_ready(FakeResponse(200, {"status": "ok"})))
+        self.assertFalse(server.health_response_is_ready(FakeResponse(404, {"status": "ok"})))
+        self.assertFalse(server.health_response_is_ready(FakeResponse(200, {"detail": "missing"})))
+        self.assertFalse(server.health_response_is_ready(FakeResponse(200, ValueError("bad json"))))
+
 
 if __name__ == "__main__":
     unittest.main()
