@@ -131,6 +131,18 @@ def cleanup_container(container):
         shutil.rmtree(STATE_DIR / sandbox_id, ignore_errors=True)
 
 
+def cleanup_partial_start(sandbox_id, network=None, container=None):
+    if container is not None:
+        cleanup_container(container)
+    elif network is not None:
+        try:
+            network.remove()
+        except (NotFound, DockerException):
+            pass
+    if sandbox_id:
+        shutil.rmtree(STATE_DIR / sandbox_id, ignore_errors=True)
+
+
 def cleanup_expired():
     now = int(time.time())
     for container in get_managed_containers():
@@ -195,6 +207,9 @@ def validate_and_write_files(sandbox_id: str, files: list[ProjectFile]) -> Path:
 
 
 def start_container(owner: str, payload: StartRequest):
+    sandbox_id = None
+    network = None
+    container = None
     try:
         runtimes = client.info().get("Runtimes", {})
         if RUNTIME not in runtimes:
@@ -280,23 +295,10 @@ def start_container(owner: str, payload: StartRequest):
                 time.sleep(0.25)
         raise RuntimeError("The API did not become ready within 20 seconds")
     except HTTPException:
+        cleanup_partial_start(sandbox_id, network, container)
         raise
     except Exception as error:
-        try:
-            container
-        except UnboundLocalError:
-            pass
-        else:
-            try:
-                cleanup_container(container)
-            except Exception:
-                pass
-        if "sandbox_id" in locals():
-            try:
-                client.networks.get(f"bz-{sandbox_id[:12]}").remove()
-            except Exception:
-                pass
-            shutil.rmtree(STATE_DIR / sandbox_id, ignore_errors=True)
+        cleanup_partial_start(sandbox_id, network, container)
         raise HTTPException(status_code=502, detail=f"Sandbox could not start: {error}") from error
 
 

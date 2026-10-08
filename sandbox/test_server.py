@@ -95,6 +95,38 @@ class SandboxInputTests(unittest.TestCase):
         self.assertEqual(stat.S_IMODE((root / "static/index.html").stat().st_mode), 0o644)
         self.assertEqual((root / "main.py").read_text(encoding="utf-8"), "app = None")
 
+    def test_partial_start_cleanup_removes_network_and_staged_files(self):
+        sandbox_id = "partial-start"
+        staged = Path(self.temp_dir.name) / sandbox_id
+        staged.mkdir()
+
+        class FakeNetwork:
+            removed = False
+
+            def remove(self):
+                self.removed = True
+
+        network = FakeNetwork()
+        server.cleanup_partial_start(sandbox_id, network=network)
+        self.assertTrue(network.removed)
+        self.assertFalse(staged.exists())
+
+    def test_partial_start_cleanup_removes_created_container(self):
+        sandbox_id = "partial-container"
+        staged = Path(self.temp_dir.name) / sandbox_id
+        staged.mkdir()
+
+        class FakeContainer:
+            labels = {server.ID_LABEL: sandbox_id}
+
+            def remove(self, force, v):
+                self.removed = force and v
+
+        container = FakeContainer()
+        server.cleanup_partial_start(sandbox_id, container=container)
+        self.assertTrue(container.removed)
+        self.assertFalse(staged.exists())
+
 
 if __name__ == "__main__":
     unittest.main()
